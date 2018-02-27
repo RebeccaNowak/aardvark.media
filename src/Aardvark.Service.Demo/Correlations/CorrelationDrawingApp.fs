@@ -38,14 +38,14 @@ module CorrelationDrawingApp =
     open Newtonsoft.Json
             
     type Action =
-        | CameraMessage    of ArcBallController.Message
-        | DrawingMessage   of CorrelationDrawing.Action
-        | SemanticMessage of CorrelationDrawing.Action
+        | CameraMessage     of ArcBallController.Message
+        | DrawingMessage    of CorrelationDrawing.Action
+        | SemanticMessage   of CorrelationDrawing.Action
         | AnnotationMessage of CorrelationDrawing.Action
-        | AddSemantic of CorrelationDrawing.Action
-        | SetSemantic of CorrelationDrawing.Action
-        | KeyDown of key : Keys
-        | KeyUp of key : Keys      
+        | AddSemantic       of CorrelationDrawing.Action
+        | SetSemantic       of CorrelationDrawing.Action
+        | KeyDown           of key : Keys
+        | KeyUp             of key : Keys      
         | Export
         | Save
         | Load

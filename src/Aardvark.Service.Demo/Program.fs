@@ -26,7 +26,7 @@ open Suave.WebPart
 open System.Windows.Forms
 open UI.Composed
 open PRo3DModels.Mutable
-
+open CorrelationDrawing
 
 
 // elm intro
@@ -88,7 +88,7 @@ let kitchenSink argv =
     //let app = MeasurementsImporterApp.app form
     //let app = RenderModelApp.app 
     //let app = AnnotationApp.app
-    let app = AnimationApp.app
+    let app = CorrelationDrawingApp.app
 
     //Config.shouldTimeUIUpdate <- true
     //Config.shouldTimeJsCodeGeneration <- true

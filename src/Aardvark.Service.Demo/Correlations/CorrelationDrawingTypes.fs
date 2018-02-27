@@ -35,6 +35,9 @@ module RenderingPars =
 
 [<DomainType>]
 type Semantic = {
+        [<TreatAsValue;PrimaryKey>]
+        id                : string
+
         label             : string
         size              : double
         style             : Style
@@ -46,7 +49,7 @@ type Semantic = {
 type Annotation = {       
     geometry : GeometryType
     projection : Projection
-    semantic : Semantic
+    semanticId : string
     points : plist<V3d>
     segments : plist<plist<V3d>> //list<Segment>
     visible : bool
@@ -75,7 +78,7 @@ type CorrelationDrawingModel = {
     geometry         : GeometryType
     semantics        : hmap<string, Semantic>
     semanticsList    : plist<Semantic>
-    selectedSemantic : option<string>
+    selectedSemantic : string
     annotations      : plist<Annotation>
     exportPath       : string
 }

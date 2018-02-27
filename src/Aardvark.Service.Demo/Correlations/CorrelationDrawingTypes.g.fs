@@ -105,12 +105,14 @@ module Mutable =
     type MSemantic(__initial : CorrelationDrawing.Semantic) =
         inherit obj()
         let mutable __current : Aardvark.Base.Incremental.IModRef<CorrelationDrawing.Semantic> = Aardvark.Base.Incremental.EqModRef<CorrelationDrawing.Semantic>(__initial) :> Aardvark.Base.Incremental.IModRef<CorrelationDrawing.Semantic>
+        let _id = ResetMod.Create(__initial.id)
         let _label = ResetMod.Create(__initial.label)
         let _size = ResetMod.Create(__initial.size)
         let _style = MStyle.Create(__initial.style)
         let _geometry = ResetMod.Create(__initial.geometry)
         let _semanticType = ResetMod.Create(__initial.semanticType)
         
+        member x.id = _id :> IMod<_>
         member x.label = _label :> IMod<_>
         member x.size = _size :> IMod<_>
         member x.style = _style
@@ -122,6 +124,7 @@ module Mutable =
             if not (System.Object.ReferenceEquals(__current.Value, v)) then
                 __current.Value <- v
                 
+                _id.Update(v.id)
                 ResetMod.Update(_label,v.label)
                 ResetMod.Update(_size,v.size)
                 MStyle.Update(_style, v.style)
@@ -143,6 +146,12 @@ module Mutable =
     module Semantic =
         [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
         module Lens =
+            let id =
+                { new Lens<CorrelationDrawing.Semantic, Microsoft.FSharp.Core.string>() with
+                    override x.Get(r) = r.id
+                    override x.Set(r,v) = { r with id = v }
+                    override x.Update(r,f) = { r with id = f r.id }
+                }
             let label =
                 { new Lens<CorrelationDrawing.Semantic, Microsoft.FSharp.Core.string>() with
                     override x.Get(r) = r.label
@@ -180,7 +189,7 @@ module Mutable =
         let mutable __current : Aardvark.Base.Incremental.IModRef<CorrelationDrawing.Annotation> = Aardvark.Base.Incremental.EqModRef<CorrelationDrawing.Annotation>(__initial) :> Aardvark.Base.Incremental.IModRef<CorrelationDrawing.Annotation>
         let _geometry = ResetMod.Create(__initial.geometry)
         let _projection = ResetMod.Create(__initial.projection)
-        let _semantic = MSemantic.Create(__initial.semantic)
+        let _semanticId = ResetMod.Create(__initial.semanticId)
         let _points = MList.Create(__initial.points)
         let _segments = MList.Create(__initial.segments, (fun v -> MList.Create(v)), (fun (m,v) -> MList.Update(m, v)), (fun v -> v :> alist<_>))
         let _visible = ResetMod.Create(__initial.visible)
@@ -188,7 +197,7 @@ module Mutable =
         
         member x.geometry = _geometry :> IMod<_>
         member x.projection = _projection :> IMod<_>
-        member x.semantic = _semantic
+        member x.semanticId = _semanticId :> IMod<_>
         member x.points = _points :> alist<_>
         member x.segments = _segments :> alist<_>
         member x.visible = _visible :> IMod<_>
@@ -201,7 +210,7 @@ module Mutable =
                 
                 ResetMod.Update(_geometry,v.geometry)
                 ResetMod.Update(_projection,v.projection)
-                MSemantic.Update(_semantic, v.semantic)
+                ResetMod.Update(_semanticId,v.semanticId)
                 MList.Update(_points, v.points)
                 MList.Update(_segments, v.segments)
                 ResetMod.Update(_visible,v.visible)
@@ -234,11 +243,11 @@ module Mutable =
                     override x.Set(r,v) = { r with projection = v }
                     override x.Update(r,f) = { r with projection = f r.projection }
                 }
-            let semantic =
-                { new Lens<CorrelationDrawing.Annotation, CorrelationDrawing.Semantic>() with
-                    override x.Get(r) = r.semantic
-                    override x.Set(r,v) = { r with semantic = v }
-                    override x.Update(r,f) = { r with semantic = f r.semantic }
+            let semanticId =
+                { new Lens<CorrelationDrawing.Annotation, Microsoft.FSharp.Core.string>() with
+                    override x.Get(r) = r.semanticId
+                    override x.Set(r,v) = { r with semanticId = v }
+                    override x.Update(r,f) = { r with semanticId = f r.semanticId }
                 }
             let points =
                 { new Lens<CorrelationDrawing.Annotation, Aardvark.Base.plist<Aardvark.Base.V3d>>() with
@@ -359,7 +368,7 @@ module Mutable =
         let _geometry = ResetMod.Create(__initial.geometry)
         let _semantics = MMap.Create(__initial.semantics, (fun v -> MSemantic.Create(v)), (fun (m,v) -> MSemantic.Update(m, v)), (fun v -> v))
         let _semanticsList = MList.Create(__initial.semanticsList, (fun v -> MSemantic.Create(v)), (fun (m,v) -> MSemantic.Update(m, v)), (fun v -> v))
-        let _selectedSemantic = MOption.Create(__initial.selectedSemantic)
+        let _selectedSemantic = ResetMod.Create(__initial.selectedSemantic)
         let _annotations = MList.Create(__initial.annotations, (fun v -> MAnnotation.Create(v)), (fun (m,v) -> MAnnotation.Update(m, v)), (fun v -> v))
         let _exportPath = ResetMod.Create(__initial.exportPath)
         
@@ -386,7 +395,7 @@ module Mutable =
                 ResetMod.Update(_geometry,v.geometry)
                 MMap.Update(_semantics, v.semantics)
                 MList.Update(_semanticsList, v.semanticsList)
-                MOption.Update(_selectedSemantic, v.selectedSemantic)
+                ResetMod.Update(_selectedSemantic,v.selectedSemantic)
                 MList.Update(_annotations, v.annotations)
                 ResetMod.Update(_exportPath,v.exportPath)
                 
@@ -448,7 +457,7 @@ module Mutable =
                     override x.Update(r,f) = { r with semanticsList = f r.semanticsList }
                 }
             let selectedSemantic =
-                { new Lens<CorrelationDrawing.CorrelationDrawingModel, Microsoft.FSharp.Core.option<Microsoft.FSharp.Core.string>>() with
+                { new Lens<CorrelationDrawing.CorrelationDrawingModel, Microsoft.FSharp.Core.string>() with
                     override x.Get(r) = r.selectedSemantic
                     override x.Set(r,v) = { r with selectedSemantic = v }
                     override x.Update(r,f) = { r with selectedSemantic = f r.selectedSemantic }
