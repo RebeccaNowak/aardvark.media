@@ -38,6 +38,7 @@ type Semantic = {
         [<TreatAsValue;PrimaryKey>]
         id                : string
 
+        disabled          : bool
         label             : string
         size              : double
         style             : Style

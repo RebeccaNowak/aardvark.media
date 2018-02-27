@@ -106,6 +106,7 @@ module Mutable =
         inherit obj()
         let mutable __current : Aardvark.Base.Incremental.IModRef<CorrelationDrawing.Semantic> = Aardvark.Base.Incremental.EqModRef<CorrelationDrawing.Semantic>(__initial) :> Aardvark.Base.Incremental.IModRef<CorrelationDrawing.Semantic>
         let _id = ResetMod.Create(__initial.id)
+        let _disabled = ResetMod.Create(__initial.disabled)
         let _label = ResetMod.Create(__initial.label)
         let _size = ResetMod.Create(__initial.size)
         let _style = MStyle.Create(__initial.style)
@@ -113,6 +114,7 @@ module Mutable =
         let _semanticType = ResetMod.Create(__initial.semanticType)
         
         member x.id = _id :> IMod<_>
+        member x.disabled = _disabled :> IMod<_>
         member x.label = _label :> IMod<_>
         member x.size = _size :> IMod<_>
         member x.style = _style
@@ -125,6 +127,7 @@ module Mutable =
                 __current.Value <- v
                 
                 _id.Update(v.id)
+                ResetMod.Update(_disabled,v.disabled)
                 ResetMod.Update(_label,v.label)
                 ResetMod.Update(_size,v.size)
                 MStyle.Update(_style, v.style)
@@ -151,6 +154,12 @@ module Mutable =
                     override x.Get(r) = r.id
                     override x.Set(r,v) = { r with id = v }
                     override x.Update(r,f) = { r with id = f r.id }
+                }
+            let disabled =
+                { new Lens<CorrelationDrawing.Semantic, Microsoft.FSharp.Core.bool>() with
+                    override x.Get(r) = r.disabled
+                    override x.Set(r,v) = { r with disabled = v }
+                    override x.Update(r,f) = { r with disabled = f r.disabled }
                 }
             let label =
                 { new Lens<CorrelationDrawing.Semantic, Microsoft.FSharp.Core.string>() with

@@ -12,6 +12,7 @@ module Semantic =
     let initial id = {
         id = id
 
+        disabled = false
         label = "Semantic1" 
         size = 0.0
         style = {Style.color = {c = C4b.Red}; Style.thickness = {Numeric.init with value = 1.0}}
@@ -20,6 +21,8 @@ module Semantic =
     }
 
     type Action = 
+        | Disable
+        | Enable
         | ChangeLabel
         | ColorPickerMessage of ColorPicker.Action
         | ChangeThickness
@@ -29,23 +32,41 @@ module Semantic =
             | ChangeLabel -> {sem with label = "OtherLabel"}
             | ColorPickerMessage m -> {sem with style = {sem.style with color = (ColorPicker.update sem.style.color m)}}
             | ChangeThickness -> {sem with style = {sem.style with thickness = {Numeric.init with value =  2.0}}}
+            | Disable -> {sem with disabled = true}
+            | Enable -> {sem with disabled = false}
+
 
 
     let viewEnabled (s : MSemantic) =
         //require Html.semui (         
-        div [clazz "ui"][
-            button [clazz "ui button"; onMouseClick (fun _ -> ChangeLabel)] [Incremental.text (s.label)]
-            ColorPicker.view s.style.color |> UI.map ColorPickerMessage
-            button [clazz "ui button"; onMouseClick (fun _ -> ChangeThickness)] [text "Thickness"]
-        ]
-       // )
+       Incremental.div
+           (AttributeMap.ofList [clazz "ui"]) (
+                alist {
+                    yield button [clazz "ui button"; onMouseClick (fun _ -> ChangeLabel)] [Incremental.text (s.label)]
+                    yield ColorPicker.view s.style.color |> UI.map ColorPickerMessage
+                    yield button [clazz "ui button"; onMouseClick (fun _ -> ChangeThickness)] [text "Thickness"]
+               }
+           )
 
     let viewDisabled (s : MSemantic) = 
-        div [clazz "ui"][
-            button [clazz "ui disabled button"; onMouseClick (fun _ -> ChangeLabel)] [Incremental.text (s.label)]
-            label [clazz "ui horizontal label" ][text "col"]
-            button [clazz "ui disabled button"; onMouseClick (fun _ -> ChangeThickness)] [text "Thickness"]
-        ]
+        Incremental.div
+           (AttributeMap.ofList [clazz "ui"]) (
+                alist {
+                    yield button [clazz "ui disabled button"; onMouseClick (fun _ -> ChangeLabel)] [Incremental.text (s.label)]
+                    yield label [clazz "ui horizontal label" ][text "col"]
+                    yield button [clazz "ui disabled button"; onMouseClick (fun _ -> ChangeThickness)] [text "Thickness"]
+                }
+           )
+
+    let view (s : MSemantic) : IMod<DomNode<Action>> =
+        adaptive {
+            let! disabled = s.disabled
+            let v = 
+                match disabled with
+                    | true -> viewDisabled s
+                    | false -> viewEnabled s
+            return v
+        }
 
     module Lens = 
        let style =

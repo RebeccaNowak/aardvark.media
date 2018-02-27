@@ -38,14 +38,14 @@ module CorrelationDrawingApp =
     open Newtonsoft.Json
             
     type Action =
-        | CameraMessage     of ArcBallController.Message
-        | DrawingMessage    of CorrelationDrawing.Action
-        | SemanticMessage   of CorrelationDrawing.Action
-        | AnnotationMessage of CorrelationDrawing.Action
-        | AddSemantic       of CorrelationDrawing.Action
-        | SetSemantic       of CorrelationDrawing.Action
-        | KeyDown           of key : Keys
-        | KeyUp             of key : Keys      
+        | CameraMessage             of ArcBallController.Message
+        | DrawingMessage            of CorrelationDrawing.Action
+        | DrawingSemanticMessage    of CorrelationDrawing.Action
+        | AnnotationMessage         of CorrelationDrawing.Action
+        //| AddSemantic               of CorrelationDrawing.Action
+        //| SetSemantic               of CorrelationDrawing.Action
+        | KeyDown                   of key : Keys
+        | KeyUp                     of key : Keys      
         | Export
         | Save
         | Load
@@ -65,11 +65,11 @@ module CorrelationDrawingApp =
                     { model with camera = ArcBallController.update model.camera m }      
             | DrawingMessage m, _ ->
                     { model with drawing = CorrelationDrawing.update model.drawing m }    
-            | AddSemantic m, false ->
-                {model with drawing = CorrelationDrawing.update model.drawing m} 
-            | SetSemantic m, false ->
-                {model with drawing = CorrelationDrawing.update model.drawing m}      
-            | SemanticMessage m, _ ->
+           // | AddSemantic m, false ->
+           //     {model with drawing = CorrelationDrawing.update model.drawing m} 
+           // | SetSemantic m, false ->
+           //     {model with drawing = CorrelationDrawing.update model.drawing m}      
+            | DrawingSemanticMessage m, _ ->
                 {model with drawing = CorrelationDrawing.update model.drawing m}          
             | AnnotationMessage m, _ ->
                 {model with drawing = CorrelationDrawing.update model.drawing m}          
@@ -140,13 +140,13 @@ module CorrelationDrawingApp =
                                     i [clazz "arrow left icon"] [] ] |> wrapToolTip "undo"
                         button [clazz "ui icon button"; onMouseClick (fun _ -> Redo)] [
                                     i [clazz "arrow right icon"] [] ] |> wrapToolTip "redo"
-                        button [clazz "ui icon button"; onMouseClick (fun _ -> Action.AddSemantic CorrelationDrawing.AddSemantic)] [
+                        button [clazz "ui icon button"; onMouseClick (fun _ -> Action.DrawingSemanticMessage CorrelationDrawing.AddSemantic)] [
                                     i [clazz "plus icon"] [] ] //|> Utilities.wrapToolTip "add semantic"
                     ]
 
                     CorrelationDrawing.UI.viewAnnotationTools model.drawing |> UI.map DrawingMessage
                     CorrelationDrawing.UI.viewAnnotations model.drawing  |> UI.map AnnotationMessage   
-                    CorrelationDrawing.UI.viewSemantics model.drawing |> UI.map SemanticMessage
+                    CorrelationDrawing.UI.viewSemantics model.drawing |> UI.map DrawingSemanticMessage
                 ]
             ]
         )

@@ -64,17 +64,34 @@ module CorrelationDrawing =
         let newSemantics = HMap.union model.semantics (model.semantics.Add(newSem.id, newSem))
         {model with semantics = newSemantics; semanticsList = plistFromHMap newSemantics; selectedSemantic = newSem.id}
            
+    let disableSemantic (semO : Option<Semantic>) =
+        match semO with
+            | Some s -> Some(Semantic.update s Semantic.Disable)
+            | None -> None //TODO something useful
+
+    let enableSemantic (semO : Option<Semantic>) =
+        match semO with
+            | Some s -> Some(Semantic.update s Semantic.Enable)
+            | None -> None //TODO something useful
+
+
     let insertSampleSemantics (model : CorrelationDrawingModel) = 
+        // disabled previous
+
         let id = Guid.NewGuid().ToString()
         let newSem = {(Semantic.initial id) with label = (sprintf "Semantic%i" (model.semantics.Count + 1))} //; id = string System.Guid.NewGuid}
-        let newSemantics = HMap.union model.semantics (model.semantics.Add(newSem.id, newSem))
-        let updatedList = sortedPlistFromHmap newSemantics (fun (x : Semantic) -> x.label)
+        let updatedSemantics = (HMap.alter model.selectedSemantic disableSemantic model.semantics).Add(newSem.id, newSem)
+       // let newSemantics = HMap.union model.semantics (model.semantics.Add(newSem.id, newSem))
+        let updatedList = sortedPlistFromHmap updatedSemantics (fun (x : Semantic) -> x.label)
 //            model.semanticsList.Append(newSem)
 //                |> PList.toList 
 //                |> List.sortBy  (fun (x : Semantic) -> x.label) 
 //                |> PList.ofList
 
-        {model with semantics = model.semantics.Add(newSem.id, newSem); semanticsList = updatedList; selectedSemantic = newSem.id}
+        {model with 
+            semantics = updatedSemantics//model.semantics.Add(newSem.id, newSem);
+            semanticsList = updatedList;
+            selectedSemantic = newSem.id}
         
 //    let getSelectedSemantic (model: CorrelationDrawingModel) =
 //        match model.selectedSemantic with
@@ -138,20 +155,24 @@ module CorrelationDrawing =
             | Exit, _ -> 
                     { model with hoverPosition = None }
             | SetSemantic sem, false ->
-                    let updatedList = 
-                        model.semanticsList  
-                            |> PList.toList 
-                            |> List.sortBy  (fun (x : Semantic) -> x.label) 
-                            |> PList.ofList
+                    
+                    let updatedSemantics = HMap.alter sem enableSemantic
+                                                (HMap.alter model.selectedSemantic disableSemantic model.semantics)
+                    let updatedList = sortedPlistFromHmap updatedSemantics (fun (x : Semantic) -> x.label)
+                        
+//                        model.semanticsList  
+//                            |> PList.toList 
+//                            |> List.sortBy  (fun (x : Semantic) -> x.label) 
+//                            |> PList.ofList
                     // (PList.sortBy (fun (x : Semantic) -> x.label)) model.semanticsList
-                    {model with selectedSemantic = sem; semanticsList = updatedList }
+                    {model with selectedSemantic = sem; semanticsList = updatedList; semantics = updatedSemantics}
             | SemanticMessage sem, false ->
                     let fUpdate (semO : Option<Semantic>) = 
                         match semO with
                             | Some s -> Some( Semantic.update s sem)
                             | None -> None //TODO something useful
                     let updatedSemantics = (HMap.alter model.selectedSemantic fUpdate model.semantics)
-                    {model with semantics = updatedSemantics; semanticsList = CorrelationUtilities.plistFromHMap updatedSemantics}
+                    {model with semantics = updatedSemantics; semanticsList = (sortedPlistFromHmap updatedSemantics (fun (x : Semantic) -> x.label))}
             | AddSemantic, _ -> insertSampleSemantics model 
             | SetGeometry mode, _ ->
                     { model with geometry = mode }
@@ -218,9 +239,11 @@ module CorrelationDrawing =
                   (AttributeMap.ofList [clazz "ui divided list"]) (
                       alist {
                           for mSem in model.semanticsList do
-                            if mSem.id = model.selectedSemantic
-                                then yield Semantic.viewDisabled mSem |> UI.map SemanticMessage
-                                else yield Semantic.viewEnabled mSem |> UI.map SemanticMessage
+                            let! domNode = Semantic.view mSem
+                            yield domNode |> UI.map SemanticMessage
+                           // if mSem.id = model.selectedSemantic
+                           //     then yield Semantic.viewDisabled mSem |> UI.map SemanticMessage
+                           //     else yield Semantic.viewEnabled mSem |> UI.map SemanticMessage
                               //yield Semantic.view mSem |> UI.map SemanticMessage
                       }
                   )

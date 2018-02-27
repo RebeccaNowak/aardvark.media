@@ -169,7 +169,7 @@ module CorrelationUtilities =
         Incremental.select (AttributeMap.ofList [ortisOnChange; style "color:black"]) 
             (
                 alist {
-                    yield Incremental.option (attributes "-None-") (AList.ofList [text "-None-"])
+                    yield Incremental.option (attributes "-New-") (AList.ofList [text "-New-"])
                     // |> AList.mapi((f x) |> Mod.map(fun (y : IMod<'a>) -> fun i x -> Incremental.option (attributes y AList.ofList [text y])))
                     // let domNode = values |> AList.mapi(fun i x -> Incremental.option (attributes (f x)) (AList.ofList [text (f x)]))
                     let domNode = 
