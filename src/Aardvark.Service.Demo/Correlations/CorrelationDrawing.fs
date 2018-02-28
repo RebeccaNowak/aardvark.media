@@ -44,6 +44,7 @@ module CorrelationDrawing =
     type Action =
         | SetSemantic       of string
         | AddSemantic
+        | DoNothing
         | SemanticMessage   of Semantic.Action
         | AnnotationMessage of Annotation.Action
         | SetGeometry       of GeometryType
@@ -67,7 +68,7 @@ module CorrelationDrawing =
     let disableSemantic (semO : Option<Semantic>) =
         match semO with
             | Some s -> Some(Semantic.update s Semantic.Disable)
-            | None -> None //TODO something useful
+            | None -> None
 
     let enableSemantic (semO : Option<Semantic>) =
         match semO with
@@ -80,16 +81,19 @@ module CorrelationDrawing =
 
         let id = Guid.NewGuid().ToString()
         let newSem = {(Semantic.initial id) with label = (sprintf "Semantic%i" (model.semantics.Count + 1))} //; id = string System.Guid.NewGuid}
-        let updatedSemantics = (HMap.alter model.selectedSemantic disableSemantic model.semantics).Add(newSem.id, newSem)
+        //let updatedSemantics = (HMap.alter model.selectedSemantic disableSemantic model.semantics).Add(newSem.id, newSem)
+        let update1 = HMap.alter model.selectedSemantic disableSemantic model.semantics
+        let update2 = update1.Add(newSem.id, newSem)
+        let update3 = HMap.alter newSem.id enableSemantic update2
        // let newSemantics = HMap.union model.semantics (model.semantics.Add(newSem.id, newSem))
-        let updatedList = sortedPlistFromHmap updatedSemantics (fun (x : Semantic) -> x.label)
+        let updatedList = sortedPlistFromHmap update3 (fun (x : Semantic) -> x.label)
 //            model.semanticsList.Append(newSem)
 //                |> PList.toList 
 //                |> List.sortBy  (fun (x : Semantic) -> x.label) 
 //                |> PList.ofList
 
         {model with 
-            semantics = updatedSemantics//model.semantics.Add(newSem.id, newSem);
+            semantics = update3//model.semantics.Add(newSem.id, newSem);
             semanticsList = updatedList;
             selectedSemantic = newSem.id}
         
@@ -125,6 +129,7 @@ module CorrelationDrawing =
 
     let update (model : CorrelationDrawingModel) (act : Action) =
         match (act, model.draw) with
+            | DoNothing, _ -> model
             | KeyDown Keys.LeftCtrl, _ ->                     
                     { model with draw = true }
             | KeyUp Keys.LeftCtrl, _ -> 
@@ -145,7 +150,7 @@ module CorrelationDrawing =
 
                     let model = match (working.geometry, (working.points |> PList.count)) with
                                     | GeometryType.Point, 1 -> model |> finishAndAppend
-                                    | GeometryType.Line, 2 -> model |> finishAndAppend
+                                    | GeometryType.Line, 10 -> model |> finishAndAppend
                                     | _ -> model
 
                     model                 
@@ -154,19 +159,19 @@ module CorrelationDrawing =
                     model |> finishAndAppend
             | Exit, _ -> 
                     { model with hoverPosition = None }
-            | SetSemantic sem, false ->
+            | SetSemantic sem, _ ->
+                    let update1 = HMap.alter model.selectedSemantic disableSemantic model.semantics
+                    let update2 = HMap.alter sem enableSemantic update1
                     
-                    let updatedSemantics = HMap.alter sem enableSemantic
-                                                (HMap.alter model.selectedSemantic disableSemantic model.semantics)
-                    let updatedList = sortedPlistFromHmap updatedSemantics (fun (x : Semantic) -> x.label)
+                    let updatedList = sortedPlistFromHmap update2 (fun (x : Semantic) -> x.label)
                         
 //                        model.semanticsList  
 //                            |> PList.toList 
 //                            |> List.sortBy  (fun (x : Semantic) -> x.label) 
 //                            |> PList.ofList
                     // (PList.sortBy (fun (x : Semantic) -> x.label)) model.semanticsList
-                    {model with selectedSemantic = sem; semanticsList = updatedList; semantics = updatedSemantics}
-            | SemanticMessage sem, false ->
+                    {model with selectedSemantic = sem; semanticsList = updatedList; semantics = update2}
+            | SemanticMessage sem, _ ->
                     let fUpdate (semO : Option<Semantic>) = 
                         match semO with
                             | Some s -> Some( Semantic.update s sem)
@@ -208,19 +213,25 @@ module CorrelationDrawing =
                 fun (selected : option<MSemantic>) ->
                     match selected with
                         | Some d -> SetSemantic (Mod.force d.id)
-                        | None -> AddSemantic // TODO?
+                        | None -> DoNothing //AddSemantic // TODO?
                    
-                    
+                           
 
             Html.SemUi.accordion "Annotation Tools" "Write" true [
                 Html.table [                            
                     Html.row "Text:"        [Html.SemUi.textBox  model.exportPath SetExportPath ]
                     Html.row "Geometry:"    [Html.SemUi.dropDown model.geometry   SetGeometry]
                     Html.row "Projections:" [Html.SemUi.dropDown model.projection SetProjection]
-                    Html.row "Semantic:"    [dropDownList'' model.semanticsList selected onChange (fun x -> x.label)]
-                    
-                ]                    
-            ]
+                    Html.row "Semantic:"    
+                        [dropDownListR 
+                            model.semanticsList 
+                            (getMSemantic model) 
+                            onChange 
+                            (fun x -> x.label) 
+                            (fun x -> x.disabled)]
+               ]                               
+            ]   
+            
 
         let viewAnnotations (model : MCorrelationDrawingModel) = 
           Html.SemUi.accordion "Annotations" "File Outline" true [

@@ -53,7 +53,7 @@ module Semantic =
            (AttributeMap.ofList [clazz "ui"]) (
                 alist {
                     yield button [clazz "ui disabled button"; onMouseClick (fun _ -> ChangeLabel)] [Incremental.text (s.label)]
-                    yield label [clazz "ui horizontal label" ][text "col"]
+                    yield label [clazz "ui horizontal label" ][Incremental.text (Mod.map(fun (x : bool)  -> x.ToString()) s.disabled)]
                     yield button [clazz "ui disabled button"; onMouseClick (fun _ -> ChangeThickness)] [text "Thickness"]
                 }
            )
