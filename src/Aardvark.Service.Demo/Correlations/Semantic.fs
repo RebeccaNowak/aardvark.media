@@ -12,7 +12,7 @@ module Semantic =
     let initial id = {
         id = id
 
-        disabled = false
+        disabled = true
         label = "Semantic1" 
         size = 0.0
         style = {Style.color = {c = C4b.Red}; Style.thickness = {Numeric.init with value = 1.0}}

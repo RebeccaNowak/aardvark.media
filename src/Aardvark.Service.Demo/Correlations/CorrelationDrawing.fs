@@ -80,38 +80,23 @@ module CorrelationDrawing =
         // disabled previous
 
         let id = Guid.NewGuid().ToString()
-        let newSem = {(Semantic.initial id) with label = (sprintf "Semantic%i" (model.semantics.Count + 1))} //; id = string System.Guid.NewGuid}
-        //let updatedSemantics = (HMap.alter model.selectedSemantic disableSemantic model.semantics).Add(newSem.id, newSem)
-        let update1 = HMap.alter model.selectedSemantic disableSemantic model.semantics
-        let update2 = update1.Add(newSem.id, newSem)
-        let update3 = HMap.alter newSem.id enableSemantic update2
-       // let newSemantics = HMap.union model.semantics (model.semantics.Add(newSem.id, newSem))
-        let updatedList = sortedPlistFromHmap update3 (fun (x : Semantic) -> x.label)
-//            model.semanticsList.Append(newSem)
-//                |> PList.toList 
-//                |> List.sortBy  (fun (x : Semantic) -> x.label) 
-//                |> PList.ofList
+        let newSemantic = {(Semantic.initial id) with label = (sprintf "Semantic%i" (model.semantics.Count + 1))}
+        let newSemantics = (model.semantics.Add(newSemantic.id, newSemantic)
+            |> HMap.alter model.selectedSemantic disableSemantic
+            |> HMap.alter newSemantic.id enableSemantic)
+                               
+        let updatedList = sortedPlistFromHmap newSemantics (fun (x : Semantic) -> x.label)
+        {model with selectedSemantic = newSemantic.id; semanticsList = updatedList; semantics = newSemantics}
+//        {model with 
+//            semantics = update3
+//            semanticsList = updatedList;
+//            selectedSemantic = newSem.id}
 
-        {model with 
-            semantics = update3//model.semantics.Add(newSem.id, newSem);
-            semanticsList = updatedList;
-            selectedSemantic = newSem.id}
         
-//    let getSelectedSemantic (model: CorrelationDrawingModel) =
-//        match model.selectedSemantic with
-//            | Some s -> model.semantics.Find(s) 
-//            | None -> Semantic.initial // TODO do something useful
-
     let getMSemantic (model : MCorrelationDrawingModel) =
         adaptive {
             let! selected = model.selectedSemantic            
             return AMap.tryFind selected model.semantics
-//            match selected with
-//                | Some s -> 
-//                    let! semantic = AMap.tryFind s model.semantics
-//                    return semantic
-//                | None -> 
-//                    return None
         }
               
 
@@ -228,7 +213,7 @@ module CorrelationDrawing =
                             (getMSemantic model) 
                             onChange 
                             (fun x -> x.label) 
-                            (fun x -> x.disabled)]
+                            (fun x -> (Mod.map (fun y -> not y) x.disabled))]
                ]                               
             ]   
             

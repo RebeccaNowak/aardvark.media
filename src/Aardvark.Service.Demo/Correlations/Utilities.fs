@@ -200,30 +200,45 @@ module CorrelationUtilities =
     let dropDownListR (values : alist<'a>)(selected : IMod<IMod<Option<'a>>>)
          (change : Option<'a> -> 'msg) (getDisplayString : 'a -> IMod<string>) 
          (getIsSelected : 'a -> IMod<bool>) =
-        let isSelected  =
-            adaptive {
-                let! msel = selected
-                let! s = msel
+//        let isSelected  =
+//            adaptive {
+//                let! msel = selected
+//                let! s = msel
+//
+//                match s with
+//                        | Some s -> let! mb = (getIsSelected s)
+//                                    return mb
+//                        | None -> return false
+//            }
 
-                match s with
-                        | Some s -> let! mb = (getIsSelected s)
-                                    return mb
-                        | None -> return false
-            }
 
-        let attributes (name : string) =
+        let attributes (value : 'a) (name : string) =
             let notSelected = (attribute "value" (name))
             let selAttr = (attribute "selected" "selected")
             let attrMap = 
                 AttributeMap.ofListCond [
                     always (notSelected)
-                    onlyWhen (isSelected) (selAttr)
+                    onlyWhen (getIsSelected value) (selAttr)
                 ]
             let debug = Mod.force attrMap.Content
             attrMap
             
 
-        let ortisOnChange  = 
+//        let ortisOnChange  = 
+//            let cb (i : int) =
+//                let currentState = values.Content |> Mod.force
+//                let selectedElem = PList.tryAt (i)
+//                //change (PList.tryAt (i-1) currentState)
+//                change (selectedElem currentState)
+//                    
+//            onEvent "onchange" ["event.target.selectedIndex"] 
+//                (fun x -> 
+//                    x 
+//                        |> List.head 
+//                        |> Int32.Parse 
+//                        |> cb)
+
+        let rOnChange  = 
             let cb (i : int) =
                 let currentState = values.Content |> Mod.force
                 let selectedElem = PList.tryAt (i)
@@ -238,14 +253,15 @@ module CorrelationUtilities =
                         |> cb)
         
 
-        Incremental.select (AttributeMap.ofList [ortisOnChange; style "color:black"]) 
+        Incremental.select (AttributeMap.ofList [rOnChange; style "color:black"]) 
             (
                 alist {
+                    let debug = values;
                     let domNode = 
                         values 
                             |> AList.mapi(fun i x ->
                                  Incremental.option 
-                                    (attributes (Mod.force (getDisplayString x))) 
+                                    (attributes x (Mod.force (getDisplayString x))) 
                                     (AList.ofList [Incremental.text (getDisplayString x)]))
                     yield! domNode
                 }
