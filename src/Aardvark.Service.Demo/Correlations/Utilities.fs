@@ -18,6 +18,20 @@ module CorrelationUtilities =
             |> Seq.sortBy projection
             |> PList.ofSeq 
 
+    let colorToHexStr (color : C4b) = 
+        let bytes = [| color.R; color.G; color.B |]
+        let str =
+            bytes 
+                |> (Array.map (fun (x : byte) -> System.String.Format("{0:X2}", x)))
+                |> (String.concat System.String.Empty)
+        String.concat String.Empty ["#";str] 
+
+    let bgColorAttr (color : C4b) =
+        style (sprintf "background: %s" (colorToHexStr color))
+
+    let noPadding  = "padding: 0px 0px 0px 0px"
+    let tinyPadding  = "padding: 1px 1px 1px 1px"
+
     let wrapToolTip (text:string) (dom:DomNode<'a>) : DomNode<'a> =
 
         let attr = 
