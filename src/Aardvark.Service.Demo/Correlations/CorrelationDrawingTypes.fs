@@ -35,7 +35,7 @@ module RenderingPars =
 
 [<DomainType>]
 type Semantic = {
-        [<TreatAsValue;PrimaryKey>]
+        [<NonIncremental;PrimaryKey>]
         id                : string
 
         disabled          : bool

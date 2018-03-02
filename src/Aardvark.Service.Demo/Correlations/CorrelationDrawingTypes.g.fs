@@ -105,7 +105,6 @@ module Mutable =
     type MSemantic(__initial : CorrelationDrawing.Semantic) =
         inherit obj()
         let mutable __current : Aardvark.Base.Incremental.IModRef<CorrelationDrawing.Semantic> = Aardvark.Base.Incremental.EqModRef<CorrelationDrawing.Semantic>(__initial) :> Aardvark.Base.Incremental.IModRef<CorrelationDrawing.Semantic>
-        let _id = ResetMod.Create(__initial.id)
         let _disabled = ResetMod.Create(__initial.disabled)
         let _label = ResetMod.Create(__initial.label)
         let _size = ResetMod.Create(__initial.size)
@@ -113,7 +112,7 @@ module Mutable =
         let _geometry = ResetMod.Create(__initial.geometry)
         let _semanticType = ResetMod.Create(__initial.semanticType)
         
-        member x.id = _id :> IMod<_>
+        member x.id = __current.Value.id
         member x.disabled = _disabled :> IMod<_>
         member x.label = _label :> IMod<_>
         member x.size = _size :> IMod<_>
@@ -126,7 +125,6 @@ module Mutable =
             if not (System.Object.ReferenceEquals(__current.Value, v)) then
                 __current.Value <- v
                 
-                _id.Update(v.id)
                 ResetMod.Update(_disabled,v.disabled)
                 ResetMod.Update(_label,v.label)
                 ResetMod.Update(_size,v.size)

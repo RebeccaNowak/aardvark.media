@@ -156,7 +156,7 @@ module CorrelationDrawingApp =
             camera           = { ArcBallController.initial with view = CameraView.lookAt (23.0 * V3d.OIO) V3d.Zero V3d.OOI}
             rendering        = RenderingPars.initial
            
-            drawing = CorrelationDrawing.insertFirstSemantics CorrelationDrawing.initial
+            drawing = CorrelationDrawing.insertSampleSemantics CorrelationDrawing.initial
 
            
 

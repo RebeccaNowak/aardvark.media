@@ -57,13 +57,13 @@ module CorrelationDrawing =
         | KeyUp             of key : Keys      
         | Export
 
-    let insertFirstSemantics (model : CorrelationDrawingModel) = 
-
-        let id = Guid.NewGuid().ToString()
-
-        let newSem = Semantic.initial id
-        let newSemantics = HMap.union model.semantics (model.semantics.Add(newSem.id, newSem))
-        {model with semantics = newSemantics; semanticsList = plistFromHMap newSemantics; selectedSemantic = newSem.id}
+//    let insertFirstSemantics (model : CorrelationDrawingModel) = 
+//
+//        let id = Guid.NewGuid().ToString()
+//
+//        let newSem = Semantic.initial id
+//        let newSemantics = HMap.union model.semantics (model.semantics.Add(newSem.id, newSem))
+//        {model with semantics = newSemantics; semanticsList = plistFromHMap newSemantics; selectedSemantic = newSem.id}
            
     let disableSemantic (semO : Option<Semantic>) =
         match semO with
@@ -197,7 +197,7 @@ module CorrelationDrawing =
             let onChange =
                 fun (selected : option<MSemantic>) ->
                     match selected with
-                        | Some d -> SetSemantic (Mod.force d.id)
+                        | Some d -> SetSemantic d.id
                         | None -> DoNothing //AddSemantic // TODO?
                    
                            
@@ -232,11 +232,11 @@ module CorrelationDrawing =
         let viewSemantics (model : MCorrelationDrawingModel) = 
           Html.SemUi.accordion "Semantics" "File Outline" true [
             Incremental.div
-              (AttributeMap.ofList [clazz "ui list"]) (
+              (AttributeMap.ofList [clazz "ui center aligned middle aligned three column equal width grid"; style "padding: 1px 5px 1px 5px"]) (
                 alist {
                   for mSem in model.semanticsList do
                     let! domNode = Semantic.view mSem
-                    yield div [clazz "item";style "padding: 0px 0px 0px 0px"] [domNode |> UI.map SemanticMessage]
+                    yield domNode |> UI.map SemanticMessage
                            // if mSem.id = model.selectedSemantic
                            //     then yield Semantic.viewDisabled mSem |> UI.map SemanticMessage
                            //     else yield Semantic.viewEnabled mSem |> UI.map SemanticMessage

@@ -16,7 +16,7 @@ module Semantic =
         disabled = true
         label = "Semantic1" 
         size = 0.0
-        style = {Style.color = {c = C4b.Red}; Style.thickness = {Numeric.init with value = 1.0}}
+        style = {Style.color = {c = C4b.Red}; Style.thickness = {Numeric.init with value = 1.0; min = 0.5; max = 10.0; step = 0.5; format = "{0:0.0}"}}
         geometry = GeometryType.Line
         semanticType = SemanticType.Metric
     }
@@ -39,44 +39,53 @@ module Semantic =
 
 
     let viewEnabled (s : MSemantic) =
-      let thNode = Numeric.view s.style.thickness
-          
-      //require Html.semui (         
-      Incremental.div
-        (AttributeMap.ofList [clazz "ui small horizontal list"; style tinyPadding]) (
-          alist {
-            yield div [clazz "item";style noPadding] [ColorPicker.view s.style.color |> UI.map ColorPickerMessage]
-            let! col = s.style.color.c
-            yield div [clazz "item";style noPadding] [button [clazz "ui button";
+      let thNode = Numeric.view' [NumericInputType.InputBox] s.style.thickness
+      let createDomNodeLabel =
+        adaptive {
+          let! col = s.style.color.c
+          return div [clazz "column"] [button [clazz "ui button"; style "margin: auto";
                                               onMouseClick (fun _ -> ChangeLabel);
                                               bgColorAttr col] [Incremental.text (s.label)]]
-            yield div [clazz "item";style noPadding] [thNode |> UI.map ChangeThickness]
+        }
+      //require Html.semui (         
+      Incremental.div
+        (AttributeMap.ofList [clazz "ui row"; style tinyPadding]) (
+          alist {
+            let! labelNode = createDomNodeLabel
+            yield labelNode
+            yield div [clazz "column"] [thNode |> UI.map ChangeThickness]
+            yield div [clazz "column"] [ColorPicker.view s.style.color |> UI.map ColorPickerMessage]
+            
+//            let! col = s.style.color.c
+//            yield div [clazz "column";style noPadding] [button [clazz "ui button";
+//                                              onMouseClick (fun _ -> ChangeLabel);
+//                                              bgColorAttr col] [Incremental.text (s.label)]]
+            
               //yield button [clazz "ui button"; onMouseClick (fun _ -> ChangeThickness)] [text "Thickness"]
           }
         )
 
 
     let viewDisabled (s : MSemantic) = 
-        Incremental.div
-           (AttributeMap.ofList [clazz "ui small horizontal list"; style tinyPadding]) (
-                alist {
-                    let! col = s.style.color.c
-                    //let bgAttr = style (sprintf "background: %s" (CorrelationUtilities.colorToHexStr col))
-                    yield div [clazz "item";
-                        style noPadding] [
-                            button [
-                                clazz "ui disabled button"; 
-                                onMouseClick (fun _ -> ChangeLabel); 
-                                bgColorAttr col] [Incremental.text (s.label)]]
-                    yield div [clazz "item";
-                               style noPadding] [
-                                   label [clazz "ui horizontal label" ]
-                        [Incremental.text (Mod.map(fun (x : bool)  -> x.ToString()) s.disabled)]]
-//                    yield button [
-//                        clazz "ui disabled button"; 
-//                        onMouseClick (fun _ -> ChangeThickness)] [text "Thickness"]
-                }
-           )
+      Incremental.div
+        (AttributeMap.ofList [clazz "ui row"; style tinyPadding]) (
+           alist {
+             let! col = s.style.color.c
+             yield div [clazz "column"] [
+                     button [clazz "ui disabled button"; style "margin: auto";
+                      bgColorAttr col] [Incremental.text (s.label)]]
+             yield div [clazz "column"; style ""] [label [clazz "ui horizontal label"; style "margin: auto" ]
+                 [Incremental.text (Mod.map(fun x -> sprintf "%.1f" x) s.style.thickness.value)]]
+                  //;text "test"]
+             yield div [clazz "column"] [
+                     button [clazz "ui horizontal label"; style "margin: auto";
+                      bgColorAttr col] [Incremental.text (Mod.map(fun (x : C4b) -> colorToHexStr x) s.style.color.c)]]
+
+//             yield button [
+//                 clazz "ui disabled button"; 
+//                 onMouseClick (fun _ -> ChangeThickness)] [text "Thickness"]
+           }
+         )
 
     let view (s : MSemantic) : IMod<DomNode<Action>> =
         adaptive {
