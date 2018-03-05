@@ -125,7 +125,7 @@ module CorrelationDrawingApp =
                         )                                        
                 ]
             
-                div [style "width:35%; height: 100%; float:right;"] [
+                div [clazz "scrolling content"; style "width:35%; height: 100%; float: right; overflow-y: scroll"] [
                     
                     div [clazz "ui buttons inverted"] [
                         button [clazz "ui icon button"; onMouseClick (fun _ -> Save)] [
@@ -144,9 +144,15 @@ module CorrelationDrawingApp =
                                     i [clazz "plus icon"] [] ] //|> Utilities.wrapToolTip "add semantic"
                     ]
 
+//                    div [] [
                     CorrelationDrawing.UI.viewAnnotationTools model.drawing |> UI.map DrawingMessage
                     CorrelationDrawing.UI.viewAnnotations model.drawing  |> UI.map AnnotationMessage   
                     CorrelationDrawing.UI.viewSemantics model.drawing |> UI.map DrawingSemanticMessage
+//                   ]
+
+//                    CorrelationDrawing.UI.viewAnnotationTools model.drawing |> UI.map DrawingMessage
+//                    CorrelationDrawing.UI.viewAnnotations model.drawing  |> UI.map AnnotationMessage   
+//                    CorrelationDrawing.UI.viewSemantics model.drawing |> UI.map DrawingSemanticMessage
                 ]
             ]
         )
