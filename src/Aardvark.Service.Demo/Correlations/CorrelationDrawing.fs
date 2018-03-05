@@ -230,18 +230,21 @@ module CorrelationDrawing =
           ]
 
         let viewSemantics (model : MCorrelationDrawingModel) = 
+          let domList =
+            alist {
+              for mSem in model.semanticsList do
+                let! domNode = Semantic.view mSem
+                yield domNode |> UI.map SemanticMessage
+                
+              } 
           Html.SemUi.accordion "Semantics" "File Outline" true [
-            Incremental.div
-              (AttributeMap.ofList [clazz "ui center aligned middle aligned three column equal width grid"; style "padding: 1px 5px 1px 5px"]) (
+            Incremental.table
+              (AttributeMap.ofList [clazz "ui celled striped inverted table unstackable"; style "padding: 1px 5px 1px 5px"]) (
+              //(AttributeMap.ofList [clazz "ui center aligned middle aligned three column equal width grid"; style "padding: 1px 5px 1px 5px"]) (
                 alist {
-                  for mSem in model.semanticsList do
-                    let! domNode = Semantic.view mSem
-                    yield domNode |> UI.map SemanticMessage
-                           // if mSem.id = model.selectedSemantic
-                           //     then yield Semantic.viewDisabled mSem |> UI.map SemanticMessage
-                           //     else yield Semantic.viewEnabled mSem |> UI.map SemanticMessage
-                              //yield Semantic.view mSem |> UI.map SemanticMessage
-                }
+                  yield Incremental.tbody  (AttributeMap.ofList []) domList
+               } 
+                
               )
           ]
 

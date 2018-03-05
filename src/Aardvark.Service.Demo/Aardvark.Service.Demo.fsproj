@@ -81,6 +81,9 @@
     <Compile Include="Drawing.fs" />
     <Compile Include="DrawingApp.fs" />
     <Compile Include="Correlations\CorrelationDrawingTypes.fs" />
+    <Compile Include="Correlations\NumericExt.fs" />
+    <Compile Include="Correlations\Utilities_Datastructures.fs" />
+    <Compile Include="Correlations\Utilities_GUI.fs" />
     <Compile Include="Correlations\Utilities.fs" />
     <Compile Include="Correlations\Semantic.fs" />
     <Compile Include="Correlations\Annotation.fs" />

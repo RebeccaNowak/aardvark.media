@@ -13,6 +13,10 @@ type GeometryType = Point = 0 | Line = 1 | Polyline = 2 | Polygon = 3 | DnS = 4 
 type SemanticType = Metric = 0 | Angular = 1 | Hierarchical = 2
 
 
+
+
+
+
 [<DomainType>]
 type Style = {
     color : ColorInput

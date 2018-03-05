@@ -7,7 +7,6 @@ open Aardvark.Base.Rendering
 open Aardvark.UI
 open CorrelationUtilities
 
-
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Semantic = 
     let initial id = {
@@ -24,13 +23,13 @@ module Semantic =
     type Action = 
         | Disable
         | Enable
-        | ChangeLabel
         | ColorPickerMessage of ColorPicker.Action
         | ChangeThickness of Numeric.Action
+        | ChangeLabel of string
 
     let update (sem : Semantic) (a : Action) = 
         match a with
-            | ChangeLabel -> {sem with label = "OtherLabel"}
+            | ChangeLabel m -> {sem with label = m}
             | ColorPickerMessage m -> {sem with style = {sem.style with color = (ColorPicker.update sem.style.color m)}}
             | ChangeThickness m -> {sem with style = {sem.style with thickness = Numeric.update sem.style.thickness m}} //{sem with style = {sem.style with thickness = {Numeric.init with value =  2.0}}}
             | Disable -> {sem with disabled = true}
@@ -39,22 +38,31 @@ module Semantic =
 
 
     let viewEnabled (s : MSemantic) =
-      let thNode = Numeric.view' [NumericInputType.InputBox] s.style.thickness
+      let attributes = 
+        amap {
+          yield style "margin:auto; color:black; max-width:60px;"
+        }
+      let thNode = Numeric.view'' 
+                    NumericInputType.InputBox 
+                    s.style.thickness
+                    (AttributeMap.ofAMap attributes)
+                     //(AttributeMap.ofList attributes)
       let createDomNodeLabel =
         adaptive {
           let! col = s.style.color.c
-          return div [clazz "column"] [button [clazz "ui button"; style "margin: auto";
-                                              onMouseClick (fun _ -> ChangeLabel);
+          return td [clazz "center aligned collapsing"; style tinyPadding] 
+                    [fieldset [clazz "ui input"; style "margin: auto";
+                                              onChange (fun str -> ChangeLabel str);
                                               bgColorAttr col] [Incremental.text (s.label)]]
         }
       //require Html.semui (         
-      Incremental.div
-        (AttributeMap.ofList [clazz "ui row"; style tinyPadding]) (
+      Incremental.tr
+        (AttributeMap.ofList [style tinyPadding]) (
           alist {
             let! labelNode = createDomNodeLabel
             yield labelNode
-            yield div [clazz "column"] [thNode |> UI.map ChangeThickness]
-            yield div [clazz "column"] [ColorPicker.view s.style.color |> UI.map ColorPickerMessage]
+            yield td [clazz "center aligned collapsing"; style tinyPadding] [(thNode |> UI.map ChangeThickness)]
+            yield td [clazz "center aligned collapsing"; style tinyPadding] [ColorPicker.view s.style.color |> UI.map ColorPickerMessage]
             
 //            let! col = s.style.color.c
 //            yield div [clazz "column";style noPadding] [button [clazz "ui button";
@@ -67,19 +75,23 @@ module Semantic =
 
 
     let viewDisabled (s : MSemantic) = 
-      Incremental.div
-        (AttributeMap.ofList [clazz "ui row"; style tinyPadding]) (
+      Incremental.tr
+        (AttributeMap.ofList [style tinyPadding]) (
            alist {
              let! col = s.style.color.c
-             yield div [clazz "column"] [
-                     button [clazz "ui disabled button"; style "margin: auto";
-                      bgColorAttr col] [Incremental.text (s.label)]]
-             yield div [clazz "column"; style ""] [label [clazz "ui horizontal label"; style "margin: auto" ]
-                 [Incremental.text (Mod.map(fun x -> sprintf "%.1f" x) s.style.thickness.value)]]
+             yield td [clazz "center aligned collapsing"; style tinyPadding] 
+                       [button [clazz "ui horizontal label"; // style "margin: auto";
+                          bgColorAttr col] [Incremental.text (s.label)]]
+             yield td [clazz "center aligned collapsing"; style tinyPadding] [
+                          label [clazz "ui horizontal label"]//; style "margin: auto" ]
+                                [Incremental.text (Mod.map(fun x -> sprintf "%.1f" x) s.style.thickness.value)]
+                       ]
                   //;text "test"]
-             yield div [clazz "column"] [
-                     button [clazz "ui horizontal label"; style "margin: auto";
-                      bgColorAttr col] [Incremental.text (Mod.map(fun (x : C4b) -> colorToHexStr x) s.style.color.c)]]
+             yield td [clazz "center aligned collapsing"; style tinyPadding] [
+                            button [clazz "ui horizontal label"; bgColorAttr col] 
+//                          button [clazz "ui horizontal label"; style "margin: auto"; bgColorAttr col] 
+                                 [Incremental.text (Mod.map(fun (x : C4b) -> colorToHexStr x) s.style.color.c)]
+                          ]
 
 //             yield button [
 //                 clazz "ui disabled button"; 
