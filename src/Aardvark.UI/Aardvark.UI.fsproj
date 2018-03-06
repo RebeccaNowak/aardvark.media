@@ -71,6 +71,8 @@
     <Compile Include="Attributes.fs" />
     <None Include="paket.references" />
     <Compile Include="SgFSharpExtensions.fs" />
+    <EmbeddedResource Include="aardvark.ico" />
+    <Compile Include="Resources.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
