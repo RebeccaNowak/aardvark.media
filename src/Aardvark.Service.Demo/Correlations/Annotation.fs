@@ -48,7 +48,7 @@ module Annotation =
             let! semantic = AMap.tryFind id model.semantics
             match semantic with
                 | Some s -> 
-                    let! lbl = s.label
+                    let! lbl = s.label.text
                     return lbl
                 | None -> return "-None-"
         }

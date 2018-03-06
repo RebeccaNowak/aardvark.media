@@ -13,9 +13,14 @@ module Semantic =
         id = id
 
         disabled = true
-        label = "Semantic1" 
+        label = TextInput.init
         size = 0.0
-        style = {Style.color = {c = C4b.Red}; Style.thickness = {Numeric.init with value = 1.0; min = 0.5; max = 10.0; step = 0.5; format = "{0:0.0}"}}
+        style = {Style.color = {c = C4b.Red};
+                 Style.thickness = {Numeric.init with value = 1.0;
+                                                      min = 0.5; 
+                                                      max = 10.0; 
+                                                      step = 0.5; 
+                                                      format = "{0:0.0}"}}
         geometry = GeometryType.Line
         semanticType = SemanticType.Metric
     }
@@ -25,13 +30,15 @@ module Semantic =
         | Enable
         | ColorPickerMessage of ColorPicker.Action
         | ChangeThickness of Numeric.Action
-        | ChangeLabel of string
+        | ChangeLabel of TextInput.Action
 
     let update (sem : Semantic) (a : Action) = 
         match a with
-            | ChangeLabel m -> {sem with label = m}
-            | ColorPickerMessage m -> {sem with style = {sem.style with color = (ColorPicker.update sem.style.color m)}}
-            | ChangeThickness m -> {sem with style = {sem.style with thickness = Numeric.update sem.style.thickness m}} //{sem with style = {sem.style with thickness = {Numeric.init with value =  2.0}}}
+            | ChangeLabel m -> {sem with label = TextInput.update sem.label m}
+            | ColorPickerMessage m -> 
+              {sem with style = {sem.style with color = (ColorPicker.update sem.style.color m)}}
+            | ChangeThickness m -> 
+              {sem with style = {sem.style with thickness = Numeric.update sem.style.thickness m}} //{sem with style = {sem.style with thickness = {Numeric.init with value =  2.0}}}
             | Disable -> {sem with disabled = true}
             | Enable -> {sem with disabled = false}
 
@@ -46,16 +53,34 @@ module Semantic =
                     NumericInputType.InputBox 
                     s.style.thickness
                     (AttributeMap.ofAMap attributes)
-                     //(AttributeMap.ofList attributes)
+
       let createDomNodeLabel =
-        adaptive {
+//        adaptive {
+//          let! col = s.style.color.c
+//          return td [clazz "center aligned collapsing"; style tinyPadding] 
+//                    [fieldset [clazz "ui input"; style "margin: auto";
+//                                              onChange (fun str -> ChangeLabel str);
+//                                              bgColorAttr col] [Incremental.text (s.label)]]
+//        }
+//
+       adaptive {
           let! col = s.style.color.c
-          return td [clazz "center aligned collapsing"; style tinyPadding] 
-                    [fieldset [clazz "ui input"; style "margin: auto";
-                                              onChange (fun str -> ChangeLabel str);
-                                              bgColorAttr col] [Incremental.text (s.label)]]
+          return td 
+                   [clazz "center aligned collapsing"; style tinyPadding] 
+                   [TextInput.view' s.label] 
+                 |> UI.map Action.ChangeLabel
+//                    [Incremental.input 
+//                      (AttributeMap.ofList 
+//                        [clazz "ui input";
+//                         style "margin: auto"; 
+//                         onChange (fun str -> ChangeLabel str); 
+//                         //onClick (fun _ -> )
+//                         bgColorAttr col]
+//                      )
+//                    ]
+
         }
-      //require Html.semui (         
+     
       Incremental.tr
         (AttributeMap.ofList [style tinyPadding]) (
           alist {
@@ -63,13 +88,6 @@ module Semantic =
             yield labelNode
             yield td [clazz "center aligned collapsing"; style tinyPadding] [(thNode |> UI.map ChangeThickness)]
             yield td [clazz "center aligned collapsing"; style tinyPadding] [ColorPicker.view s.style.color |> UI.map ColorPickerMessage]
-            
-//            let! col = s.style.color.c
-//            yield div [clazz "column";style noPadding] [button [clazz "ui button";
-//                                              onMouseClick (fun _ -> ChangeLabel);
-//                                              bgColorAttr col] [Incremental.text (s.label)]]
-            
-              //yield button [clazz "ui button"; onMouseClick (fun _ -> ChangeThickness)] [text "Thickness"]
           }
         )
 
@@ -81,7 +99,7 @@ module Semantic =
              let! col = s.style.color.c
              yield td [clazz "center aligned collapsing"; style tinyPadding] 
                        [button [clazz "ui horizontal label"; // style "margin: auto";
-                          bgColorAttr col] [Incremental.text (s.label)]]
+                          bgColorAttr col] [Incremental.text (s.label.text)]]
              yield td [clazz "center aligned collapsing"; style tinyPadding] [
                           label [clazz "ui horizontal label"]//; style "margin: auto" ]
                                 [Incremental.text (Mod.map(fun x -> sprintf "%.1f" x) s.style.thickness.value)]

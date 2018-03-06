@@ -90,7 +90,7 @@ let kitchenSink argv =
     //let app = AnnotationApp.app
     //let app = DragNDrop.App.app
     let app = CorrelationDrawingApp.app
-
+    //let app = TextInput.app
 
     //Config.shouldTimeUIUpdate <- true
     //Config.shouldTimeJsCodeGeneration <- true

@@ -97,7 +97,11 @@ module CorrelationDrawingApp =
                     { model with drawing = d }
             | _ -> model
                        
-    let myCss = { kind = Stylesheet; name = "semui-overrides"; url = "semui-overrides.css" }
+    let myCss = [
+                  { kind = Stylesheet; name = "semui"; url = "https://cdn.jsdelivr.net/semantic-ui/2.2.6/semantic.min.css" }
+                  { kind = Stylesheet; name = "semui-overrides"; url = "semui-overrides.css" }
+                  { kind = Script; name = "semui"; url = "https://cdn.jsdelivr.net/semantic-ui/2.2.6/semantic.min.js" }
+                ]
     
     let view (model : MCorrelationAppModel) =
                     
@@ -107,7 +111,8 @@ module CorrelationDrawingApp =
         //let body att x =
         //    body [][ div att x ]
 
-        require (Html.semui) (
+//        require (Html.semui) (
+        require (myCss) (
             body [clazz "ui"; style "background: #1B1C1E"] [
                 div [] [
                     ArcBallController.controlledControl model.camera CameraMessage frustum
@@ -155,7 +160,8 @@ module CorrelationDrawingApp =
 //                    CorrelationDrawing.UI.viewSemantics model.drawing |> UI.map DrawingSemanticMessage
                 ]
             ]
-        )
+        ) 
+//        )
 
     let initial : CorrelationAppModel =
         {

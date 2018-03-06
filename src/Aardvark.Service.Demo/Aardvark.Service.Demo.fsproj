@@ -71,7 +71,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Compile Include="Model.fs" />
-	<Compile Include="FileSystem.fs" />
+    <Compile Include="FileSystem.fs" />
     <Compile Include="PRo3dModels.fs" />
     <Compile Include="ViewerModel.fs" />
     <Compile Include="BookmarkApp.fs" />
@@ -85,6 +85,7 @@
     <Compile Include="Correlations\Utilities_Datastructures.fs" />
     <Compile Include="Correlations\Utilities_GUI.fs" />
     <Compile Include="Correlations\Utilities.fs" />
+    <Compile Include="Correlations\TextInputApp.fs" />
     <Compile Include="Correlations\Semantic.fs" />
     <Compile Include="Correlations\Annotation.fs" />
     <Compile Include="Correlations\Border.fs" />

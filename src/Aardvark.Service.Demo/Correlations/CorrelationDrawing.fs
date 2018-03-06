@@ -80,12 +80,12 @@ module CorrelationDrawing =
         // disabled previous
 
         let id = Guid.NewGuid().ToString()
-        let newSemantic = {(Semantic.initial id) with label = (sprintf "Semantic%i" (model.semantics.Count + 1))}
+        let newSemantic = {(Semantic.initial id) with label = {TextInput.init with text = (sprintf "Semantic%i" (model.semantics.Count + 1))}}
         let newSemantics = (model.semantics.Add(newSemantic.id, newSemantic)
             |> HMap.alter model.selectedSemantic disableSemantic
             |> HMap.alter newSemantic.id enableSemantic)
                                
-        let updatedList = sortedPlistFromHmap newSemantics (fun (x : Semantic) -> x.label)
+        let updatedList = sortedPlistFromHmap newSemantics (fun (x : Semantic) -> x.label.text)
         {model with selectedSemantic = newSemantic.id; semanticsList = updatedList; semantics = newSemantics}
 //        {model with 
 //            semantics = update3
@@ -148,7 +148,7 @@ module CorrelationDrawing =
                     let update1 = HMap.alter model.selectedSemantic disableSemantic model.semantics
                     let update2 = HMap.alter sem enableSemantic update1
                     
-                    let updatedList = sortedPlistFromHmap update2 (fun (x : Semantic) -> x.label)
+                    let updatedList = sortedPlistFromHmap update2 (fun (x : Semantic) -> x.label.text)
                         
 //                        model.semanticsList  
 //                            |> PList.toList 
@@ -162,7 +162,7 @@ module CorrelationDrawing =
                             | Some s -> Some( Semantic.update s sem)
                             | None -> None //TODO something useful
                     let updatedSemantics = (HMap.alter model.selectedSemantic fUpdate model.semantics)
-                    {model with semantics = updatedSemantics; semanticsList = (sortedPlistFromHmap updatedSemantics (fun (x : Semantic) -> x.label))}
+                    {model with semantics = updatedSemantics; semanticsList = (sortedPlistFromHmap updatedSemantics (fun (x : Semantic) -> x.label.text))}
             | AddSemantic, _ -> insertSampleSemantics model 
             | SetGeometry mode, _ ->
                     { model with geometry = mode }
@@ -212,7 +212,7 @@ module CorrelationDrawing =
                             model.semanticsList 
                             (getMSemantic model) 
                             onChange 
-                            (fun x -> x.label) 
+                            (fun x -> x.label.text) 
                             (fun x -> (Mod.map (fun y -> not y) x.disabled))]
                ]                               
             ]   
