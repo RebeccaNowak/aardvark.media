@@ -72,6 +72,101 @@ module Mutable =
                     override x.Set(r,v) = { r with size = v }
                     override x.Update(r,f) = { r with size = f r.size }
                 }
+    [<AbstractClass; StructuredFormatDisplay("{AsString}")>]
+    type MDropdownList<'va,'na>() = 
+        abstract member valueList : Aardvark.Base.Incremental.alist<'na>
+        abstract member selected : Aardvark.Base.Incremental.IMod<Microsoft.FSharp.Core.option<'na>>
+        abstract member color : Aardvark.Base.Incremental.IMod<Aardvark.Base.C4b>
+        abstract member AsString : string
+    
+    
+    and private MDropdownListD<'a,'ma,'va>(__initial : CorrelationDrawing.DropdownList<'a>, __ainit : 'a -> 'ma, __aupdate : 'ma * 'a -> unit, __aview : 'ma -> 'va) =
+        inherit MDropdownList<'va,'va>()
+        let mutable __current : Aardvark.Base.Incremental.IModRef<CorrelationDrawing.DropdownList<'a>> = Aardvark.Base.Incremental.EqModRef<CorrelationDrawing.DropdownList<'a>>(__initial) :> Aardvark.Base.Incremental.IModRef<CorrelationDrawing.DropdownList<'a>>
+        let _valueList = MList.Create(__initial.valueList, (fun v -> __ainit(v)), (fun (m,v) -> __aupdate(m, v)), (fun v -> __aview(v)))
+        let _selected = MOption.Create(__initial.selected, (fun v -> __ainit(v)), (fun (m,v) -> __aupdate(m, v)), (fun v -> __aview(v)))
+        let _color = ResetMod.Create(__initial.color)
+        
+        override x.valueList = _valueList :> alist<_>
+        override x.selected = _selected :> IMod<_>
+        override x.color = _color :> IMod<_>
+        
+        member x.Current = __current :> IMod<_>
+        member x.Update(v : CorrelationDrawing.DropdownList<'a>) =
+            if not (System.Object.ReferenceEquals(__current.Value, v)) then
+                __current.Value <- v
+                
+                MList.Update(_valueList, v.valueList)
+                MOption.Update(_selected, v.selected)
+                ResetMod.Update(_color,v.color)
+                
+        
+        static member Update(m : MDropdownListD<'a,'ma,'va>, v : CorrelationDrawing.DropdownList<'a>) = m.Update(v)
+        
+        override x.ToString() = __current.Value.ToString()
+        override x.AsString = sprintf "%A" __current.Value
+        interface IUpdatable<CorrelationDrawing.DropdownList<'a>> with
+            member x.Update v = x.Update v
+    
+    and private MDropdownListV<'a>(__initial : CorrelationDrawing.DropdownList<'a>) =
+        inherit MDropdownList<IMod<'a>,'a>()
+        let mutable __current : Aardvark.Base.Incremental.IModRef<CorrelationDrawing.DropdownList<'a>> = Aardvark.Base.Incremental.EqModRef<CorrelationDrawing.DropdownList<'a>>(__initial) :> Aardvark.Base.Incremental.IModRef<CorrelationDrawing.DropdownList<'a>>
+        let _valueList = MList.Create(__initial.valueList)
+        let _selected = MOption.Create(__initial.selected)
+        let _color = ResetMod.Create(__initial.color)
+        
+        override x.valueList = _valueList :> alist<_>
+        override x.selected = _selected :> IMod<_>
+        override x.color = _color :> IMod<_>
+        
+        member x.Current = __current :> IMod<_>
+        member x.Update(v : CorrelationDrawing.DropdownList<'a>) =
+            if not (System.Object.ReferenceEquals(__current.Value, v)) then
+                __current.Value <- v
+                
+                MList.Update(_valueList, v.valueList)
+                MOption.Update(_selected, v.selected)
+                ResetMod.Update(_color,v.color)
+                
+        
+        static member Update(m : MDropdownListV<'a>, v : CorrelationDrawing.DropdownList<'a>) = m.Update(v)
+        
+        override x.ToString() = __current.Value.ToString()
+        override x.AsString = sprintf "%A" __current.Value
+        interface IUpdatable<CorrelationDrawing.DropdownList<'a>> with
+            member x.Update v = x.Update v
+    
+    and [<AbstractClass; Sealed>] MDropdownList private() =
+        static member Create<'a,'ma,'va>(__initial : CorrelationDrawing.DropdownList<'a>, __ainit : 'a -> 'ma, __aupdate : 'ma * 'a -> unit, __aview : 'ma -> 'va) : MDropdownList<'va,'va> = MDropdownListD<'a,'ma,'va>(__initial, __ainit, __aupdate, __aview) :> MDropdownList<'va,'va>
+        static member Create<'a>(__initial : CorrelationDrawing.DropdownList<'a>) : MDropdownList<IMod<'a>,'a> = MDropdownListV<'a>(__initial) :> MDropdownList<IMod<'a>,'a>
+        static member Update<'a,'xva,'xna>(m : MDropdownList<'xva,'xna>, v : CorrelationDrawing.DropdownList<'a>) : unit = 
+            match m :> obj with
+            | :? IUpdatable<CorrelationDrawing.DropdownList<'a>> as m -> m.Update(v)
+            | _ -> failwith "cannot update"
+    
+    
+    [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+    module DropdownList =
+        [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+        module Lens =
+            let valueList<'a> =
+                { new Lens<CorrelationDrawing.DropdownList<'a>, Aardvark.Base.plist<'a>>() with
+                    override x.Get(r) = r.valueList
+                    override x.Set(r,v) = { r with valueList = v }
+                    override x.Update(r,f) = { r with valueList = f r.valueList }
+                }
+            let selected<'a> =
+                { new Lens<CorrelationDrawing.DropdownList<'a>, Microsoft.FSharp.Core.option<'a>>() with
+                    override x.Get(r) = r.selected
+                    override x.Set(r,v) = { r with selected = v }
+                    override x.Update(r,f) = { r with selected = f r.selected }
+                }
+            let color<'a> =
+                { new Lens<CorrelationDrawing.DropdownList<'a>, Aardvark.Base.C4b>() with
+                    override x.Get(r) = r.color
+                    override x.Set(r,v) = { r with color = v }
+                    override x.Update(r,f) = { r with color = f r.color }
+                }
     
     
     type MStyle(__initial : CorrelationDrawing.Style) =
@@ -266,6 +361,7 @@ module Mutable =
         let _visible = ResetMod.Create(__initial.visible)
         let _text = ResetMod.Create(__initial.text)
         
+        member x.id = __current.Value.id
         member x.geometry = _geometry :> IMod<_>
         member x.projection = _projection :> IMod<_>
         member x.semanticId = _semanticId :> IMod<_>
@@ -302,6 +398,12 @@ module Mutable =
     module Annotation =
         [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
         module Lens =
+            let id =
+                { new Lens<CorrelationDrawing.Annotation, Microsoft.FSharp.Core.string>() with
+                    override x.Get(r) = r.id
+                    override x.Set(r,v) = { r with id = v }
+                    override x.Update(r,f) = { r with id = f r.id }
+                }
             let geometry =
                 { new Lens<CorrelationDrawing.Annotation, CorrelationDrawing.GeometryType>() with
                     override x.Get(r) = r.geometry
@@ -440,6 +542,7 @@ module Mutable =
         let _semantics = MMap.Create(__initial.semantics, (fun v -> MSemantic.Create(v)), (fun (m,v) -> MSemantic.Update(m, v)), (fun v -> v))
         let _semanticsList = MList.Create(__initial.semanticsList, (fun v -> MSemantic.Create(v)), (fun (m,v) -> MSemantic.Update(m, v)), (fun v -> v))
         let _selectedSemantic = ResetMod.Create(__initial.selectedSemantic)
+        let _selectedAnnotation = MOption.Create(__initial.selectedAnnotation)
         let _annotations = MList.Create(__initial.annotations, (fun v -> MAnnotation.Create(v)), (fun (m,v) -> MAnnotation.Update(m, v)), (fun v -> v))
         let _exportPath = ResetMod.Create(__initial.exportPath)
         
@@ -451,6 +554,7 @@ module Mutable =
         member x.semantics = _semantics :> amap<_,_>
         member x.semanticsList = _semanticsList :> alist<_>
         member x.selectedSemantic = _selectedSemantic :> IMod<_>
+        member x.selectedAnnotation = _selectedAnnotation :> IMod<_>
         member x.annotations = _annotations :> alist<_>
         member x.exportPath = _exportPath :> IMod<_>
         
@@ -467,6 +571,7 @@ module Mutable =
                 MMap.Update(_semantics, v.semantics)
                 MList.Update(_semanticsList, v.semanticsList)
                 ResetMod.Update(_selectedSemantic,v.selectedSemantic)
+                MOption.Update(_selectedAnnotation, v.selectedAnnotation)
                 MList.Update(_annotations, v.annotations)
                 ResetMod.Update(_exportPath,v.exportPath)
                 
@@ -532,6 +637,12 @@ module Mutable =
                     override x.Get(r) = r.selectedSemantic
                     override x.Set(r,v) = { r with selectedSemantic = v }
                     override x.Update(r,f) = { r with selectedSemantic = f r.selectedSemantic }
+                }
+            let selectedAnnotation =
+                { new Lens<CorrelationDrawing.CorrelationDrawingModel, Microsoft.FSharp.Core.option<Microsoft.FSharp.Core.string>>() with
+                    override x.Get(r) = r.selectedAnnotation
+                    override x.Set(r,v) = { r with selectedAnnotation = v }
+                    override x.Update(r,f) = { r with selectedAnnotation = f r.selectedAnnotation }
                 }
             let annotations =
                 { new Lens<CorrelationDrawing.CorrelationDrawingModel, Aardvark.Base.plist<CorrelationDrawing.Annotation>>() with

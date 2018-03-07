@@ -86,6 +86,7 @@
     <Compile Include="Correlations\Utilities_GUI.fs" />
     <Compile Include="Correlations\Utilities.fs" />
     <Compile Include="Correlations\TextInputApp.fs" />
+    <Compile Include="Correlations\DropdownApp.fs" />
     <Compile Include="Correlations\Semantic.fs" />
     <Compile Include="Correlations\Annotation.fs" />
     <Compile Include="Correlations\Border.fs" />

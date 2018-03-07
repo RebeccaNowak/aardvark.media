@@ -4,12 +4,15 @@ open System
 open Aardvark.Base
 open Aardvark.Base.Incremental
 open Aardvark.Base.Rendering
+//open Aardvark.UI.Mutable
 open Aardvark.UI
 open Aardvark.UI.Primitives
-
+open Aardvark.Application
 
 
 /// GUI
+
+type ClientLocalAttribute() = inherit System.Attribute()
 
 [<DomainType>]
 type TextInput = {
@@ -19,7 +22,12 @@ type TextInput = {
     size      : option<int>
  } 
 
-
+ [<DomainType>]
+ type DropdownList<'a> = {
+   valueList          : plist<'a>
+   selected           : option<'a>
+   color              : C4b
+ } 
 
 /// END GUI
 
@@ -52,19 +60,22 @@ module RenderingPars =
 
 [<DomainType>]
 type Semantic = {
-        [<NonIncremental;PrimaryKey>]
-        id                : string
+   [<NonIncremental;PrimaryKey>]
+   id                : string
 
-        disabled          : bool
-        label             : TextInput
-        size              : double
-        style             : Style
-        geometry          : GeometryType
-        semanticType      : SemanticType
-    }
+   disabled          : bool
+   label             : TextInput
+   size              : double
+   style             : Style
+   geometry          : GeometryType
+   semanticType      : SemanticType
+ }
 
 [<DomainType>]
-type Annotation = {       
+type Annotation = {     
+    [<NonIncremental;PrimaryKey>]
+    id                : string
+  
     geometry : GeometryType
     projection : Projection
     semanticId : string
@@ -81,24 +92,25 @@ type Border = {
 
 [<DomainType>]
 type LogModel = {
-        id      : string
-        //borders : alist<Annotation>
-        range   : V2d //?
-        // horizon ?
+   id      : string
+   //borders : alist<Annotation>
+   range   : V2d //?
+   // horizon ?
 }
 
 [<DomainType>]
 type CorrelationDrawingModel = {
-    draw             : bool 
-    hoverPosition    : option<Trafo3d>
-    working          : option<Annotation>
-    projection       : Projection
-    geometry         : GeometryType
-    semantics        : hmap<string, Semantic>
-    semanticsList    : plist<Semantic>
-    selectedSemantic : string
-    annotations      : plist<Annotation>
-    exportPath       : string
+    draw                : bool 
+    hoverPosition       : option<Trafo3d>
+    working             : option<Annotation>
+    projection          : Projection
+    geometry            : GeometryType
+    semantics           : hmap<string, Semantic>
+    semanticsList       : plist<Semantic>
+    selectedSemantic    : string
+    selectedAnnotation  : option<string>
+    annotations         : plist<Annotation>
+    exportPath          : string
 }
 
 [<DomainType>]

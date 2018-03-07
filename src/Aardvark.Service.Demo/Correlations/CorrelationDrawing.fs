@@ -37,6 +37,7 @@ module CorrelationDrawing =
         semantics = hmap.Empty
         semanticsList = plist.Empty
         selectedSemantic = "" //TODO?
+        selectedAnnotation = None
         annotations = plist.Empty
         exportPath = @"."
     }
@@ -126,8 +127,9 @@ module CorrelationDrawing =
                         match model.working with
                                 | Some w ->                                     
                                     { w with points = w.points |> PList.append p }
-                                | None ->                                     
-                                    {Annotation.initial with
+                                | None -> 
+                                    let id = Guid.NewGuid().ToString()                                     
+                                    {Annotation.initial id with
                                         points = PList.ofList [p]; 
                                         semanticId = model.selectedSemantic}//add annotation states
 

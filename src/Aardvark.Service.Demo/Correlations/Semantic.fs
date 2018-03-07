@@ -58,7 +58,7 @@ module Semantic =
         adaptive {
            let! col = s.style.color.c
            return td 
-                    [clazz "center aligned collapsing"; style tinyPadding] 
+                    [clazz "center aligned"; style lrPadding] 
                     [TextInput.view' s.label] 
                   |> UI.map Action.ChangeLabel
          }
@@ -67,36 +67,28 @@ module Semantic =
       alist {
           let! labelNode = createDomNodeLabel
           yield labelNode
-          yield td [clazz "center aligned collapsing"; style tinyPadding] [(thNode |> UI.map ChangeThickness)]
-          yield td [clazz "center aligned collapsing"; style tinyPadding] [ColorPicker.view s.style.color |> UI.map ColorPickerMessage]
+          yield td [clazz "center aligned"; style lrPadding] [(thNode |> UI.map ChangeThickness)]
+          yield td [clazz "center aligned"; style lrPadding] [ColorPicker.view s.style.color |> UI.map ColorPickerMessage]
        }
         
 
 
     let viewDisabled (s : MSemantic) = 
-//      Incremental.tr
-//        (AttributeMap.ofList [style tinyPadding]) (
            alist {
              let! col = s.style.color.c
-             yield td [clazz "center aligned collapsing"; style tinyPadding] 
-                       [button [clazz "ui horizontal label"; // style "margin: auto";
+             yield td [clazz "center aligned"; style lrPadding] 
+                       [button [clazz "ui horizontal label";
                           bgColorAttr col] [Incremental.text (s.label.text)]]
-             yield td [clazz "center aligned collapsing"; style tinyPadding] [
-                          label [clazz "ui horizontal label"]//; style "margin: auto" ]
+             yield td [clazz "center aligned"; style lrPadding] [
+                          label [clazz "ui horizontal label"]
                                 [Incremental.text (Mod.map(fun x -> sprintf "%.1f" x) s.style.thickness.value)]
                        ]
-                  //;text "test"]
-             yield td [clazz "center aligned collapsing"; style tinyPadding] [
+             yield td [clazz "center aligned"; style lrPadding] [
                             button [clazz "ui horizontal label"; bgColorAttr col] 
-//                          button [clazz "ui horizontal label"; style "margin: auto"; bgColorAttr col] 
                                  [Incremental.text (Mod.map(fun (x : C4b) -> colorToHexStr x) s.style.color.c)]
                           ]
-
-//             yield button [
-//                 clazz "ui disabled button"; 
-//                 onMouseClick (fun _ -> ChangeThickness)] [text "Thickness"]
            }
-//         )
+
 
     let view (s : MSemantic) : IMod<alist<DomNode<Action>>> =
         adaptive {
@@ -109,9 +101,16 @@ module Semantic =
         }
 
     module Lens = 
-       let style =
-            { new Lens<CorrelationDrawing.Semantic, C4b>() with
-                override x.Get(r) = r.style.color.c
-                override x.Set(r,v) = { r with style = {r.style with color = {r.style.color with c = v}}}
-                override x.Update(r,f) = { r with style = {r.style with color = {r.style.color with c = (f r.style.color.c)}}}
-            }
+      let color =
+         { new Lens<CorrelationDrawing.Semantic, C4b>() with
+             override x.Get(r) = r.style.color.c
+             override x.Set(r,v) = { r with style = {r.style with color = {r.style.color with c = v}}}
+             override x.Update(r,f) = { r with style = {r.style with color = {r.style.color with c = (f r.style.color.c)}}}
+         }
+      
+      let thickness =
+         { new Lens<CorrelationDrawing.Semantic, float>() with
+             override x.Get(r) = r.style.thickness.value
+             override x.Set(r,v) = { r with style = {r.style with thickness = {r.style.thickness with value = v}}}
+             override x.Update(r,f) = { r with style = {r.style with thickness = {r.style.thickness with value = (f r.style.thickness.value)}}}
+         }
