@@ -55,46 +55,27 @@ module Semantic =
                     (AttributeMap.ofAMap attributes)
 
       let createDomNodeLabel =
-//        adaptive {
-//          let! col = s.style.color.c
-//          return td [clazz "center aligned collapsing"; style tinyPadding] 
-//                    [fieldset [clazz "ui input"; style "margin: auto";
-//                                              onChange (fun str -> ChangeLabel str);
-//                                              bgColorAttr col] [Incremental.text (s.label)]]
-//        }
-//
-       adaptive {
-          let! col = s.style.color.c
-          return td 
-                   [clazz "center aligned collapsing"; style tinyPadding] 
-                   [TextInput.view' s.label] 
-                 |> UI.map Action.ChangeLabel
-//                    [Incremental.input 
-//                      (AttributeMap.ofList 
-//                        [clazz "ui input";
-//                         style "margin: auto"; 
-//                         onChange (fun str -> ChangeLabel str); 
-//                         //onClick (fun _ -> )
-//                         bgColorAttr col]
-//                      )
-//                    ]
-
-        }
+        adaptive {
+           let! col = s.style.color.c
+           return td 
+                    [clazz "center aligned collapsing"; style tinyPadding] 
+                    [TextInput.view' s.label] 
+                  |> UI.map Action.ChangeLabel
+         }
      
-      Incremental.tr
-        (AttributeMap.ofList [style tinyPadding]) (
-          alist {
-            let! labelNode = createDomNodeLabel
-            yield labelNode
-            yield td [clazz "center aligned collapsing"; style tinyPadding] [(thNode |> UI.map ChangeThickness)]
-            yield td [clazz "center aligned collapsing"; style tinyPadding] [ColorPicker.view s.style.color |> UI.map ColorPickerMessage]
-          }
-        )
+
+      alist {
+          let! labelNode = createDomNodeLabel
+          yield labelNode
+          yield td [clazz "center aligned collapsing"; style tinyPadding] [(thNode |> UI.map ChangeThickness)]
+          yield td [clazz "center aligned collapsing"; style tinyPadding] [ColorPicker.view s.style.color |> UI.map ColorPickerMessage]
+       }
+        
 
 
     let viewDisabled (s : MSemantic) = 
-      Incremental.tr
-        (AttributeMap.ofList [style tinyPadding]) (
+//      Incremental.tr
+//        (AttributeMap.ofList [style tinyPadding]) (
            alist {
              let! col = s.style.color.c
              yield td [clazz "center aligned collapsing"; style tinyPadding] 
@@ -115,9 +96,9 @@ module Semantic =
 //                 clazz "ui disabled button"; 
 //                 onMouseClick (fun _ -> ChangeThickness)] [text "Thickness"]
            }
-         )
+//         )
 
-    let view (s : MSemantic) : IMod<DomNode<Action>> =
+    let view (s : MSemantic) : IMod<alist<DomNode<Action>>> =
         adaptive {
             let! disabled = s.disabled
             let v = 

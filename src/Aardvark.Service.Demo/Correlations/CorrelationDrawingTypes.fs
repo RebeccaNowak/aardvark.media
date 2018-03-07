@@ -16,6 +16,7 @@ type TextInput = {
     text      : string
     disabled  : bool
     bgColor   : C4b
+    size      : option<int>
  } 
 
 

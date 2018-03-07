@@ -234,12 +234,14 @@ module CorrelationDrawing =
             alist {
               for mSem in model.semanticsList do
                 let! domNode = Semantic.view mSem
-                yield domNode |> UI.map SemanticMessage
+                yield (Incremental.tr 
+                        (AttributeMap.ofList [style tinyPadding; onClick (fun str -> SetSemantic mSem.id)]) 
+                        (AList.map (fun x -> x |> UI.map SemanticMessage) domNode)) //|> UI.map SemanticMessage
                 
               } 
           Html.SemUi.accordion "Semantics" "File Outline" true [
             Incremental.table
-              (AttributeMap.ofList [clazz "ui celled striped inverted table unstackable"; style "padding: 1px 5px 1px 5px"]) (
+              (AttributeMap.ofList [clazz "ui celled striped selectable inverted table unstackable"; style "padding: 1px 5px 1px 5px"]) (
               //(AttributeMap.ofList [clazz "ui center aligned middle aligned three column equal width grid"; style "padding: 1px 5px 1px 5px"]) (
                 alist {
                   yield Incremental.tbody  (AttributeMap.ofList []) domList

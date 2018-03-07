@@ -16,10 +16,12 @@ module Mutable =
         let _text = ResetMod.Create(__initial.text)
         let _disabled = ResetMod.Create(__initial.disabled)
         let _bgColor = ResetMod.Create(__initial.bgColor)
+        let _size = MOption.Create(__initial.size)
         
         member x.text = _text :> IMod<_>
         member x.disabled = _disabled :> IMod<_>
         member x.bgColor = _bgColor :> IMod<_>
+        member x.size = _size :> IMod<_>
         
         member x.Current = __current :> IMod<_>
         member x.Update(v : CorrelationDrawing.TextInput) =
@@ -29,6 +31,7 @@ module Mutable =
                 ResetMod.Update(_text,v.text)
                 ResetMod.Update(_disabled,v.disabled)
                 ResetMod.Update(_bgColor,v.bgColor)
+                MOption.Update(_size, v.size)
                 
         
         static member Create(__initial : CorrelationDrawing.TextInput) : MTextInput = MTextInput(__initial)
@@ -62,6 +65,12 @@ module Mutable =
                     override x.Get(r) = r.bgColor
                     override x.Set(r,v) = { r with bgColor = v }
                     override x.Update(r,f) = { r with bgColor = f r.bgColor }
+                }
+            let size =
+                { new Lens<CorrelationDrawing.TextInput, Microsoft.FSharp.Core.option<Microsoft.FSharp.Core.int>>() with
+                    override x.Get(r) = r.size
+                    override x.Set(r,v) = { r with size = v }
+                    override x.Update(r,f) = { r with size = f r.size }
                 }
     
     
