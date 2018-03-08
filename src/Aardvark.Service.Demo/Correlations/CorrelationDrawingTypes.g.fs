@@ -75,7 +75,7 @@ module Mutable =
     [<AbstractClass; StructuredFormatDisplay("{AsString}")>]
     type MDropdownList<'va,'na>() = 
         abstract member valueList : Aardvark.Base.Incremental.alist<'na>
-        abstract member selected : Aardvark.Base.Incremental.IMod<Microsoft.FSharp.Core.option<Microsoft.FSharp.Core.string>>
+        abstract member selected : Aardvark.Base.Incremental.IMod<Microsoft.FSharp.Core.option<'na>>
         abstract member color : Aardvark.Base.Incremental.IMod<Aardvark.Base.C4b>
         abstract member AsString : string
     
@@ -84,7 +84,7 @@ module Mutable =
         inherit MDropdownList<'va,'va>()
         let mutable __current : Aardvark.Base.Incremental.IModRef<CorrelationDrawing.DropdownList<'a>> = Aardvark.Base.Incremental.EqModRef<CorrelationDrawing.DropdownList<'a>>(__initial) :> Aardvark.Base.Incremental.IModRef<CorrelationDrawing.DropdownList<'a>>
         let _valueList = MList.Create(__initial.valueList, (fun v -> __ainit(v)), (fun (m,v) -> __aupdate(m, v)), (fun v -> __aview(v)))
-        let _selected = MOption.Create(__initial.selected)
+        let _selected = MOption.Create(__initial.selected, (fun v -> __ainit(v)), (fun (m,v) -> __aupdate(m, v)), (fun v -> __aview(v)))
         let _color = ResetMod.Create(__initial.color)
         
         override x.valueList = _valueList :> alist<_>
@@ -156,7 +156,7 @@ module Mutable =
                     override x.Update(r,f) = { r with valueList = f r.valueList }
                 }
             let selected<'a> =
-                { new Lens<CorrelationDrawing.DropdownList<'a>, Microsoft.FSharp.Core.option<Microsoft.FSharp.Core.string>>() with
+                { new Lens<CorrelationDrawing.DropdownList<'a>, Microsoft.FSharp.Core.option<'a>>() with
                     override x.Get(r) = r.selected
                     override x.Set(r,v) = { r with selected = v }
                     override x.Update(r,f) = { r with selected = f r.selected }

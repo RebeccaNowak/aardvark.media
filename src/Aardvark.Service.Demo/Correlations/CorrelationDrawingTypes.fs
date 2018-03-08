@@ -25,7 +25,7 @@ type TextInput = {
  [<DomainType>]
  type DropdownList<'a> = {
    valueList          : plist<'a>
-   selected           : option<string>
+   selected           : option<'a>
    color              : C4b
  } 
 

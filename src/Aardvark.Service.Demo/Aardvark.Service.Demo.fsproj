@@ -82,8 +82,8 @@
     <Compile Include="DrawingApp.fs" />
     <Compile Include="Correlations\CorrelationDrawingTypes.fs" />
     <Compile Include="Correlations\NumericExt.fs" />
-    <Compile Include="Correlations\Utilities_Datastructures.fs" />
-    <Compile Include="Correlations\Utilities_GUI.fs" />
+    <Compile Include="Correlations\UtilitiesDatastructures.fs" />
+    <Compile Include="Correlations\UtilitiesGUI.fs" />
     <Compile Include="Correlations\Utilities.fs" />
     <Compile Include="Correlations\TextInputApp.fs" />
     <Compile Include="Correlations\DropdownApp.fs" />

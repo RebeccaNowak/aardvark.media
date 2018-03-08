@@ -11,7 +11,7 @@ open Aardvark.UI
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module DropdownList =
   type Action<'a> =
-    | SetSelected of option<string>
+    | SetSelected of option<'a>
     | SetColor of C4b
     | SetList of plist<'a>
 
@@ -23,48 +23,46 @@ module DropdownList =
 
   let update (model : DropdownList<'a>) (action : Action<'a>) =
     match action with
-      | SetSelected str -> {model with selected = str}
+      | SetSelected a -> {model with selected = a}
       | SetColor col -> {model with color = col}
       | SetList lst -> {model with valueList = lst}
 
   
   let view (mDropdown : MDropdownList<'a, _>) 
-           (changeFunction     : (option<string> -> 'msg))
+           (changeFunction     : (option<'a> -> 'msg))
            (labelFunction      : ('a -> IMod<string>))
-           (idFunction         : (option<'a> -> option<string>))
-           (getIsSelected      : ('a -> IMod<bool>))
-            =
+           (getIsSelected      : ('a -> IMod<bool>))  =
+           
 
     let attributes (value : 'a) (name : string) =
-        let notSelected = 
-          (attribute "value" (Mod.force (labelFunction value)))
-          
-        let selAttr = (attribute "selected" "selected")
-        let attrMap = 
-            AttributeMap.ofListCond [
-                always (notSelected )
-                onlyWhen (getIsSelected value) (selAttr)
-            ]
-        attrMap
+      let notSelected = 
+        (attribute "value" (Mod.force (labelFunction value)))
+        
+      let selAttr = (attribute "selected" "selected")
+      let attrMap = 
+          AttributeMap.ofListCond [
+              always (notSelected )
+              onlyWhen (getIsSelected value) (selAttr)
+          ]
+      attrMap
        
     
 
     let alistAttr  = 
       amap {
-          yield style "color:black"
-          let! lst = (mDropdown.valueList.Content) 
-          let callback (i : int) = lst
-                                |> PList.tryAt(i) 
-                                |> idFunction
-                                |> changeFunction
-           
-          yield (onEvent "onchange" 
-                         ["event.target.selectedIndex"] 
-                         (fun x -> 
-                                x 
-                                    |> List.head 
-                                    |> Int32.Parse 
-                                    |> callback)) 
+        yield style "color:black"
+        let! lst = (mDropdown.valueList.Content) 
+        let callback (i : int) = lst
+                              |> PList.tryAt(i) 
+                              |> changeFunction
+         
+        yield (onEvent "onchange" 
+                       ["event.target.selectedIndex"] 
+                       (fun x -> 
+                              x 
+                                  |> List.head 
+                                  |> Int32.Parse 
+                                  |> callback)) 
       }
 
     Incremental.select (AttributeMap.ofAMap alistAttr)                        
