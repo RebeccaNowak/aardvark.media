@@ -31,24 +31,20 @@ module TextInput =
       | ChangeBgColor c -> {model with bgColor = c}
 
   let view' (model : MTextInput) : DomNode<Action> = 
-   
-      let attributes = 
-        amap {
-          //yield attribute "color" "black"
-          yield attribute "type" "text"
+    let attributes = //@Thomas Performance?
+      amap {
+        yield attribute "type" "text"
 
-          let! optS = model.size
-          if optS.IsSome then yield attribute "size" (sprintf "%i" optS.Value)
-          
-          yield onChange (fun str -> ChangeText str); 
-          let! txt = model.text
-          yield attribute "value" txt
-        }
-      Incremental.input (AttributeMap.ofAMap attributes)
+        let! optS = model.size
+        if optS.IsSome then yield attribute "size" (sprintf "%i" optS.Value)
+        
+        yield onChange (fun str -> ChangeText str); 
+        let! txt = model.text
+        yield attribute "value" txt
+      }
+    Incremental.input (AttributeMap.ofAMap attributes)
    
-   
-      
-  let app  = { //() : App<TextInput, MTextInput, Action>
+  let app  = {
     unpersist = Unpersist.instance
     threads = fun _ -> ThreadPool.empty
     initial = init

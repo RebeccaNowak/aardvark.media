@@ -6,7 +6,6 @@ open Aardvark.Base.Incremental
 
 open Aardvark.UI
 
-//open CorrelationDrawing.CorrelationUtilities
 
 //
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
@@ -30,50 +29,54 @@ module DropdownList =
 
   
   let view (mDropdown : MDropdownList<'a, _>) 
-          // (changeFunction     : (string -> Action))
-           (labelFunction      : ('a -> string))
+           (changeFunction     : (option<string> -> 'msg))
+           (labelFunction      : ('a -> IMod<string>))
            (idFunction         : (option<'a> -> option<string>))
            (getIsSelected      : ('a -> IMod<bool>))
             =
 
     let attributes (value : 'a) (name : string) =
-        let notSelected = (attribute "value" (labelFunction value))
+        let notSelected = 
+          (attribute "value" (Mod.force (labelFunction value)))
+          
         let selAttr = (attribute "selected" "selected")
         let attrMap = 
             AttributeMap.ofListCond [
-                always (notSelected)
+                always (notSelected )
                 onlyWhen (getIsSelected value) (selAttr)
             ]
         attrMap
        
-
+    
 
     let alistAttr  = 
       amap {
           yield style "color:black"
-          let! lst = (mDropdown.valueList.Content)
-          let aopt (i : int) = (PList.tryAt(i) lst)
-          let setSel (i : int) = (idFunction (aopt i) |> SetSelected) 
-          let callback (i : int) = setSel i//changeFunction (PList.tryAt(i) lst)
+          let! lst = (mDropdown.valueList.Content) 
+          let callback (i : int) = lst
+                                |> PList.tryAt(i) 
+                                |> idFunction
+                                |> changeFunction
+           
           yield (onEvent "onchange" 
-                                ["event.target.selectedIndex"] 
-                                (fun x -> 
-                                    x 
-                                        |> List.head 
-                                        |> Int32.Parse 
-                                        |> callback)) 
+                         ["event.target.selectedIndex"] 
+                         (fun x -> 
+                                x 
+                                    |> List.head 
+                                    |> Int32.Parse 
+                                    |> callback)) 
       }
 
     Incremental.select (AttributeMap.ofAMap alistAttr)                        
       (
         alist {
-            let domNode = 
-                mDropdown.valueList
-                    |> AList.mapi(fun i x ->
-                         Incremental.option 
-                           (attributes x (labelFunction x)) 
-                           (AList.ofList [text (labelFunction x)]))
-            yield! domNode
+          let domNode = 
+              mDropdown.valueList
+                |> AList.mapi(fun i x ->
+                    Incremental.option 
+                      (attributes x (Mod.force (labelFunction x))) 
+                      (AList.ofList [Incremental.text (labelFunction x)]))
+          yield! domNode
         }
       )
 

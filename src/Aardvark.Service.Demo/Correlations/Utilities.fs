@@ -6,17 +6,6 @@ open Aardvark.Base
 open Aardvark.UI
 
 module CorrelationUtilities =
-    let alistFromAMap (input : amap<_,'a>) : alist<'a> = input |> AMap.toASet |> AList.ofASet |> AList.map snd 
-
-
-    let plistFromHMap (input : hmap<_,'a>) : plist<'a> = input |> HMap.toSeq |> PList.ofSeq |> PList.map snd 
-
-    let sortedPlistFromHmap (input : hmap<_,'a>) (projection : ('a -> 'b)) : plist<'a> =
-        input 
-            |> HMap.toSeq 
-            |> Seq.map snd
-            |> Seq.sortBy projection
-            |> PList.ofSeq 
 
     let colorToHexStr (color : C4b) = 
         let bytes = [| color.R; color.G; color.B |]
