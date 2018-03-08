@@ -25,7 +25,7 @@ type TextInput = {
  [<DomainType>]
  type DropdownList<'a> = {
    valueList          : plist<'a>
-   selected           : option<'a>
+   selected           : option<string>
    color              : C4b
  } 
 
@@ -106,7 +106,7 @@ type CorrelationDrawingModel = {
     projection          : Projection
     geometry            : GeometryType
     semantics           : hmap<string, Semantic>
-    semanticsList       : plist<Semantic>
+    semanticsList       : DropdownList<Semantic>
     selectedSemantic    : string
     selectedAnnotation  : option<string>
     annotations         : plist<Annotation>

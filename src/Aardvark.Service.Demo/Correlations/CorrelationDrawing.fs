@@ -35,7 +35,7 @@ module CorrelationDrawing =
         projection = Projection.Viewpoint
         geometry = GeometryType.Line
         semantics = hmap.Empty
-        semanticsList = plist.Empty
+        semanticsList = DropdownList.init
         selectedSemantic = "" //TODO?
         selectedAnnotation = None
         annotations = plist.Empty
@@ -44,6 +44,7 @@ module CorrelationDrawing =
 
     type Action =
         | SetSemantic       of string
+        | DropdownMessage   of DropdownList.Action<Semantic>
         | AddSemantic
         | DoNothing
         | SemanticMessage   of Semantic.Action
@@ -87,7 +88,7 @@ module CorrelationDrawing =
             |> HMap.alter newSemantic.id enableSemantic)
                                
         let updatedList = sortedPlistFromHmap newSemantics (fun (x : Semantic) -> x.label.text)
-        {model with selectedSemantic = newSemantic.id; semanticsList = updatedList; semantics = newSemantics}
+        {model with selectedSemantic = newSemantic.id; semanticsList = {model.semanticsList with valueList = updatedList; selected = Some newSemantic.id}; semantics = newSemantics}
 //        {model with 
 //            semantics = update3
 //            semanticsList = updatedList;
@@ -110,7 +111,10 @@ module CorrelationDrawing =
 //    let getCurrentSemantic (model : CorrelationDrawingModel) =
 //        model.semantics.FindIndex(true, (fun x -> model.selectedSemantic <> Some x.id))
 
-
+    let setSelectedSemanticInMap (model : CorrelationDrawingModel) (semId : string)=
+        let update1 = HMap.alter model.selectedSemantic disableSemantic model.semantics
+        HMap.alter semId enableSemantic update1
+        
         
 
     let update (model : CorrelationDrawingModel) (act : Action) =
@@ -152,19 +156,27 @@ module CorrelationDrawing =
                     
                     let updatedList = sortedPlistFromHmap update2 (fun (x : Semantic) -> x.label.text)
                         
-//                        model.semanticsList  
-//                            |> PList.toList 
-//                            |> List.sortBy  (fun (x : Semantic) -> x.label) 
-//                            |> PList.ofList
-                    // (PList.sortBy (fun (x : Semantic) -> x.label)) model.semanticsList
-                    {model with selectedSemantic = sem; semanticsList = updatedList; semantics = update2}
+                    {model with selectedSemantic = sem; 
+                                semanticsList = {model.semanticsList with selected = Some sem} ;
+                                semantics = update2}
+            | DropdownMessage msg, _ -> {model with semanticsList = (DropdownList.update model.semanticsList msg)}
+//                    let update1 = HMap.alter model.selectedSemantic disableSemantic model.semantics
+                    //let update2 = HMap.alter sem enableSemantic update1
+                    
+//                    let updatedList = sortedPlistFromHmap update1 (fun (x : Semantic) -> x.label.text)
+                        
+//                    {model with selectedSemantic = sem; 
+//                                semanticsList = {model.semanticsList with selected = Some sem} ;
+//                                semantics = update2}
             | SemanticMessage sem, _ ->
                     let fUpdate (semO : Option<Semantic>) = 
                         match semO with
                             | Some s -> Some( Semantic.update s sem)
                             | None -> None //TODO something useful
                     let updatedSemantics = (HMap.alter model.selectedSemantic fUpdate model.semantics)
-                    {model with semantics = updatedSemantics; semanticsList = (sortedPlistFromHmap updatedSemantics (fun (x : Semantic) -> x.label.text))}
+                    let sortedList = (sortedPlistFromHmap updatedSemantics (fun (x : Semantic) -> x.label.text))
+                    //{model.semanticsList with valueList = updatedList; selected = newSemantic.id}
+                    {model with semantics = updatedSemantics; semanticsList = {model.semanticsList with valueList = sortedList}}
             | AddSemantic, _ -> insertSampleSemantics model 
             | SetGeometry mode, _ ->
                     { model with geometry = mode }
@@ -203,19 +215,25 @@ module CorrelationDrawing =
                         | None -> DoNothing //AddSemantic // TODO?
                    
                            
-
+            //let mapping = Option.map (fun y -> Semantic.Lens.id.Get y)
+            let mapping = Option.map (fun (y : MSemantic) -> y.id)
             Html.SemUi.accordion "Annotation Tools" "Write" true [
                 Html.table [                            
                     Html.row "Text:"        [Html.SemUi.textBox  model.exportPath SetExportPath ]
                     Html.row "Geometry:"    [Html.SemUi.dropDown model.geometry   SetGeometry]
                     Html.row "Projections:" [Html.SemUi.dropDown model.projection SetProjection]
-                    Html.row "Semantic:"    
-                        [dropDownListR 
-                            model.semanticsList 
-                            (getMSemantic model) 
-                            onChange 
-                            (fun x -> x.label.text) 
-                            (fun x -> (Mod.map (fun y -> not y) x.disabled))]
+                    Html.row "Semantic:"    [DropdownList.view model.semanticsList 
+                                                               //(onChange)
+                                                               (fun x -> Mod.force x.label.text) //// TODO
+                                                               (fun (x : option<MSemantic>) -> (mapping x))
+                                                               (fun x -> (Mod.map (fun y -> not y) x.disabled))
+                                            ] |> UI.map Action.DropdownMessage
+//                        [dropDownListR 
+//                            model.semanticsList 
+//                            (getMSemantic model) 
+//                            onChange 
+//                            (fun x -> x.label.text) 
+//                            (fun x -> (Mod.map (fun y -> not y) x.disabled))]
                ]                               
             ]   
             
@@ -234,7 +252,7 @@ module CorrelationDrawing =
         let viewSemantics (model : MCorrelationDrawingModel) = 
           let domList =
             alist {
-              for mSem in model.semanticsList do
+              for mSem in model.semanticsList.valueList do
                 let! domNode = Semantic.view mSem
                 yield (Incremental.tr 
                         (AttributeMap.ofList [style tinyPadding; onClick (fun str -> SetSemantic mSem.id)]) 
