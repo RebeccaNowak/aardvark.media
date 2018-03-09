@@ -26,9 +26,9 @@ module DropdownList =
       | SetSelected a -> {model with selected = a}
       | SetColor col -> {model with color = col}
       | SetList lst -> {model with valueList = lst}
+    
 
-  
-  let view (mDropdown : MDropdownList<'a, _>) 
+  let view' (mDropdown : MDropdownList<'a, _>)  
            (changeFunction     : (option<'a> -> 'msg))
            (labelFunction      : ('a -> IMod<string>))
            (getIsSelected      : ('a -> IMod<bool>))  =
@@ -79,5 +79,14 @@ module DropdownList =
       )
 
 
+//  let app = { // @Thomas see view function; what about arguments?
+//    unpersist = Unpersist.instance
+//    threads = fun _ -> ThreadPool.empty
+//    initial = init
+//    update = update
+//    view = view'
+//  }
+
+  //let start () = App.start app
 
 

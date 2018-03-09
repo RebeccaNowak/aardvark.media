@@ -72,7 +72,8 @@ module CorrelationDrawing =
 
     let insertSampleSemantics (model : CorrelationDrawingModel) = 
         let id = Guid.NewGuid().ToString()
-        let newSemantic = {(Semantic.initial id) with label = {TextInput.init with text = (sprintf "Semantic%i" (model.semantics.Count + 1))}}
+        //let newSemantic = {(Semantic.initial id) with label = {TextInput.init with text = (sprintf "Semantic%i" (model.semantics.Count + 1))}}
+        let newSemantic = Semantic.Lens._labelText.Set((Semantic.initial id),(sprintf "Semantic%i" (model.semantics.Count + 1)))
         let newSemantics = (model.semantics.Add(newSemantic.id, newSemantic)
             |> HMap.alter model.selectedSemantic disableSemantic
             |> HMap.alter newSemantic.id enableSemantic)
@@ -164,7 +165,6 @@ module CorrelationDrawing =
                             | None -> None //TODO something useful
                     let updatedSemantics = (HMap.alter model.selectedSemantic fUpdate model.semantics)
                     let sortedList = (sortedPlistFromHmap updatedSemantics (fun (x : Semantic) -> x.label.text))
-                    //{model.semanticsList with valueList = updatedList; selected = newSemantic.id}
                     {model with semantics = updatedSemantics; semanticsList = {model.semanticsList with valueList = sortedList}}
             | AddSemantic, _ -> insertSampleSemantics model 
             | SetGeometry mode, _ ->
@@ -206,10 +206,10 @@ module CorrelationDrawing =
             let mapping = Option.map (fun (y : MSemantic) -> y.id)
             Html.SemUi.accordion "Annotation Tools" "Write" true [
               Html.table [                            
-                Html.row "Text:"        [Html.SemUi.textBox  model.exportPath SetExportPath ]
+                Html.row "Export Path:" [Html.SemUi.textBox  model.exportPath SetExportPath ]
                 Html.row "Geometry:"    [Html.SemUi.dropDown model.geometry   SetGeometry]
                 Html.row "Projections:" [Html.SemUi.dropDown model.projection SetProjection]
-                Html.row "Semantic:"    [DropdownList.view model.semanticsList 
+                Html.row "Semantic:"    [DropdownList.view' model.semanticsList 
                                                            (Option.map (fun y -> y.id) >> SetSemantic)
                                                            (fun x -> x.label.text)
                                                            (fun x -> (Mod.map (fun y -> not y) x.disabled))

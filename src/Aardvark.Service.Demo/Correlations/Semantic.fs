@@ -9,6 +9,14 @@ open CorrelationUtilities
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Semantic = 
+
+    module Lens = 
+      let _color     : Lens<CorrelationDrawing.Semantic,C4b> = Semantic.Lens.style |. Style.Lens.color |. ColorInput.Lens.c
+      let _thickness : Lens<CorrelationDrawing.Semantic,float> = Semantic.Lens.style |. Style.Lens.thickness |. NumericInput.Lens.value
+      let _labelText : Lens<CorrelationDrawing.Semantic,string> = Semantic.Lens.label |. TextInput.Lens.text
+
+
+
     let initial id = {
         id = id
 
@@ -37,8 +45,7 @@ module Semantic =
             | ChangeLabel m -> {sem with label = TextInput.update sem.label m}
             | ColorPickerMessage m -> 
               {sem with style = {sem.style with color = (ColorPicker.update sem.style.color m)}}
-            | ChangeThickness m -> 
-              {sem with style = {sem.style with thickness = Numeric.update sem.style.thickness m}} //{sem with style = {sem.style with thickness = {Numeric.init with value =  2.0}}}
+            | ChangeThickness m -> {sem with style = {sem.style with thickness = Numeric.update sem.style.thickness m}}
             | Disable -> {sem with disabled = true}
             | Enable -> {sem with disabled = false}
 
@@ -99,18 +106,3 @@ module Semantic =
                     | false -> viewEnabled s
             return v
         }
-
-    module Lens = 
-      let color =
-         { new Lens<CorrelationDrawing.Semantic, C4b>() with
-             override x.Get(r) = r.style.color.c
-             override x.Set(r,v) = { r with style = {r.style with color = {r.style.color with c = v}}}
-             override x.Update(r,f) = { r with style = {r.style with color = {r.style.color with c = (f r.style.color.c)}}}
-         }
-      
-      let thickness =
-         { new Lens<CorrelationDrawing.Semantic, float>() with
-             override x.Get(r) = r.style.thickness.value
-             override x.Set(r,v) = { r with style = {r.style with thickness = {r.style.thickness with value = v}}}
-             override x.Update(r,f) = { r with style = {r.style with thickness = {r.style.thickness with value = (f r.style.thickness.value)}}}
-         }

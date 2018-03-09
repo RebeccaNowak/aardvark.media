@@ -12,8 +12,6 @@ open Aardvark.Application
 
 /// GUI
 
-type ClientLocalAttribute() = inherit System.Attribute()
-
 [<DomainType>]
 type TextInput = {
     text      : string
@@ -27,6 +25,9 @@ type TextInput = {
    valueList          : plist<'a>
    selected           : option<'a>
    color              : C4b
+   //changeFunction     : (option<'a> -> 'msg) @Thomas proper way?
+   //labelFunction      : ('a -> IMod<string>)
+   //getIsSelected      : ('a -> IMod<bool>) 
  } 
 
 /// END GUI
