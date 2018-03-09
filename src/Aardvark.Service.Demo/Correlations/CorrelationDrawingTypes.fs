@@ -76,9 +76,13 @@ type Semantic = {
 type Annotation = {     
     [<NonIncremental;PrimaryKey>]
     id                : string
-  
+    
+    [<NonIncremental>]
     geometry : GeometryType
+
+    [<NonIncremental>]
     projection : Projection
+
     semanticId : string
     points : plist<V3d>
     segments : plist<plist<V3d>> //list<Segment>

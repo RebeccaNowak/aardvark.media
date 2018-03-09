@@ -353,8 +353,6 @@ module Mutable =
     type MAnnotation(__initial : CorrelationDrawing.Annotation) =
         inherit obj()
         let mutable __current : Aardvark.Base.Incremental.IModRef<CorrelationDrawing.Annotation> = Aardvark.Base.Incremental.EqModRef<CorrelationDrawing.Annotation>(__initial) :> Aardvark.Base.Incremental.IModRef<CorrelationDrawing.Annotation>
-        let _geometry = ResetMod.Create(__initial.geometry)
-        let _projection = ResetMod.Create(__initial.projection)
         let _semanticId = ResetMod.Create(__initial.semanticId)
         let _points = MList.Create(__initial.points)
         let _segments = MList.Create(__initial.segments, (fun v -> MList.Create(v)), (fun (m,v) -> MList.Update(m, v)), (fun v -> v :> alist<_>))
@@ -362,8 +360,8 @@ module Mutable =
         let _text = ResetMod.Create(__initial.text)
         
         member x.id = __current.Value.id
-        member x.geometry = _geometry :> IMod<_>
-        member x.projection = _projection :> IMod<_>
+        member x.geometry = __current.Value.geometry
+        member x.projection = __current.Value.projection
         member x.semanticId = _semanticId :> IMod<_>
         member x.points = _points :> alist<_>
         member x.segments = _segments :> alist<_>
@@ -375,8 +373,6 @@ module Mutable =
             if not (System.Object.ReferenceEquals(__current.Value, v)) then
                 __current.Value <- v
                 
-                ResetMod.Update(_geometry,v.geometry)
-                ResetMod.Update(_projection,v.projection)
                 ResetMod.Update(_semanticId,v.semanticId)
                 MList.Update(_points, v.points)
                 MList.Update(_segments, v.segments)

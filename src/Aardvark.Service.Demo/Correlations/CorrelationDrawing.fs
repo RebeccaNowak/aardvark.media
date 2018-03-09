@@ -126,7 +126,9 @@ module CorrelationDrawing =
                         let id = Guid.NewGuid().ToString()                                     
                         {Annotation.initial id with
                             points = PList.ofList [p]; 
-                            semanticId = model.selectedSemantic}//add annotation states
+                            semanticId = model.selectedSemantic
+                            geometry = model.geometry
+                            projection = model.projection}//add annotation states
 
                 let model = { model with working = Some working }
 
@@ -238,6 +240,8 @@ module CorrelationDrawing =
         let viewSemantics (model : MCorrelationDrawingModel) = 
           let domList =
             alist {
+
+                                 
               for mSem in model.semanticsList.valueList do
                 let! domNode = Semantic.view mSem
                 yield (Incremental.tr 
@@ -250,6 +254,9 @@ module CorrelationDrawing =
               (AttributeMap.ofList [clazz "ui celled striped selectable inverted table unstackable"; style "padding: 1px 5px 1px 5px"]) (
               //(AttributeMap.ofList [clazz "ui center aligned middle aligned three column equal width grid"; style "padding: 1px 5px 1px 5px"]) (
                 alist {
+                  yield thead [][tr[][th[][text "Label"];
+                                      th[][text "Thickness"];
+                                      th[][text "Colour"]]]
                   yield Incremental.tbody  (AttributeMap.ofList []) domList
                } 
                 

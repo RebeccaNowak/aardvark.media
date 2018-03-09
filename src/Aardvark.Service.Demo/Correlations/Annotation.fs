@@ -112,7 +112,8 @@ module Annotation =
             return  ColorPicker.colorToHex colorMod
         }
     
-    let buttonTextNode =
+
+    let semanticButtonTextNode =
         adaptive {
             let! lbl = getSemanticLblMod mAnno model
             let! col = (getHtmlColor mAnno)
@@ -120,12 +121,33 @@ module Annotation =
             // return div [clazz "item"] [button [clazz "ui button"; onMouseClick (fun _ -> ChangeSemantic)] [text lbl]]
         }
 
+    let geometryTypeNode =
+      div [clazz "item"] [label  [clazz "ui label"] [text (mAnno.geometry.ToString())]]
+    //  adaptive {
+    //    let! geo = mAnno.geometry
+    //    return div [clazz "item"] [label  [clazz "ui label"] [text (geo.ToString())]]
+    //  }
+
+    let projectionNode =
+      div [clazz "item"] [label  [clazz "ui label"] [text (mAnno.projection.ToString())]]
+
+    let annotationTextNode = 
+      adaptive {
+        let! txt = mAnno.text
+        return div [clazz "item"] [label  [clazz "ui label"] [text txt]]
+      }
+
     Incremental.div AttributeMap.empty (
         alist {
             let! col = getHtmlColor mAnno
             //let! icon = iconNode
-            let! button = buttonTextNode
-            yield div [clazz "ui horizontal list"] [button]
+            let! button = semanticButtonTextNode
+            let! annoText = annotationTextNode
+            //let! geoNode = geometryTypeNode
+            yield div [clazz "ui horizontal list"] [button; 
+                                                    geometryTypeNode; 
+                                                    projectionNode
+                                                    annoText]
         }
     )
 
