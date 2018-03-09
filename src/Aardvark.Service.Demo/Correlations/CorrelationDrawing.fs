@@ -72,7 +72,6 @@ module CorrelationDrawing =
 
     let insertSampleSemantics (model : CorrelationDrawingModel) = 
         let id = Guid.NewGuid().ToString()
-        //let newSemantic = {(Semantic.initial id) with label = {TextInput.init with text = (sprintf "Semantic%i" (model.semantics.Count + 1))}}
         let newSemantic = Semantic.Lens._labelText.Set((Semantic.initial id),(sprintf "Semantic%i" (model.semantics.Count + 1)))
         let newSemantics = (model.semantics.Add(newSemantic.id, newSemantic)
             |> HMap.alter model.selectedSemantic disableSemantic
@@ -83,14 +82,14 @@ module CorrelationDrawing =
         {model with selectedSemantic = newSemantic.id;
                     semanticsList = {model.semanticsList with valueList = updatedList;
                                                               selected = Some newSemantic}; 
-                    semantics = newSemantics}
+                    semantics = newSemantics;
+        }
 
         
     let getMSemantic (model : MCorrelationDrawingModel) =
-        adaptive {
-            let! selected = model.selectedSemantic            
-            return AMap.tryFind selected model.semantics
-        }
+        let selected = model.selectedSemantic            
+        Mod.bind (fun s -> AMap.tryFind s model.semantics) selected
+        
               
 
     let finishAndAppend (model : CorrelationDrawingModel) = 
@@ -99,14 +98,18 @@ module CorrelationDrawing =
                             | None -> model.annotations
         { model with working = None; annotations = anns }
 
-//    let getCurrentSemantic (model : CorrelationDrawingModel) =
-//        model.semantics.FindIndex(true, (fun x -> model.selectedSemantic <> Some x.id))
-
     let setSelectedSemanticInMap (model : CorrelationDrawingModel) (semId : string)=
         let update1 = HMap.alter model.selectedSemantic disableSemantic model.semantics
         HMap.alter semId enableSemantic update1
         
-        
+    let getCurrentColor (model : MCorrelationDrawingModel) =
+        let mapping (s : option<MSemantic>) : IMod<C4b> =
+                                                  match s with
+                                                    | Some y -> y.style.color.c
+                                                    | None -> Mod.constant C4b.VRVisGreen
+        Mod.bind (fun x -> mapping x) (getMSemantic model)
+      
+      
 
     let update (model : CorrelationDrawingModel) (act : Action) =
         match (act, model.draw) with
@@ -167,7 +170,9 @@ module CorrelationDrawing =
                             | None -> None //TODO something useful
                     let updatedSemantics = (HMap.alter model.selectedSemantic fUpdate model.semantics)
                     let sortedList = (sortedPlistFromHmap updatedSemantics (fun (x : Semantic) -> x.label.text))
-                    {model with semantics = updatedSemantics; semanticsList = {model.semanticsList with valueList = sortedList}}
+                    {model with semantics = updatedSemantics; 
+                                semanticsList = {model.semanticsList with valueList = sortedList}
+                    }
             | AddSemantic, _ -> insertSampleSemantics model 
             | SetGeometry mode, _ ->
                     { model with geometry = mode }
@@ -252,7 +257,6 @@ module CorrelationDrawing =
           Html.SemUi.accordion "Semantics" "File Outline" true [
             Incremental.table
               (AttributeMap.ofList [clazz "ui celled striped selectable inverted table unstackable"; style "padding: 1px 5px 1px 5px"]) (
-              //(AttributeMap.ofList [clazz "ui center aligned middle aligned three column equal width grid"; style "padding: 1px 5px 1px 5px"]) (
                 alist {
                   yield thead [][tr[][th[][text "Label"];
                                       th[][text "Thickness"];
@@ -316,13 +320,14 @@ module CorrelationDrawing =
                     | None -> [||]                         
             )
             
-        let brush (hovered : IMod<Trafo3d option>) = 
+        let brush (hovered : IMod<Trafo3d option>) (color : IMod<C4b>) = 
             let trafo =
                 hovered |> Mod.map (function o -> match o with 
                                                     | Some t-> t
                                                     | None -> Trafo3d.Scale(V3d.Zero))
 
-            mkISg (Mod.constant C4b.Red) (Mod.constant 0.05) trafo
+            //mkISg (Mod.constant C4b.Blue) (Mod.constant 0.05) trafo
+            mkISg (color) (Mod.constant 0.05) trafo
        
         let dots (points : alist<V3d>) (color : IMod<C4b>) (view : IMod<CameraView>) =            
             
@@ -378,7 +383,6 @@ module CorrelationDrawing =
                     for a in annoSet do
                         yield! annotation' model a cam
                 } |> Sg.set
-                                
 
-            [canvas; brush model.hoverPosition; annotations] @ annotation model model.working cam
+            [canvas; brush model.hoverPosition (getCurrentColor model); annotations] @ annotation model model.working cam
             |> Sg.ofList
