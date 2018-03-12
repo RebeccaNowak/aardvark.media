@@ -5,9 +5,10 @@ open Aardvark.Base
 open Aardvark.Base.Incremental
 
 open Aardvark.UI
+open UtilitiesGUI
 
-
-//
+// https://semantic-ui.com/modules/dropdown.html
+//TODO use full dropdown markup for more flexible design
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module DropdownList =
   type Action<'a> =
@@ -18,7 +19,8 @@ module DropdownList =
   let init<'a> : DropdownList<'a> = {
     valueList = plist.Empty
     selected = None
-    color = C4b.VRVisGreen
+    color = C4b.Black
+    searchable = true
   }
 
   let update (model : DropdownList<'a>) (action : Action<'a>) =
@@ -50,7 +52,9 @@ module DropdownList =
 
     let alistAttr  = 
       amap {
-        yield style "color:black"
+        //yield clazz "ui dropdown"
+        let! attr = modColorToColorAttr mDropdown.color
+        yield attr
         let! lst = (mDropdown.valueList.Content) 
         let callback (i : int) = lst
                               |> PList.tryAt(i) 

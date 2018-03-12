@@ -6,13 +6,13 @@ open Aardvark.Base.Incremental
 open Aardvark.Base.Incremental.Operators
 open Aardvark.Base.Rendering
 open Aardvark.UI
-open CorrelationUtilities
+open UtilitiesGUI
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Annotation =
   
-  let initial id = 
+  let initial (id : string) (semanticsList : plist<Semantic>) = 
       {     
           id = id
 
@@ -23,15 +23,19 @@ module Annotation =
           projection = Projection.Viewpoint
           visible = true
           text = "text"
+
+          //semDropdown = {DropdownList.init with valueList = semanticsList}
       }
 
   type Action =
-      | SetSemantic //of string
+      | SetSemantic of option<string>
 
   let update (anno : Annotation) (a : Action) =
       match a with
           //| SetSemantic s -> anno
-          | SetSemantic -> anno
+          | SetSemantic str -> match str with
+                                | Some s -> {anno with semanticId = s}
+                                | None -> anno
 
   // TODO make generic function for fs below
 
@@ -100,10 +104,8 @@ module Annotation =
 
 
 
-
 //  let color (anno : Annotation) =
 //      (Annotation.Lens.semantic |. Semantic.Lens.style |. Style.Lens.color |. ColorInput.Lens.c).Get anno
-
 
   let view (model : MCorrelationDrawingModel) (mAnno : MAnnotation) = 
     let getHtmlColor (ma : MAnnotation) =
@@ -117,7 +119,12 @@ module Annotation =
         adaptive {
             let! lbl = getSemanticLblMod mAnno model
             let! col = (getHtmlColor mAnno)
-            return div [clazz "item"] [label [clazz "ui label"; style (sprintf "background: #%s" col); onMouseClick (fun _ -> SetSemantic)] [text lbl]]
+            return div [clazz "item"] [(DropdownList.view' model.semanticsList
+                                                           (Option.map (fun y -> y.id) >> SetSemantic)
+                                                           (fun x -> x.label.text)
+                                                           (fun x -> Mod.map (fun y -> x.id = y) mAnno.semanticId)
+                                      )]
+            //[label [clazz "ui label"; style (sprintf "background: #%s" col); onMouseClick (fun _ -> SetSemantic)] [text lbl]]
             // return div [clazz "item"] [button [clazz "ui button"; onMouseClick (fun _ -> ChangeSemantic)] [text lbl]]
         }
 

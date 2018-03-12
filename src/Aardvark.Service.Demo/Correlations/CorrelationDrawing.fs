@@ -26,7 +26,7 @@ module CorrelationDrawing =
     open Aardvark.SceneGraph.SgPrimitives
     open Aardvark.SceneGraph.FShadeSceneGraph
     open Annotation
-    open CorrelationUtilities
+    open UtilitiesGUI
     open UtilitiesDatastructures
 
     let initial : CorrelationDrawingModel = {
@@ -127,7 +127,7 @@ module CorrelationDrawing =
                         { w with points = w.points |> PList.append p }
                     | None -> 
                         let id = Guid.NewGuid().ToString()                                     
-                        {Annotation.initial id with
+                        {Annotation.initial id model.semanticsList.valueList with
                             points = PList.ofList [p]; 
                             semanticId = model.selectedSemantic
                             geometry = model.geometry
@@ -320,7 +320,7 @@ module CorrelationDrawing =
                     | None -> [||]                         
             )
             
-        let brush (hovered : IMod<Trafo3d option>) (color : IMod<C4b>) = 
+        let brush (hovered : IMod<Trafo3d option>) (color : IMod<C4b>) = //(size : IMod<float>)= 
             let trafo =
                 hovered |> Mod.map (function o -> match o with 
                                                     | Some t-> t
@@ -384,5 +384,5 @@ module CorrelationDrawing =
                         yield! annotation' model a cam
                 } |> Sg.set
 
-            [canvas; brush model.hoverPosition (getCurrentColor model); annotations] @ annotation model model.working cam
+            [canvas; brush model.hoverPosition (getCurrentColor model) ; annotations] @ annotation model model.working cam
             |> Sg.ofList

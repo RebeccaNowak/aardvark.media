@@ -25,6 +25,7 @@ type TextInput = {
    valueList          : plist<'a>
    selected           : option<'a>
    color              : C4b
+   searchable         : bool
    //changeFunction     : (option<'a> -> 'msg) @Thomas proper way?
    //labelFunction      : ('a -> IMod<string>)
    //getIsSelected      : ('a -> IMod<bool>) 
@@ -88,6 +89,8 @@ type Annotation = {
     segments : plist<plist<V3d>> //list<Segment>
     visible : bool
     text : string
+
+    // semDropdown : DropdownList<Semantic>
 }
 
 [<DomainType>]
@@ -97,10 +100,11 @@ type Border = {
 
 [<DomainType>]
 type LogModel = {
-   id      : string
-   //borders : alist<Annotation>
-   range   : V2d //?
-   // horizon ?
+    [<NonIncremental;PrimaryKey>]
+    id      : string
+    //borders : alist<Annotation>
+    range   : V2d //?
+
 }
 
 [<DomainType>]
@@ -108,8 +112,8 @@ type CorrelationDrawingModel = {
     draw                : bool 
     hoverPosition       : option<Trafo3d>
     working             : option<Annotation>
-    projection          : Projection
-    geometry            : GeometryType
+    projection          : Projection //TODO move to semantic
+    geometry            : GeometryType //TODO move to semantic
     semantics           : hmap<string, Semantic>
     semanticsList       : DropdownList<Semantic>
     selectedSemantic    : string

@@ -3,7 +3,7 @@
 
 open Aardvark.Base.Rendering
 open Aardvark.Base.Incremental
-open CorrelationDrawing.CorrelationUtilities
+open CorrelationDrawing.UtilitiesGUI
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module TextInput =
@@ -31,18 +31,22 @@ module TextInput =
       | ChangeBgColor c -> {model with bgColor = c}
 
   let view' (model : MTextInput) : DomNode<Action> = 
-    let attributes = //@Thomas Performance?
+    let attr1 =
       amap {
         yield attribute "type" "text"
+        yield onChange (fun str -> ChangeText str)
+        //let optS = Mod.force(model.size)
+        //if optS.IsSome then yield attribute "size" (sprintf "%i" optS.Value)
+      }
 
-        let! optS = model.size
-        if optS.IsSome then yield attribute "size" (sprintf "%i" optS.Value)
-        
-        yield onChange (fun str -> ChangeText str); 
+    let attributes =
+      amap {
+        //let! optS = model.size
+        //if optS.IsSome then yield attribute "size" (sprintf "%i" optS.Value)
         let! txt = model.text
         yield attribute "value" txt
       }
-    Incremental.input (AttributeMap.ofAMap attributes)
+    Incremental.input (AttributeMap.ofAMap (AMap.union attr1 attributes))
    
   let app  = {
     unpersist = Unpersist.instance

@@ -5,7 +5,7 @@ open Aardvark.Base
 open Aardvark.Base.Incremental
 open Aardvark.Base.Rendering
 open Aardvark.UI
-open CorrelationUtilities
+open UtilitiesGUI
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Semantic = 
@@ -52,28 +52,20 @@ module Semantic =
 
 
     let viewEnabled (s : MSemantic) =
-      let attributes = 
-        amap {
-          yield style "margin:auto; color:black; max-width:60px;"
-        }
       let thNode = Numeric.view'' 
                     NumericInputType.InputBox 
                     s.style.thickness
-                    (AttributeMap.ofAMap attributes)
+                    (AttributeMap.ofList [style "margin:auto; color:black; max-width:60px"])//attributes)
 
-      let createDomNodeLabel =
-        adaptive {
-           let! col = s.style.color.c
-           return td 
-                    [clazz "center aligned"; style lrPadding] 
-                    [TextInput.view' s.label] 
-                  |> UI.map Action.ChangeLabel
-         }
+      let domNodeLabel =
+          td [clazz "center aligned"; style lrPadding] 
+             [TextInput.view' s.label] 
+             |> UI.map Action.ChangeLabel
      
 
       alist {
-          let! labelNode = createDomNodeLabel
-          yield labelNode
+          //let! labelNode = createDomNodeLabel
+          yield domNodeLabel
           yield td [clazz "center aligned"; style lrPadding] [(thNode |> UI.map ChangeThickness)]
           yield td [clazz "center aligned"; style lrPadding] [ColorPicker.view s.style.color |> UI.map ColorPickerMessage]
        }
@@ -81,28 +73,58 @@ module Semantic =
 
 
     let viewDisabled (s : MSemantic) = 
-           alist {
-             let! col = s.style.color.c
-             yield td [clazz "center aligned"; style lrPadding] 
-                       [button [clazz "ui horizontal label";
-                          bgColorAttr col] [Incremental.text (s.label.text)]]
-             yield td [clazz "center aligned"; style lrPadding] [
+      let domNodeLbl =
+            td [clazz "center aligned"; style lrPadding] 
+               [Incremental.label (AttributeMap.union 
+                                      (AttributeMap.ofList [clazz "ui horizontal label"]) 
+                                      (AttributeMap.ofAMap (incrBgColorAttr s.style.color.c)))
+                                  (AList.ofList [Incremental.text (s.label.text)])
+               ]
+
+      let domNodeThickness = 
+        td [clazz "center aligned"; style lrPadding] [
                           label [clazz "ui horizontal label"]
                                 [Incremental.text (Mod.map(fun x -> sprintf "%.1f" x) s.style.thickness.value)]
                        ]
-             yield td [clazz "center aligned"; style lrPadding] [
-                            button [clazz "ui horizontal label"; bgColorAttr col] 
-                                 [Incremental.text (Mod.map(fun (x : C4b) -> colorToHexStr x) s.style.color.c)]
-                          ]
-           }
+
+      let domNodeColor = td [clazz "center aligned"; style lrPadding] 
+                            [Incremental.label (AttributeMap.union 
+                                      (AttributeMap.ofList [clazz "ui horizontal label"])
+                                      (AttributeMap.ofAMap (incrBgColorAttr s.style.color.c)))
+                                 (AList.ofList [Incremental.text (Mod.map(fun (x : C4b) -> colorToHexStr x) s.style.color.c)])
+                            ]
+                         
+      alist {
+        yield domNodeLbl
+        yield domNodeThickness
+        yield domNodeColor
+      }
+//           alist {
+//             let! col = s.style.color.c
+//             yield td [clazz "center aligned"; style lrPadding] 
+//                       [button [clazz "ui horizontal label";
+//                          bgColorAttr col] [Incremental.text (s.label.text)]]
+//             yield td [clazz "center aligned"; style lrPadding] [
+//                          label [clazz "ui horizontal label"]
+//                                [Incremental.text (Mod.map(fun x -> sprintf "%.1f" x) s.style.thickness.value)]
+//                       ]
+//             yield td [clazz "center aligned"; style lrPadding] [
+//                            button [clazz "ui horizontal label"; bgColorAttr col] 
+//                                 [Incremental.text (Mod.map(fun (x : C4b) -> colorToHexStr x) s.style.color.c)]
+//                          ]
+//           }
 
 
-    let view (s : MSemantic) : IMod<alist<DomNode<Action>>> =
-        adaptive {
-            let! disabled = s.disabled
-            let v = 
-                match disabled with
-                    | true -> viewDisabled s
-                    | false -> viewEnabled s
-            return v
-        }
+    let view (model : MSemantic) : IMod<alist<DomNode<Action>>> = //@Thomas is there a difference (Mod.map vs adaptive block)?
+        Mod.map (fun d -> match d with
+                            | true -> viewDisabled model
+                            | false -> viewEnabled model) model.disabled
+
+//        adaptive {
+//            let! disabled = model.disabled
+//            let v = 
+//                match disabled with
+//                    | true -> viewDisabled model
+//                    | false -> viewEnabled model
+//            return v
+//        }

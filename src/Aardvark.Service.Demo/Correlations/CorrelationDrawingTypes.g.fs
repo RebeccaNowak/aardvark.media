@@ -77,6 +77,7 @@ module Mutable =
         abstract member valueList : Aardvark.Base.Incremental.alist<'na>
         abstract member selected : Aardvark.Base.Incremental.IMod<Microsoft.FSharp.Core.option<'na>>
         abstract member color : Aardvark.Base.Incremental.IMod<Aardvark.Base.C4b>
+        abstract member searchable : Aardvark.Base.Incremental.IMod<Microsoft.FSharp.Core.bool>
         abstract member AsString : string
     
     
@@ -86,10 +87,12 @@ module Mutable =
         let _valueList = MList.Create(__initial.valueList, (fun v -> __ainit(v)), (fun (m,v) -> __aupdate(m, v)), (fun v -> __aview(v)))
         let _selected = MOption.Create(__initial.selected, (fun v -> __ainit(v)), (fun (m,v) -> __aupdate(m, v)), (fun v -> __aview(v)))
         let _color = ResetMod.Create(__initial.color)
+        let _searchable = ResetMod.Create(__initial.searchable)
         
         override x.valueList = _valueList :> alist<_>
         override x.selected = _selected :> IMod<_>
         override x.color = _color :> IMod<_>
+        override x.searchable = _searchable :> IMod<_>
         
         member x.Current = __current :> IMod<_>
         member x.Update(v : CorrelationDrawing.DropdownList<'a>) =
@@ -99,6 +102,7 @@ module Mutable =
                 MList.Update(_valueList, v.valueList)
                 MOption.Update(_selected, v.selected)
                 ResetMod.Update(_color,v.color)
+                ResetMod.Update(_searchable,v.searchable)
                 
         
         static member Update(m : MDropdownListD<'a,'ma,'va>, v : CorrelationDrawing.DropdownList<'a>) = m.Update(v)
@@ -114,10 +118,12 @@ module Mutable =
         let _valueList = MList.Create(__initial.valueList)
         let _selected = MOption.Create(__initial.selected)
         let _color = ResetMod.Create(__initial.color)
+        let _searchable = ResetMod.Create(__initial.searchable)
         
         override x.valueList = _valueList :> alist<_>
         override x.selected = _selected :> IMod<_>
         override x.color = _color :> IMod<_>
+        override x.searchable = _searchable :> IMod<_>
         
         member x.Current = __current :> IMod<_>
         member x.Update(v : CorrelationDrawing.DropdownList<'a>) =
@@ -127,6 +133,7 @@ module Mutable =
                 MList.Update(_valueList, v.valueList)
                 MOption.Update(_selected, v.selected)
                 ResetMod.Update(_color,v.color)
+                ResetMod.Update(_searchable,v.searchable)
                 
         
         static member Update(m : MDropdownListV<'a>, v : CorrelationDrawing.DropdownList<'a>) = m.Update(v)
@@ -166,6 +173,12 @@ module Mutable =
                     override x.Get(r) = r.color
                     override x.Set(r,v) = { r with color = v }
                     override x.Update(r,f) = { r with color = f r.color }
+                }
+            let searchable<'a> =
+                { new Lens<CorrelationDrawing.DropdownList<'a>, Microsoft.FSharp.Core.bool>() with
+                    override x.Get(r) = r.searchable
+                    override x.Set(r,v) = { r with searchable = v }
+                    override x.Update(r,f) = { r with searchable = f r.searchable }
                 }
     
     
@@ -484,10 +497,9 @@ module Mutable =
     type MLogModel(__initial : CorrelationDrawing.LogModel) =
         inherit obj()
         let mutable __current : Aardvark.Base.Incremental.IModRef<CorrelationDrawing.LogModel> = Aardvark.Base.Incremental.EqModRef<CorrelationDrawing.LogModel>(__initial) :> Aardvark.Base.Incremental.IModRef<CorrelationDrawing.LogModel>
-        let _id = ResetMod.Create(__initial.id)
         let _range = ResetMod.Create(__initial.range)
         
-        member x.id = _id :> IMod<_>
+        member x.id = __current.Value.id
         member x.range = _range :> IMod<_>
         
         member x.Current = __current :> IMod<_>
@@ -495,7 +507,6 @@ module Mutable =
             if not (System.Object.ReferenceEquals(__current.Value, v)) then
                 __current.Value <- v
                 
-                ResetMod.Update(_id,v.id)
                 ResetMod.Update(_range,v.range)
                 
         

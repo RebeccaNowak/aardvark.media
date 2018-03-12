@@ -6,6 +6,7 @@ open Aardvark.Base.Incremental
 open Numeric
 open Combinators
 
+//extension so attributes can be specified
 module Numeric = 
     let numericField'<'msg> ( f : Action -> seq<'msg> ) ( atts : AttributeMap<'msg> ) ( model : MNumericInput ) inputType =         
 

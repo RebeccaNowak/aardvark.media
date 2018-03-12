@@ -15,7 +15,7 @@ open Aardvark.Rendering.Text
 
 open Aardvark.SceneGraph.SgPrimitives
 open Aardvark.SceneGraph.FShadeSceneGraph
-open CorrelationUtilities    
+open UtilitiesGUI    
 
 module Serialization =
     open MBrace.FsPickler
