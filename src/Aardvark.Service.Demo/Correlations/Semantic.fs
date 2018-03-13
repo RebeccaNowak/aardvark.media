@@ -34,6 +34,36 @@ module Semantic =
         semanticType = SemanticType.Metric
     }
 
+    let initialHorizon id = 
+      { initial id with 
+          label = {TextInput.init with text = "Horizon"}
+          style = {Style.color = {c = C4b.Red};
+                   Style.thickness = {Numeric.init with value = 5.0}}
+          geometry = GeometryType.Line
+          semanticType = SemanticType.Metric
+      }
+
+    let initialGrainSize id = 
+      {
+        initial id with 
+          label = {TextInput.init with text = "Grainsize"}
+          style = {Style.color = {c = C4b.Gray};
+                   Style.thickness = {Numeric.init with value = 1.0}}
+          geometry = GeometryType.Line
+          semanticType = SemanticType.Metric
+      }
+
+    let initialCrossbed id = 
+      {
+        initial id with 
+          label = {TextInput.init with text = "Crossbed"}
+          style = {Style.color = {c = C4b.Blue};
+                   Style.thickness = {Numeric.init with value = 1.0}}
+          geometry = GeometryType.Line
+          semanticType = SemanticType.Metric
+      }
+    
+
     type Action = 
         | Disable
         | Enable

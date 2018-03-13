@@ -69,25 +69,25 @@ module CorrelationDrawing =
             | Some s -> Some(Semantic.update s Semantic.Enable)
             | None -> None //TODO something useful
 
+    let insertSemantic (semantic : Semantic) (model : CorrelationDrawingModel) = 
+        let newSemantics = (model.semantics.Add(semantic.id, semantic)
+            |> HMap.alter model.selectedSemantic disableSemantic
+            |> HMap.alter semantic.id enableSemantic)
+                               
+        let updatedList = sortedPlistFromHmap newSemantics (fun (x : Semantic) -> x.label.text)
 
-    let insertSampleSemantics (model : CorrelationDrawingModel) = 
+        {model with selectedSemantic = semantic.id;
+                    semanticsList = {model.semanticsList with valueList = updatedList;
+                                                              selected = Some semantic}; 
+                    semantics = newSemantics;
+        }
 
+    let insertSampleSemantic (model : CorrelationDrawingModel) = 
         let id = Guid.NewGuid().ToString()
         let newSemantic = Semantic.Lens._labelText.Set(
                             (Semantic.initial id),
                             (sprintf "Semantic%i" (model.semantics.Count + 1)))
-
-        let newSemantics = (model.semantics.Add(newSemantic.id, newSemantic)
-            |> HMap.alter model.selectedSemantic disableSemantic
-            |> HMap.alter newSemantic.id enableSemantic)
-                               
-        let updatedList = sortedPlistFromHmap newSemantics (fun (x : Semantic) -> x.label.text)
-
-        {model with selectedSemantic = newSemantic.id;
-                    semanticsList = {model.semanticsList with valueList = updatedList;
-                                                              selected = Some newSemantic}; 
-                    semantics = newSemantics;
-        }
+        insertSemantic newSemantic model
 
         
     let getMSemantic (model : MCorrelationDrawingModel) =
@@ -174,7 +174,7 @@ module CorrelationDrawing =
                     {model with semantics = updatedSemantics; 
                                 semanticsList = {model.semanticsList with valueList = sortedList}
                     }
-            | AddSemantic, _ -> insertSampleSemantics model 
+            | AddSemantic, _ -> insertSampleSemantic model 
             | SetGeometry mode, _ ->
                     { model with geometry = mode }
             | SetProjection mode, _ ->

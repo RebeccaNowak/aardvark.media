@@ -151,7 +151,12 @@ module CorrelationDrawingApp =
             camera           = { ArcBallController.initial with view = CameraView.lookAt (23.0 * V3d.OIO) V3d.Zero V3d.OOI}
             rendering        = RenderingPars.initial
            
-            drawing = CorrelationDrawing.insertSampleSemantics CorrelationDrawing.initial
+            drawing = 
+               CorrelationDrawing.initial 
+                |> (CorrelationDrawing.insertSemantic (Semantic.initialHorizon (Guid.NewGuid().ToString())))
+                |> (CorrelationDrawing.insertSemantic (Semantic.initialGrainSize (Guid.NewGuid().ToString())))
+                |> (CorrelationDrawing.insertSemantic (Semantic.initialCrossbed (Guid.NewGuid().ToString())))
+                      
 
            
 
