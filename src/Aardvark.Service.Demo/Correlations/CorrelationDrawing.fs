@@ -230,21 +230,32 @@ module CorrelationDrawing =
             
 
         let viewAnnotations (model : MCorrelationDrawingModel) = 
+          let domList = 
+            alist {                                                                     
+                    for a in model.annotations do    
+                      yield (Incremental.tr 
+                        (AttributeMap.ofList [style tinyPadding])
+                        (AList.map (fun x -> x |> UI.map AnnotationMessage) (Annotation.view a model))
+                      )
+                  }   
+
           Html.SemUi.accordion "Annotations" "File Outline" true [
-              Incremental.div 
-                  (AttributeMap.ofList [clazz "ui list"]) (
-                      alist {                                                                     
-                          for a in model.annotations do    
-                            yield Annotation.view a model |> UI.map AnnotationMessage
-                      }     
+            Incremental.table 
+              (AttributeMap.ofList [clazz "ui celled striped selectable inverted table unstackable"; 
+                                    style "padding: 1px 5px 1px 5px"]) (
+                alist {
+                  yield thead [][tr[][th[][text "Semantic"];
+                                      th[][text "Geometry"];
+                                      th[][text "Projection"];
+                                      th[][text "Text"]]]
+                  yield Incremental.tbody  (AttributeMap.ofList []) domList
+                }
               )
           ]
 
         let viewSemantics (model : MCorrelationDrawingModel) = 
           let domList =
-            alist {
-
-                                 
+            alist {                 
               for mSem in model.semanticsList.valueList do
                 let! domNode = Semantic.view mSem
                 yield (Incremental.tr 
@@ -254,7 +265,8 @@ module CorrelationDrawing =
               } 
           Html.SemUi.accordion "Semantics" "File Outline" true [
             Incremental.table
-              (AttributeMap.ofList [clazz "ui celled striped selectable inverted table unstackable"; style "padding: 1px 5px 1px 5px"]) (
+              (AttributeMap.ofList [clazz "ui celled striped selectable inverted table unstackable";
+                                    style "padding: 1px 5px 1px 5px"]) (
                 alist {
                   yield thead [][tr[][th[][text "Label"];
                                       th[][text "Thickness"];

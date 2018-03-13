@@ -36,26 +36,29 @@ module Annotation =
 
   let view (model : MAnnotation) (cdModel : MCorrelationDrawingModel) = 
     let semanticsNode =
-      div [clazz "item"] [(DropdownList.view' cdModel.semanticsList
-                                                      (Option.map (fun y -> y.id) >> SetSemantic)
-                                                      (fun x -> x.label.text)
-                                                      (fun x -> Mod.map (fun y -> x.id = y) model.semanticId)
-                         )]
-
+      td [clazz "center aligned"; style lrPadding] 
+          [(DropdownList.view' cdModel.semanticsList
+                                  (Option.map (fun y -> y.id) >> SetSemantic)
+                                  (fun x -> x.label.text)
+                                  (fun x -> Mod.map (fun y -> x.id = y) model.semanticId))]
+          
     let geometryTypeNode =
-      div [clazz "item"] [label  [clazz "ui label"] [text (model.geometry.ToString())]]
+      td [clazz "center aligned"; style lrPadding] [label  [clazz "ui label"] [text (model.geometry.ToString())]]
 
     let projectionNode =
-      div [clazz "item"] [label  [clazz "ui label"] [text (model.projection.ToString())]]
+      td [clazz "center aligned"; style lrPadding] [label  [clazz "ui label"] [text (model.projection.ToString())]]
 
     let annotationTextNode = 
-        div [clazz "item"] [label  [clazz "ui label"] [Incremental.text model.text]]
-
-    div [clazz "ui horizontal list"] [semanticsNode; 
-                                                geometryTypeNode; 
-                                                projectionNode;
-                                                annotationTextNode]
+        td [clazz "center aligned"; style lrPadding] [label  [clazz "ui label"] [Incremental.text model.text]]
+    
+    alist {
+      yield semanticsNode
+      yield geometryTypeNode
+      yield projectionNode
+      yield annotationTextNode        
+    }
         
+  /////////////////////////
 
         //@Thomas: is there a simpler way to do this?
     //@Thomas: performance: use of Mod.bind
