@@ -42,8 +42,6 @@ module CorrelationDrawingApp =
         | DrawingMessage            of CorrelationDrawing.Action
         | DrawingSemanticMessage    of CorrelationDrawing.Action
         | AnnotationMessage         of CorrelationDrawing.Action
-        //| AddSemantic               of CorrelationDrawing.Action
-        //| SetSemantic               of CorrelationDrawing.Action
         | KeyDown                   of key : Keys
         | KeyUp                     of key : Keys      
         | Export
@@ -64,11 +62,7 @@ module CorrelationDrawingApp =
             | CameraMessage m, false -> 
                     { model with camera = ArcBallController.update model.camera m }      
             | DrawingMessage m, _ ->
-                    { model with drawing = CorrelationDrawing.update model.drawing m }    
-           // | AddSemantic m, false ->
-           //     {model with drawing = CorrelationDrawing.update model.drawing m} 
-           // | SetSemantic m, false ->
-           //     {model with drawing = CorrelationDrawing.update model.drawing m}      
+                    { model with drawing = CorrelationDrawing.update model.drawing m }      
             | DrawingSemanticMessage m, _ ->
                 {model with drawing = CorrelationDrawing.update model.drawing m}          
             | AnnotationMessage m, _ ->
@@ -88,7 +82,6 @@ module CorrelationDrawingApp =
                 match model.future with
                     | Some f -> f
                     | None -> model
-            // | EditSemantics, _ ->  
             | KeyDown k, _ -> 
                     let d = CorrelationDrawing.update model.drawing (CorrelationDrawing.Action.KeyDown k)
                     { model with drawing = d }
@@ -104,14 +97,9 @@ module CorrelationDrawingApp =
                 ]
     
     let view (model : MCorrelationAppModel) =
-                    
         let frustum =
             Mod.constant (Frustum.perspective 60.0 0.1 100.0 1.0)
       
-        //let body att x =
-        //    body [][ div att x ]
-
-//        require (Html.semui) (
         require (myCss) (
             body [clazz "ui"; style "background: #1B1C1E"] [
                 div [] [
@@ -149,19 +137,14 @@ module CorrelationDrawingApp =
                                     i [clazz "plus icon"] [] ] //|> Utilities.wrapToolTip "add semantic"
                     ]
 
-//                    div [] [
                     CorrelationDrawing.UI.viewAnnotationTools model.drawing |> UI.map DrawingMessage
                     CorrelationDrawing.UI.viewAnnotations model.drawing  |> UI.map AnnotationMessage   
                     CorrelationDrawing.UI.viewSemantics model.drawing |> UI.map DrawingSemanticMessage
-//                   ]
 
-//                    CorrelationDrawing.UI.viewAnnotationTools model.drawing |> UI.map DrawingMessage
-//                    CorrelationDrawing.UI.viewAnnotations model.drawing  |> UI.map AnnotationMessage   
-//                    CorrelationDrawing.UI.viewSemantics model.drawing |> UI.map DrawingSemanticMessage
                 ]
             ]
         ) 
-//        )
+
 
     let initial : CorrelationAppModel =
         {

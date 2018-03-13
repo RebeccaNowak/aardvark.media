@@ -37,7 +37,7 @@ module CorrelationDrawing =
         geometry = GeometryType.Line
         semantics = hmap.Empty
         semanticsList = DropdownList.init
-        selectedSemantic = "" //TODO?
+        selectedSemantic = "" 
         selectedAnnotation = None
         annotations = plist.Empty
         exportPath = @"."
@@ -71,8 +71,12 @@ module CorrelationDrawing =
 
 
     let insertSampleSemantics (model : CorrelationDrawingModel) = 
+
         let id = Guid.NewGuid().ToString()
-        let newSemantic = Semantic.Lens._labelText.Set((Semantic.initial id),(sprintf "Semantic%i" (model.semantics.Count + 1)))
+        let newSemantic = Semantic.Lens._labelText.Set(
+                            (Semantic.initial id),
+                            (sprintf "Semantic%i" (model.semantics.Count + 1)))
+
         let newSemantics = (model.semantics.Add(newSemantic.id, newSemantic)
             |> HMap.alter model.selectedSemantic disableSemantic
             |> HMap.alter newSemantic.id enableSemantic)
@@ -152,7 +156,6 @@ module CorrelationDrawing =
                       
                       let updatedList = sortedPlistFromHmap update2 (fun (x : Semantic) -> x.label.text)
                       
-                      //let newList = DropdownList.update model.semanticsList (DropdownList.Action.SetSelected(s))
                       let newList = DropdownList.update 
                                           model.semanticsList 
                                           (DropdownList.Action.SetList(updatedList))
@@ -231,49 +234,45 @@ module CorrelationDrawing =
 
         let viewAnnotations (model : MCorrelationDrawingModel) = 
           let domList = 
-            alist {                                                                     
-                    for a in model.annotations do    
-                      yield (Incremental.tr 
-                        (AttributeMap.ofList [style tinyPadding])
-                        (AList.map (fun x -> x |> UI.map AnnotationMessage) (Annotation.view a model))
-                      )
-                  }   
+            alist {
+              for a in model.annotations do
+                yield (tr 
+                  ([style tinyPadding])
+                  (List.map (fun x -> x |> UI.map AnnotationMessage) (Annotation.view a model))
+                )
+            }  
 
           Html.SemUi.accordion "Annotations" "File Outline" true [
-            Incremental.table 
-              (AttributeMap.ofList [clazz "ui celled striped selectable inverted table unstackable"; 
-                                    style "padding: 1px 5px 1px 5px"]) (
-                alist {
-                  yield thead [][tr[][th[][text "Semantic"];
-                                      th[][text "Geometry"];
-                                      th[][text "Projection"];
-                                      th[][text "Text"]]]
-                  yield Incremental.tbody  (AttributeMap.ofList []) domList
-                }
-              )
+            table 
+              ([clazz "ui celled striped selectable inverted table unstackable"; 
+                style "padding: 1px 5px 1px 5px"]) 
+              [thead [][tr[][th[][text "Semantic"];
+                                    th[][text "Geometry"];
+                                    th[][text "Projection"];
+                                    th[][text "Text"]
+                       ]];
+              Incremental.tbody (AttributeMap.ofList []) domList]    
           ]
 
         let viewSemantics (model : MCorrelationDrawingModel) = 
-          let domList =
+          let domList = 
             alist {                 
               for mSem in model.semanticsList.valueList do
                 let! domNode = Semantic.view mSem
-                yield (Incremental.tr 
-                        (AttributeMap.ofList [style tinyPadding; onClick (fun str -> SetSemantic (Some mSem.id))]) 
-                        (AList.map (fun x -> x |> UI.map SemanticMessage) domNode)) //|> UI.map SemanticMessage
+                yield (tr 
+                        ([style tinyPadding; onClick (fun str -> SetSemantic (Some mSem.id))]) 
+                        (List.map (fun x -> x |> UI.map SemanticMessage) domNode)) //|> UI.map SemanticMessage
                 
               } 
+
           Html.SemUi.accordion "Semantics" "File Outline" true [
-            Incremental.table
-              (AttributeMap.ofList [clazz "ui celled striped selectable inverted table unstackable";
+            table
+              ([clazz "ui celled striped selectable inverted table unstackable";
                                     style "padding: 1px 5px 1px 5px"]) (
-                alist {
-                  yield thead [][tr[][th[][text "Label"];
-                                      th[][text "Thickness"];
-                                      th[][text "Colour"]]]
-                  yield Incremental.tbody  (AttributeMap.ofList []) domList
-               } 
-                
+                  [thead [][tr[][th[][text "Label"];
+                                 th[][text "Thickness"];
+                                 th[][text "Colour"]]];
+                  Incremental.tbody  (AttributeMap.ofList []) domList]           
               )
           ]
 
@@ -359,10 +358,10 @@ module CorrelationDrawing =
                 |> Sg.uniform "LineWidth" width
                 |> Sg.pass (RenderPass.after "lines" RenderPassOrder.Arbitrary RenderPass.main)
                 |> Sg.depthTest (Mod.constant DepthTestMode.None)
-   
-        //let getC4bFromCI = Mod.map (fun c -> c.c)
 
-        let annotation (model : MCorrelationDrawingModel) (anno : IMod<Option<MAnnotation>>)(view : IMod<CameraView>) = 
+        let annotation (model : MCorrelationDrawingModel)
+                       (anno  : IMod<Option<MAnnotation>>)
+                       (view  : IMod<CameraView>) = 
             //alist builder?
             let points = 
                 anno |> AList.bind (fun o -> 

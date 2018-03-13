@@ -59,17 +59,15 @@ module Semantic =
                     (AttributeMap.ofList [style "margin:auto; color:black; max-width:60px"])//attributes)
 
       let domNodeLabel =
-          td [clazz "center aligned"; style lrPadding] 
-             [TextInput.view' s.label] 
-             |> UI.map Action.ChangeLabel
+        td [clazz "center aligned"; style lrPadding] 
+            [TextInput.view' s.label] 
+            |> UI.map Action.ChangeLabel
      
 
-      alist {
-          //let! labelNode = createDomNodeLabel
-          yield domNodeLabel
-          yield td [clazz "center aligned"; style lrPadding] [(thNode |> UI.map ChangeThickness)]
-          yield td [clazz "center aligned"; style lrPadding] [ColorPicker.view s.style.color |> UI.map ColorPickerMessage]
-       }
+      [domNodeLabel;
+      td [clazz "center aligned"; style lrPadding] [(thNode |> UI.map ChangeThickness)];
+      td [clazz "center aligned"; style lrPadding] [ColorPicker.view s.style.color |> UI.map ColorPickerMessage]]
+       
         
 
 
@@ -95,11 +93,9 @@ module Semantic =
                                  (AList.ofList [Incremental.text (Mod.map(fun (x : C4b) -> colorToHexStr x) s.style.color.c)])
                             ]
                          
-      alist {
-        yield domNodeLbl
-        yield domNodeThickness
-        yield domNodeColor
-      }
+      [domNodeLbl;domNodeThickness;domNodeColor]
+      
+
 //           alist {
 //             let! col = s.style.color.c
 //             yield td [clazz "center aligned"; style lrPadding] 
@@ -117,10 +113,12 @@ module Semantic =
 
 
 
-    let view (model : MSemantic) : IMod<alist<DomNode<Action>>> = //@Thomas is there a difference (Mod.map vs adaptive block)?
+    let view (model : MSemantic) : IMod<list<DomNode<Action>>> = //@Thomas is there a difference (Mod.map vs adaptive block)?
         Mod.map (fun d -> match d with
                             | true -> viewDisabled model
                             | false -> viewEnabled model) model.disabled
+
+
 
 //        adaptive {
 //            let! disabled = model.disabled

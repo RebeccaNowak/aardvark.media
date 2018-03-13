@@ -37,26 +37,28 @@ module Annotation =
   let view (model : MAnnotation) (cdModel : MCorrelationDrawingModel) = 
     let semanticsNode =
       td [clazz "center aligned"; style lrPadding] 
-          [(DropdownList.view' cdModel.semanticsList
-                                  (Option.map (fun y -> y.id) >> SetSemantic)
-                                  (fun x -> x.label.text)
-                                  (fun x -> Mod.map (fun y -> x.id = y) model.semanticId))]
+         [(DropdownList.view' cdModel.semanticsList
+                              (Option.map (fun y -> y.id) >> SetSemantic)
+                              (fun x -> x.label.text)
+                              (fun x -> Mod.map (fun y -> x.id = y) model.semanticId))]
           
     let geometryTypeNode =
-      td [clazz "center aligned"; style lrPadding] [label  [clazz "ui label"] [text (model.geometry.ToString())]]
+      td [clazz "center aligned"; style lrPadding] 
+         [label  [clazz "ui label"] 
+                 [text (model.geometry.ToString())]]
 
     let projectionNode =
-      td [clazz "center aligned"; style lrPadding] [label  [clazz "ui label"] [text (model.projection.ToString())]]
+      td [clazz "center aligned"; style lrPadding] 
+         [label  [clazz "ui label"] 
+                 [text (model.projection.ToString())]]
 
     let annotationTextNode = 
-        td [clazz "center aligned"; style lrPadding] [label  [clazz "ui label"] [Incremental.text model.text]]
+        td [clazz "center aligned"; style lrPadding] 
+           [label  [clazz "ui label"] 
+                   [Incremental.text model.text]]
     
-    alist {
-      yield semanticsNode
-      yield geometryTypeNode
-      yield projectionNode
-      yield annotationTextNode        
-    }
+    [semanticsNode;geometryTypeNode;projectionNode;annotationTextNode]
+    
         
   /////////////////////////
 
