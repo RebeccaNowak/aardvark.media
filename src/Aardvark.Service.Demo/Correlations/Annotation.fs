@@ -11,7 +11,7 @@ open UtilitiesGUI
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Annotation =
-  
+
   let initial (id : string) (semanticsList : plist<Semantic>) = 
       {     
           id = id
@@ -19,12 +19,10 @@ module Annotation =
           geometry = GeometryType.Line
           semanticId = ""
           points = plist.Empty
-          segments = plist.Empty //[]
+          segments = plist.Empty
           projection = Projection.Viewpoint
           visible = true
           text = "text"
-
-          //semDropdown = {DropdownList.init with valueList = semanticsList}
       }
 
   type Action =
@@ -32,146 +30,75 @@ module Annotation =
 
   let update (anno : Annotation) (a : Action) =
       match a with
-          //| SetSemantic s -> anno
           | SetSemantic str -> match str with
                                 | Some s -> {anno with semanticId = s}
                                 | None -> anno
 
-  // TODO make generic function for fs below
-
-  let getSemanticLblMod (anno : MAnnotation) (model : MCorrelationDrawingModel) = 
-      adaptive {
-          let! id = anno.semanticId
-          let! semantic = AMap.tryFind id model.semantics
-          match semantic with
-              | Some s -> 
-                  let! lbl = s.label.text
-                  return lbl
-              | None -> return "-None-"
-      }
-
-  let getSemanticLblMod' (anno : IMod<Option<MAnnotation>>) (model : MCorrelationDrawingModel) = 
-      adaptive {
-          let! a = anno
-          match a with
-              | Some b -> 
-                  let! lbl = getSemanticLblMod b model
-                  return lbl
-              | None -> return "-None-"
-  }
-
-  let getColorMod (anno : MAnnotation) (model : MCorrelationDrawingModel) = 
-      adaptive {
-          let! id = anno.semanticId
-          let! semantic = AMap.tryFind id model.semantics
-          match semantic with
-              | Some s -> 
-                  let! col = s.style.color.c
-                  return col
-              | None -> return C4b.Blue
-      }
-
-  let getColorMod' (anno : IMod<Option<MAnnotation>>) (model : MCorrelationDrawingModel) = 
-      adaptive {
-          let! a = anno
-          match a with
-              | Some b -> 
-                  let! col = getColorMod b model
-                  return col
-              | None -> return C4b.Cyan
-  }
-
-  let getThicknessMod (anno : MAnnotation) (model : MCorrelationDrawingModel) = 
-      adaptive {
-          let! id = anno.semanticId
-          let! semantic = AMap.tryFind id model.semantics
-          match semantic with
-              | Some s -> 
-                  let! th = s.style.thickness.value
-                  return th
-              | None -> return 1.0
-      }
-
-  let getThicknessMod' (anno : IMod<Option<MAnnotation>>) (model : MCorrelationDrawingModel) = 
-      adaptive {
-          let! a = anno
-          match a with
-              | Some b ->
-                  let! th = getThicknessMod b model
-                  return th
-              | None -> return 1.0
-      }
-
-
-
-//  let color (anno : Annotation) =
-//      (Annotation.Lens.semantic |. Semantic.Lens.style |. Style.Lens.color |. ColorInput.Lens.c).Get anno
-
-  let view (model : MCorrelationDrawingModel) (mAnno : MAnnotation) = 
-    let getHtmlColor (ma : MAnnotation) =
-        adaptive {
-            let! colorMod = (getColorMod mAnno model)
-            return  ColorPicker.colorToHex colorMod
-        }
-    
-
-    let semanticButtonTextNode =
-        adaptive {
-            let! lbl = getSemanticLblMod mAnno model
-            let! col = (getHtmlColor mAnno)
-            return div [clazz "item"] [(DropdownList.view' model.semanticsList
-                                                           (Option.map (fun y -> y.id) >> SetSemantic)
-                                                           (fun x -> x.label.text)
-                                                           (fun x -> Mod.map (fun y -> x.id = y) mAnno.semanticId)
-                                      )]
-            //[label [clazz "ui label"; style (sprintf "background: #%s" col); onMouseClick (fun _ -> SetSemantic)] [text lbl]]
-            // return div [clazz "item"] [button [clazz "ui button"; onMouseClick (fun _ -> ChangeSemantic)] [text lbl]]
-        }
+  let view (model : MAnnotation) (cdModel : MCorrelationDrawingModel) = 
+    let semanticsNode =
+      div [clazz "item"] [(DropdownList.view' cdModel.semanticsList
+                                                      (Option.map (fun y -> y.id) >> SetSemantic)
+                                                      (fun x -> x.label.text)
+                                                      (fun x -> Mod.map (fun y -> x.id = y) model.semanticId)
+                         )]
 
     let geometryTypeNode =
-      div [clazz "item"] [label  [clazz "ui label"] [text (mAnno.geometry.ToString())]]
-    //  adaptive {
-    //    let! geo = mAnno.geometry
-    //    return div [clazz "item"] [label  [clazz "ui label"] [text (geo.ToString())]]
-    //  }
+      div [clazz "item"] [label  [clazz "ui label"] [text (model.geometry.ToString())]]
 
     let projectionNode =
-      div [clazz "item"] [label  [clazz "ui label"] [text (mAnno.projection.ToString())]]
+      div [clazz "item"] [label  [clazz "ui label"] [text (model.projection.ToString())]]
 
     let annotationTextNode = 
-      adaptive {
-        let! txt = mAnno.text
-        return div [clazz "item"] [label  [clazz "ui label"] [text txt]]
-      }
+        div [clazz "item"] [label  [clazz "ui label"] [Incremental.text model.text]]
 
-    Incremental.div AttributeMap.empty (
-        alist {
-            let! col = getHtmlColor mAnno
-            //let! icon = iconNode
-            let! button = semanticButtonTextNode
-            let! annoText = annotationTextNode
-            //let! geoNode = geometryTypeNode
-            yield div [clazz "ui horizontal list"] [button; 
-                                                    geometryTypeNode; 
-                                                    projectionNode
-                                                    annoText]
-        }
-    )
-
-  //let viewEnabled (model : MCorrelationDrawingModel) (mAnno : MAnnotation) =
-    //alist {
-      //let! labelNode = createDomNodeLabel
-      //yield labelNode
-      //yield td [clazz "center aligned"; style lrPadding] [(thNode |> UI.map ChangeThickness)]
-      //yield td [clazz "center aligned"; style lrPadding] [ColorPicker.view s.style.color |> UI.map ColorPickerMessage]
-    //}
-
-
-
-
-       
+    div [clazz "ui horizontal list"] [semanticsNode; 
+                                                geometryTypeNode; 
+                                                projectionNode;
+                                                annotationTextNode]
         
-        
+
+        //@Thomas: is there a simpler way to do this?
+    //@Thomas: performance: use of Mod.bind
+  let getColor (anno : IMod<Option<MAnnotation>>) (cdModel : MCorrelationDrawingModel) = 
+    Mod.bind (fun (a : Option<MAnnotation>)
+                  -> match a with
+                      | Some a ->
+                          let sem = Mod.bind (fun id -> AMap.tryFind id cdModel.semantics) a.semanticId
+                          Mod.bind (fun (se : option<MSemantic>) ->
+                            match se with
+                                        | Some s -> s.style.color.c
+                                        | None -> Mod.constant C4b.Red) sem
+                      | None -> Mod.constant C4b.Red) anno   
+
+
+  let getColor' (anno : MAnnotation) (cdModel : MCorrelationDrawingModel) = 
+    let sem = Mod.bind (fun id -> AMap.tryFind id cdModel.semantics) anno.semanticId
+    Mod.bind (fun (se : option<MSemantic>) ->
+      match se with
+                  | Some s -> s.style.color.c
+                  | None -> Mod.constant C4b.Red) sem
+
+  
+    
+
+  let getThickness (anno : IMod<Option<MAnnotation>>) (cdModel : MCorrelationDrawingModel) = 
+    Mod.bind (fun (a : Option<MAnnotation>)
+                  -> match a with
+                      | Some a ->
+                          let sem = Mod.bind (fun id -> AMap.tryFind id cdModel.semantics) a.semanticId
+                          Mod.bind (fun (se : option<MSemantic>) ->
+                            match se with
+                                        | Some s -> s.style.thickness.value
+                                        | None -> Mod.constant Semantic.ThicknessDefault) sem
+                      | None -> Mod.constant Semantic.ThicknessDefault) anno   
+
+
+  let getThickness' (anno : MAnnotation) (cdModel : MCorrelationDrawingModel) = 
+    let sem = Mod.bind (fun id -> AMap.tryFind id cdModel.semantics) anno.semanticId
+    Mod.bind (fun (se : option<MSemantic>) ->
+      match se with
+                  | Some s -> s.style.thickness.value
+                  | None -> Mod.constant Semantic.ThicknessDefault) sem      
                                                
         
 

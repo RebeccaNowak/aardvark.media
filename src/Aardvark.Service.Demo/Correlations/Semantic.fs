@@ -15,7 +15,8 @@ module Semantic =
       let _thickness : Lens<CorrelationDrawing.Semantic,float> = Semantic.Lens.style |. Style.Lens.thickness |. NumericInput.Lens.value
       let _labelText : Lens<CorrelationDrawing.Semantic,string> = Semantic.Lens.label |. TextInput.Lens.text
 
-
+    [<Literal>]
+    let ThicknessDefault = 1.0
 
     let initial id = {
         id = id
@@ -24,7 +25,7 @@ module Semantic =
         label = TextInput.init
         size = 0.0
         style = {Style.color = {c = C4b.Red};
-                 Style.thickness = {Numeric.init with value = 1.0;
+                 Style.thickness = {Numeric.init with value = ThicknessDefault;
                                                       min = 0.5; 
                                                       max = 10.0; 
                                                       step = 0.5; 
@@ -72,7 +73,7 @@ module Semantic =
         
 
 
-    let viewDisabled (s : MSemantic) = 
+    let viewDisabled (s : MSemantic) = //@Thomas is this better than the version below? (performance)
       let domNodeLbl =
             td [clazz "center aligned"; style lrPadding] 
                [Incremental.label (AttributeMap.union 
@@ -113,6 +114,7 @@ module Semantic =
 //                                 [Incremental.text (Mod.map(fun (x : C4b) -> colorToHexStr x) s.style.color.c)]
 //                          ]
 //           }
+
 
 
     let view (model : MSemantic) : IMod<alist<DomNode<Action>>> = //@Thomas is there a difference (Mod.map vs adaptive block)?

@@ -90,8 +90,6 @@ module CorrelationDrawing =
         let selected = model.selectedSemantic            
         Mod.bind (fun s -> AMap.tryFind s model.semantics) selected
         
-              
-
     let finishAndAppend (model : CorrelationDrawingModel) = 
         let anns = match model.working with
                             | Some w -> model.annotations |> PList.append w
@@ -109,7 +107,7 @@ module CorrelationDrawing =
                                                     | None -> Mod.constant C4b.VRVisGreen
         Mod.bind (fun x -> mapping x) (getMSemantic model)
       
-      
+
 
     let update (model : CorrelationDrawingModel) (act : Action) =
         match (act, model.draw) with
@@ -237,7 +235,7 @@ module CorrelationDrawing =
                   (AttributeMap.ofList [clazz "ui list"]) (
                       alist {                                                                     
                           for a in model.annotations do    
-                            yield Annotation.view model a |> UI.map AnnotationMessage
+                            yield Annotation.view a model |> UI.map AnnotationMessage
                       }     
               )
           ]
@@ -364,13 +362,13 @@ module CorrelationDrawing =
             let withDefault (m : IMod<Option<'a>>) (f : 'a -> IMod<'b>) (defaultValue : 'b) = 
                 let defaultValue = defaultValue |> Mod.constant
                 m |> Mod.bind (function | None -> defaultValue | Some v -> f v)
-            let color = Annotation.getColorMod' anno model
-            let thickness = Annotation.getThicknessMod' anno model
+            let color = Annotation.getColor anno model
+            let thickness = Annotation.getThickness anno model 
             [lines points color thickness; dots points color view]
           
         let annotation' (model : MCorrelationDrawingModel)(anno : MAnnotation)(view : IMod<CameraView>) =      
-            let color = Annotation.getColorMod anno model
-            let thickness = Annotation.getThicknessMod anno model
+            let color = Annotation.getColor' anno model
+            let thickness = Annotation.getThickness' anno model
             [lines anno.points color thickness; dots anno.points color view] |> ASet.ofList
 
         let view (model:MCorrelationDrawingModel) (cam:IMod<CameraView>) =        
