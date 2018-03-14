@@ -111,7 +111,10 @@ module Semantic =
            [ColorPicker.view s.style.color |> UI.map ColorPickerMessage]
       ]
        
-        
+      //          [div [clazz "item"] 
+//              [div [clazz "ui right labeled input"] [
+//                      label [clazz "ui label"] [text "Geometry"]  // style "color:white"
+//                      Html.SemUi.dropDown model.geometry SetGeometry]];  
 
 
     let viewDisabled (s : MSemantic) = 

@@ -99,50 +99,63 @@ module CorrelationDrawingApp =
     let view (model : MCorrelationAppModel) =
         let frustum =
             Mod.constant (Frustum.perspective 60.0 0.1 100.0 1.0)
-      
+
+        let menu = 
+          let foo = [div [clazz "item"]
+                      [button [clazz "ui icon button"; onMouseClick (fun _ -> Save)] 
+                              [i [clazz "small save icon"] [] ] |> wrapToolTip "save"];
+                  div [clazz "item"]
+                      [button [clazz "ui icon button"; onMouseClick (fun _ -> Load)] 
+                              [i [clazz "small folder outline icon"] [] ] |> wrapToolTip "load"];
+                  div [clazz "item"]
+                      [button [clazz "ui icon button"; onMouseClick (fun _ -> Clear)]
+                              [i [clazz "small file outline icon"] [] ] |> wrapToolTip "clear"];
+                  div [clazz "item"]
+                      [button [clazz "ui icon button"; onMouseClick (fun _ -> Export)]
+                              [i [clazz "small external icon"] [] ] |> wrapToolTip "export"];
+                  div [clazz "item"]
+                      [button [clazz "ui icon button"; onMouseClick (fun _ -> Undo)] 
+                              [i [clazz "small arrow left icon"] [] ] |> wrapToolTip "undo"];
+                  div [clazz "item"]
+                      [button [clazz "ui icon button"; onMouseClick (fun _ -> Redo)] 
+                              [i [clazz "small arrow right icon"] [] ] |> wrapToolTip "redo"];
+                  div [clazz "item"]
+                      [button [clazz "ui icon button"; 
+                                onMouseClick (fun _ -> Action.DrawingSemanticMessage CorrelationDrawing.AddSemantic)] 
+                              [i [clazz "small plus icon"] [] ]]]
+
+          div [style "vertical-align: middle"] [
+          // div [style "width:100%; height: 10%; vertical-align: middle"] [
+            div [clazz "ui horizontal inverted menu";style "width:100%; height: 10%; float:middle; vertical-align: middle"]
+                (List.append foo (List.map (fun x -> x |> UI.map DrawingMessage) 
+                                           (CorrelationDrawing.UI.viewAnnotationTools model.drawing)))]
+                 
         require (myCss) (
-            body [clazz "ui"; style "background: #1B1C1E"] [
-                div [] [
-                    ArcBallController.controlledControl model.camera CameraMessage frustum
-                        (AttributeMap.ofList [
-                                    onKeyDown (KeyDown)
-                                    onKeyUp (KeyUp)
-                                    attribute "style" "width:65%; height: 100%; float: left;"]
-                        )
-                        (
-                            CorrelationDrawing.Sg.view model.drawing model.camera.view
-                                |> Sg.map DrawingMessage
-                                |> Sg.fillMode (model.rendering.fillMode)
+            body [clazz "ui"; style "background: #1B1C1E;position:fixed;width:100%"] [
+              menu
+              div [] [
+                ArcBallController.controlledControl model.camera CameraMessage frustum
+                    (AttributeMap.ofList [
+                                onKeyDown (KeyDown)
+                                onKeyUp (KeyUp)
+                                attribute "style" "width:70%; height: 100%; float: left;"]
+                    )
+                    (
+                        CorrelationDrawing.Sg.view model.drawing model.camera.view
+                            |> Sg.map DrawingMessage
+                            |> Sg.fillMode (model.rendering.fillMode)
                                     
-                                |> Sg.cullMode (model.rendering.cullMode)                                                                    
-                        )                                        
-                ]
+                            |> Sg.cullMode (model.rendering.cullMode)                                                                    
+                    )                                        
+              ]
             
-                div [clazz "scrolling content"; style "width:35%; height: 100%; float: right; overflow-y: scroll"] [
-                    
-                    div [clazz "ui buttons inverted"] [
-                        button [clazz "ui icon button"; onMouseClick (fun _ -> Save)] [
-                                    i [clazz "save icon"] [] ] |> wrapToolTip "save"
-                        button [clazz "ui icon button"; onMouseClick (fun _ -> Load)] [
-                                    i [clazz "folder outline icon"] [] ] |> wrapToolTip "load"
-                        button [clazz "ui icon button"; onMouseClick (fun _ -> Clear)] [
-                                    i [clazz "file outline icon"] [] ] |> wrapToolTip "clear"
-                        button [clazz "ui icon button"; onMouseClick (fun _ -> Export)] [
-                                    i [clazz "external icon"] [] ] |> wrapToolTip "export"
-                        button [clazz "ui icon button"; onMouseClick (fun _ -> Undo)] [
-                                    i [clazz "arrow left icon"] [] ] |> wrapToolTip "undo"
-                        button [clazz "ui icon button"; onMouseClick (fun _ -> Redo)] [
-                                    i [clazz "arrow right icon"] [] ] |> wrapToolTip "redo"
-                        button [clazz "ui icon button"; onMouseClick (fun _ -> Action.DrawingSemanticMessage CorrelationDrawing.AddSemantic)] [
-                                    i [clazz "plus icon"] [] ] //|> Utilities.wrapToolTip "add semantic"
-                    ]
+              div [clazz "scrolling content"; style "width:30%; height: 100%; float: right; overflow-y: scroll"] [
+                  CorrelationDrawing.UI.viewAnnotations model.drawing  |> UI.map AnnotationMessage   
+                  CorrelationDrawing.UI.viewSemantics model.drawing |> UI.map DrawingSemanticMessage
 
-                    CorrelationDrawing.UI.viewAnnotationTools model.drawing |> UI.map DrawingMessage
-                    CorrelationDrawing.UI.viewAnnotations model.drawing  |> UI.map AnnotationMessage   
-                    CorrelationDrawing.UI.viewSemantics model.drawing |> UI.map DrawingSemanticMessage
-
-                ]
             ]
+        ]
+//          ]
         ) 
 
 

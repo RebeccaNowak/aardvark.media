@@ -63,7 +63,7 @@ let kitchenSink argv =
              app :> IDisposable, app.Runtime :> IRuntime
     use app = app
     
-    use form = new Form(Width = 1024, Height = 768)
+    use form = new Form(Width = 1600, Height = 900)
 
     //let app = Viewer.KitchenSinkApp.app
     //let app = Aardvark.UI.Numeric.app

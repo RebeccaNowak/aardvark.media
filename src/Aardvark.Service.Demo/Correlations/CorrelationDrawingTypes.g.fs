@@ -283,6 +283,7 @@ module Mutable =
         let _style = MStyle.Create(__initial.style)
         let _geometry = ResetMod.Create(__initial.geometry)
         let _semanticType = ResetMod.Create(__initial.semanticType)
+        let _level = ResetMod.Create(__initial.level)
         
         member x.id = __current.Value.id
         member x.disabled = _disabled :> IMod<_>
@@ -291,6 +292,7 @@ module Mutable =
         member x.style = _style
         member x.geometry = _geometry :> IMod<_>
         member x.semanticType = _semanticType :> IMod<_>
+        member x.level = _level :> IMod<_>
         
         member x.Current = __current :> IMod<_>
         member x.Update(v : CorrelationDrawing.Semantic) =
@@ -303,6 +305,7 @@ module Mutable =
                 MStyle.Update(_style, v.style)
                 ResetMod.Update(_geometry,v.geometry)
                 ResetMod.Update(_semanticType,v.semanticType)
+                ResetMod.Update(_level,v.level)
                 
         
         static member Create(__initial : CorrelationDrawing.Semantic) : MSemantic = MSemantic(__initial)
@@ -360,6 +363,12 @@ module Mutable =
                     override x.Get(r) = r.semanticType
                     override x.Set(r,v) = { r with semanticType = v }
                     override x.Update(r,f) = { r with semanticType = f r.semanticType }
+                }
+            let level =
+                { new Lens<CorrelationDrawing.Semantic, Microsoft.FSharp.Core.int>() with
+                    override x.Get(r) = r.level
+                    override x.Set(r,v) = { r with level = v }
+                    override x.Update(r,f) = { r with level = f r.level }
                 }
     
     

@@ -165,15 +165,15 @@ module CorrelationDrawing =
                                   semantics = update2}
                   | None -> model
             | SemanticMessage sem, _ ->
-                    let fUpdate (semO : Option<Semantic>) = 
-                        match semO with
-                            | Some s -> Some( Semantic.update s sem)
-                            | None -> None //TODO something useful
-                    let updatedSemantics = (HMap.alter model.selectedSemantic fUpdate model.semantics)
-                    let sortedList = (sortedPlistFromHmap updatedSemantics (fun (x : Semantic) -> x.label.text))
-                    {model with semantics = updatedSemantics; 
-                                semanticsList = {model.semanticsList with valueList = sortedList}
-                    }
+                let fUpdate (semO : Option<Semantic>) = 
+                    match semO with
+                        | Some s -> Some( Semantic.update s sem)
+                        | None -> None //TODO something useful
+                let updatedSemantics = (HMap.alter model.selectedSemantic fUpdate model.semantics)
+                let sortedList = (sortedPlistFromHmap updatedSemantics (fun (x : Semantic) -> x.label.text))
+                {model with semantics = updatedSemantics; 
+                            semanticsList = {model.semanticsList with valueList = sortedList}
+                }
             | AddSemantic, _ -> insertSampleSemantic model 
             | SetGeometry mode, _ ->
                     { model with geometry = mode }
@@ -204,32 +204,49 @@ module CorrelationDrawing =
         open Aardvark.Base.Incremental    
        
         let viewAnnotationTools (model:MCorrelationDrawingModel) =  
-            let selected = getMSemantic model
-            let onChange =
-                fun (selected : option<MSemantic>) ->
-                    match selected with
-                        | Some d -> SetSemantic (Some d.id)
-                        | None -> DoNothing //AddSemantic // TODO?
+          let selected = getMSemantic model
+          let onChange =
+              fun (selected : option<MSemantic>) ->
+                  match selected with
+                      | Some d -> SetSemantic (Some d.id)
+                      | None -> DoNothing //AddSemantic // TODO?
                    
-            let mapping = Option.map (fun (y : MSemantic) -> y.id)
-            Html.SemUi.accordion "Annotation Tools" "Write" true [
-              Html.table [                            
-                Html.row "Export Path:" [Html.SemUi.textBox  model.exportPath SetExportPath ]
-                Html.row "Geometry:"    [Html.SemUi.dropDown model.geometry   SetGeometry]
-                Html.row "Projections:" [Html.SemUi.dropDown model.projection SetProjection]
-                Html.row "Semantic:"    [DropdownList.view' model.semanticsList 
-                                                           (Option.map (fun y -> y.id) >> SetSemantic)
-                                                           (fun x -> x.label.text)
-                                                           (fun x -> (Mod.map (fun y -> not y) x.disabled))
-                                        ]
-//                    [dropDownListR 
-//                        model.semanticsList 
-//                        (getMSemantic model) 
-//                        onChange 
-//                        (fun x -> x.label.text) 
-//                        (fun x -> (Mod.map (fun y -> not y) x.disabled))]
-              ]                               
-           ]   
+          let mapping = Option.map (fun (y : MSemantic) -> y.id)
+
+
+          //div [clazz "item"] [label [] [text "Export Path"; Html.SemUi.textBox  model.exportPath SetExportPath]];
+          [div [clazz "item"] 
+              [div [clazz "ui right labeled input"] [
+                      label [clazz "ui label"] [text "Semantic"] 
+                      DropdownList.view' 
+                        model.semanticsList 
+                        (Option.map (fun y -> y.id) >> SetSemantic)
+                        (fun x -> x.label.text)
+                        (fun x -> (Mod.map (fun y -> not y) x.disabled))]];          
+          div [clazz "item"] 
+              [div [clazz "ui right labeled input"] [
+                      label [clazz "ui label"] [text "Geometry"]  // style "color:white"
+                      Html.SemUi.dropDown model.geometry SetGeometry]];
+          div [clazz "item"] 
+              [div [clazz "ui right labeled input"] [
+                      label [clazz "ui label"] [text "Projections"]
+                      Html.SemUi.dropDown model.projection SetProjection]]]
+
+
+
+
+//            Html.SemUi.accordion "Annotation Tools" "Write" true [
+//              Html.table [                            
+//                Html.row "Export Path:" [Html.SemUi.textBox  model.exportPath SetExportPath ]
+//                Html.row "Geometry:"    [Html.SemUi.dropDown model.geometry   SetGeometry]
+//                Html.row "Projections:" [Html.SemUi.dropDown model.projection SetProjection]
+//                Html.row "Semantic:"    [DropdownList.view' model.semanticsList 
+//                                                           (Option.map (fun y -> y.id) >> SetSemantic)
+//                                                           (fun x -> x.label.text)
+//                                                           (fun x -> (Mod.map (fun y -> not y) x.disabled))
+//                                        ]
+//              ]                               
+//           ]   
             
 
         let viewAnnotations (model : MCorrelationDrawingModel) = 

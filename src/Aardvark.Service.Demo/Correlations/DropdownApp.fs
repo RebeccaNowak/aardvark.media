@@ -52,7 +52,6 @@ module DropdownList =
 
     let alistAttr  = 
       amap {
-        //yield clazz "ui dropdown"
         let! attr = modColorToColorAttr mDropdown.color
         yield attr
         let! lst = (mDropdown.valueList.Content) 

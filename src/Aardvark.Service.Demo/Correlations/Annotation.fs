@@ -35,12 +35,22 @@ module Annotation =
                                 | None -> anno
 
   let view (model : MAnnotation) (cdModel : MCorrelationDrawingModel) = 
-    let semanticsNode =
+    let semanticsNode =       
+      let getSemanticLabel (id : string) = 
+        (AMap.tryFind id cdModel.semantics)
+          |> Mod.bind (fun x ->
+                        match x with 
+                          | Some s -> s.label.text
+                          | None -> Mod.constant "-NONE-")
       td [clazz "center aligned"; style lrPadding] 
-         [(DropdownList.view' cdModel.semanticsList
-                              (Option.map (fun y -> y.id) >> SetSemantic)
-                              (fun x -> x.label.text)
-                              (fun x -> Mod.map (fun y -> x.id = y) model.semanticId))]
+         [label  [clazz "ui label"] 
+                 [Incremental.text (model.semanticId |> Mod.bind (fun x -> getSemanticLabel x))]]
+
+//      td [clazz "center aligned"; style lrPadding] 
+//         [(DropdownList.view' cdModel.semanticsList
+//                              (Option.map (fun y -> y.id) >> SetSemantic)
+//                              (fun x -> x.label.text)
+//                              (fun x -> Mod.map (fun y -> x.id = y) model.semanticId))]
           
     let geometryTypeNode =
       td [clazz "center aligned"; style lrPadding] 
