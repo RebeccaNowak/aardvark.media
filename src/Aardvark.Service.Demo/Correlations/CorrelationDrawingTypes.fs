@@ -36,13 +36,13 @@ type TextInput = {
 
 /// CORRELATION PANELS
 
-type Projection = Linear = 0 | Viewpoint = 1 | Sky = 2
+type Projection   = Linear = 0 | Viewpoint = 1 | Sky = 2
 type GeometryType = Point = 0 | Line = 1 | Polyline = 2 | Polygon = 3 | DnS = 4 | Undefined = 5
 type SemanticType = Metric = 0 | Angular = 1 | Hierarchical = 2
 
 [<DomainType>]
 type Style = {
-    color : ColorInput
+    color     : ColorInput
     thickness : NumericInput
  } 
 
@@ -53,7 +53,6 @@ type RenderingParameters = {
 }   
     
 module RenderingPars =
-    [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
     let initial : RenderingParameters = {
         fillMode = FillMode.Fill
         cullMode = CullMode.None
@@ -71,6 +70,7 @@ type Semantic = {
    style             : Style
    geometry          : GeometryType
    semanticType      : SemanticType
+   level             : int
  }
 
 [<DomainType>]
@@ -79,18 +79,16 @@ type Annotation = {
     id                : string
     
     [<NonIncremental>]
-    geometry : GeometryType
+    geometry          : GeometryType
 
     [<NonIncremental>]
-    projection : Projection
+    projection        : Projection
 
-    semanticId : string
-    points : plist<V3d>
-    segments : plist<plist<V3d>> //list<Segment>
-    visible : bool
-    text : string
-
-    // semDropdown : DropdownList<Semantic>
+    semanticId        : string
+    points            : plist<V3d>
+    segments          : plist<plist<V3d>> //list<Segment>
+    visible           : bool
+    text              : string
 }
 
 [<DomainType>]

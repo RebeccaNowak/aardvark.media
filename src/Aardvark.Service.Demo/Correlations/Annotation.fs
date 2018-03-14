@@ -65,15 +65,20 @@ module Annotation =
         //@Thomas: is there a simpler way to do this?
     //@Thomas: performance: use of Mod.bind
   let getColor (anno : IMod<Option<MAnnotation>>) (cdModel : MCorrelationDrawingModel) = 
-    Mod.bind (fun (a : Option<MAnnotation>)
-                  -> match a with
-                      | Some a ->
-                          let sem = Mod.bind (fun id -> AMap.tryFind id cdModel.semantics) a.semanticId
-                          Mod.bind (fun (se : option<MSemantic>) ->
-                            match se with
-                                        | Some s -> s.style.color.c
-                                        | None -> Mod.constant C4b.Red) sem
-                      | None -> Mod.constant C4b.Red) anno   
+    anno |> 
+      Mod.bind (fun (a : Option<MAnnotation>) -> 
+        match a with
+          | Some a ->
+              let sem = 
+                a.semanticId |>
+                  Mod.bind (fun id -> AMap.tryFind id cdModel.semantics)
+
+              sem |> 
+                Mod.bind (fun (se : option<MSemantic>) ->
+                  match se with
+                    | Some s -> s.style.color.c
+                    | None -> Mod.constant C4b.Red)
+          | None -> Mod.constant C4b.Red)
 
 
   let getColor' (anno : MAnnotation) (cdModel : MCorrelationDrawingModel) = 
