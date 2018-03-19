@@ -80,7 +80,7 @@ type Semantic = {
    semantics           : hmap<string, Semantic>
    semanticsList       : plist<Semantic>
    selectedSemantic    : string
-   sorting             : SemanticsSortingOption
+   sortBy              : SemanticsSortingOption
  }
 
 [<DomainType>]

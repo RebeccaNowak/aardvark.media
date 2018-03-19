@@ -13,14 +13,15 @@ module SemanticApp =
     | SetSemantic       of option<string>
     | AddSemantic
     | SemanticMessage   of Semantic.Action
+    | SortBy            of SemanticsSortingOption
 
 
     ///// INITIAL
   let initial : SemanticApp = {
-    semantics = hmap.Empty
-    selectedSemantic = ""
-    semanticsList = plist.Empty
-    sorting = SemanticsSortingOption.Label
+    semantics         = hmap.Empty
+    selectedSemantic  = ""
+    semanticsList     = plist.Empty
+    sortBy            = SemanticsSortingOption.Label
   }
 
 
@@ -51,7 +52,7 @@ module SemanticApp =
 
     {model with selectedSemantic  = s.id
                 semantics         = newSemantics
-                semanticsList     = getSortedList newSemantics model.sorting
+                semanticsList     = getSortedList newSemantics model.sortBy
     }
 
 
@@ -79,9 +80,9 @@ module SemanticApp =
                   |> HMap.alter model.selectedSemantic disableSemantic
                   |> HMap.alter s enableSemantic
                       
-              {model with selectedSemantic = s
-                          semanticsList = getSortedList updatedSemantics model.sorting 
-                          semantics = updatedSemantics}
+              {model with selectedSemantic  = s
+                          semanticsList     = getSortedList updatedSemantics model.sortBy 
+                          semantics         = updatedSemantics}
           | None    -> model
 
       | SemanticMessage sem ->
@@ -90,10 +91,14 @@ module SemanticApp =
                 | Some s  -> Some(Semantic.update s sem)
                 | None    -> None
         let updatedSemantics = HMap.alter model.selectedSemantic fUpdate model.semantics
-        {model with semantics = updatedSemantics
-                    semanticsList = getSortedList updatedSemantics model.sorting}
+        {model with semantics     = updatedSemantics
+                    semanticsList = getSortedList updatedSemantics model.sortBy}
 
       | AddSemantic -> insertSampleSemantic model 
+
+      | SortBy sortingOption ->
+        {model with sortBy        = sortingOption
+                    semanticsList = (getSortedList model.semantics sortingOption)}
 
 
 
@@ -115,8 +120,8 @@ module SemanticApp =
         ([clazz "ui celled striped selectable inverted table unstackable";
                               style "padding: 1px 5px 1px 5px"]) (
             [thead [][tr[][th[][text "Label"];
-                            th[][text "Thickness"];
-                            th[][text "Colour"]]];
+                           th[][text "Thickness"];
+                           th[][text "Colour"]]];
             Incremental.tbody  (AttributeMap.ofList []) domList]           
         )
     ]
@@ -124,10 +129,10 @@ module SemanticApp =
   let app : App<SemanticApp, MSemanticApp, Action> =
       {
           unpersist = Unpersist.instance
-          threads = fun _ -> ThreadPool.empty
-          initial = getInitialWithSamples
-          update = update
-          view = viewSemantics
+          threads   = fun _ -> ThreadPool.empty
+          initial   = getInitialWithSamples
+          update    = update
+          view      = viewSemantics
       }
 
   let start () = App.start app
