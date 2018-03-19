@@ -73,6 +73,16 @@ type Semantic = {
    level             : int
  }
 
+ type SemanticsSortingOption = Label = 0 | Level = 1 | GeometryType = 2 | SemanticType = 3 | Id = 4
+
+ [<DomainType>]
+ type SemanticApp = {
+   semantics           : hmap<string, Semantic>
+   semanticsList       : plist<Semantic>
+   selectedSemantic    : string
+   sorting             : SemanticsSortingOption
+ }
+
 [<DomainType>]
 type Annotation = {     
     [<NonIncremental;PrimaryKey>]
@@ -84,11 +94,14 @@ type Annotation = {
     [<NonIncremental>]
     projection        : Projection
 
-    semanticId        : string
-    points            : plist<V3d>
-    segments          : plist<plist<V3d>> //list<Segment>
-    visible           : bool
-    text              : string
+    semanticId            : string
+    points                : plist<V3d>
+    segments              : plist<plist<V3d>> //list<Segment>
+    visible               : bool
+    text                  : string
+    overrideGeometryType  : option<GeometryType>
+    overrideStyle         : option<Style>
+    overrideLevel         : option<int>
 }
 
 [<DomainType>]

@@ -88,12 +88,14 @@
     <Compile Include="Correlations\TextInputApp.fs" />
     <Compile Include="Correlations\DropdownApp.fs" />
     <Compile Include="Correlations\Semantic.fs" />
+    <Compile Include="Correlations\SemanticApp.fs" />
     <Compile Include="Correlations\Annotation.fs" />
     <Compile Include="Correlations\Border.fs" />
     <Compile Include="Correlations\GeologicalLog.fs" />
     <Compile Include="Correlations\CorrelationPlot.fs" />
     <Compile Include="Correlations\CorrelationDrawing.fs" />
     <Compile Include="Correlations\CorrelationDrawingApp.fs" />
+
     <Compile Include="SimpleTest.fs" />
     <Compile Include="Quicktest-Models.fs" />
     <Compile Include="QuickTest.fs" />

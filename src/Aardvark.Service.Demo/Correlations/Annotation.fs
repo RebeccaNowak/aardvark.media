@@ -23,6 +23,9 @@ module Annotation =
           projection = Projection.Viewpoint
           visible = true
           text = "text"
+          overrideStyle = None
+          overrideLevel = None
+          overrideGeometryType = None
       }
 
   type Action =

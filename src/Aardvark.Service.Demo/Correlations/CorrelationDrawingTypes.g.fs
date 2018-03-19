@@ -372,6 +372,70 @@ module Mutable =
                 }
     
     
+    type MSemanticApp(__initial : CorrelationDrawing.SemanticApp) =
+        inherit obj()
+        let mutable __current : Aardvark.Base.Incremental.IModRef<CorrelationDrawing.SemanticApp> = Aardvark.Base.Incremental.EqModRef<CorrelationDrawing.SemanticApp>(__initial) :> Aardvark.Base.Incremental.IModRef<CorrelationDrawing.SemanticApp>
+        let _semantics = MMap.Create(__initial.semantics, (fun v -> MSemantic.Create(v)), (fun (m,v) -> MSemantic.Update(m, v)), (fun v -> v))
+        let _semanticsList = MList.Create(__initial.semanticsList, (fun v -> MSemantic.Create(v)), (fun (m,v) -> MSemantic.Update(m, v)), (fun v -> v))
+        let _selectedSemantic = ResetMod.Create(__initial.selectedSemantic)
+        let _sorting = ResetMod.Create(__initial.sorting)
+        
+        member x.semantics = _semantics :> amap<_,_>
+        member x.semanticsList = _semanticsList :> alist<_>
+        member x.selectedSemantic = _selectedSemantic :> IMod<_>
+        member x.sorting = _sorting :> IMod<_>
+        
+        member x.Current = __current :> IMod<_>
+        member x.Update(v : CorrelationDrawing.SemanticApp) =
+            if not (System.Object.ReferenceEquals(__current.Value, v)) then
+                __current.Value <- v
+                
+                MMap.Update(_semantics, v.semantics)
+                MList.Update(_semanticsList, v.semanticsList)
+                ResetMod.Update(_selectedSemantic,v.selectedSemantic)
+                ResetMod.Update(_sorting,v.sorting)
+                
+        
+        static member Create(__initial : CorrelationDrawing.SemanticApp) : MSemanticApp = MSemanticApp(__initial)
+        static member Update(m : MSemanticApp, v : CorrelationDrawing.SemanticApp) = m.Update(v)
+        
+        override x.ToString() = __current.Value.ToString()
+        member x.AsString = sprintf "%A" __current.Value
+        interface IUpdatable<CorrelationDrawing.SemanticApp> with
+            member x.Update v = x.Update v
+    
+    
+    
+    [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+    module SemanticApp =
+        [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+        module Lens =
+            let semantics =
+                { new Lens<CorrelationDrawing.SemanticApp, Aardvark.Base.hmap<Microsoft.FSharp.Core.string,CorrelationDrawing.Semantic>>() with
+                    override x.Get(r) = r.semantics
+                    override x.Set(r,v) = { r with semantics = v }
+                    override x.Update(r,f) = { r with semantics = f r.semantics }
+                }
+            let semanticsList =
+                { new Lens<CorrelationDrawing.SemanticApp, Aardvark.Base.plist<CorrelationDrawing.Semantic>>() with
+                    override x.Get(r) = r.semanticsList
+                    override x.Set(r,v) = { r with semanticsList = v }
+                    override x.Update(r,f) = { r with semanticsList = f r.semanticsList }
+                }
+            let selectedSemantic =
+                { new Lens<CorrelationDrawing.SemanticApp, Microsoft.FSharp.Core.string>() with
+                    override x.Get(r) = r.selectedSemantic
+                    override x.Set(r,v) = { r with selectedSemantic = v }
+                    override x.Update(r,f) = { r with selectedSemantic = f r.selectedSemantic }
+                }
+            let sorting =
+                { new Lens<CorrelationDrawing.SemanticApp, CorrelationDrawing.SemanticsSortingOption>() with
+                    override x.Get(r) = r.sorting
+                    override x.Set(r,v) = { r with sorting = v }
+                    override x.Update(r,f) = { r with sorting = f r.sorting }
+                }
+    
+    
     type MAnnotation(__initial : CorrelationDrawing.Annotation) =
         inherit obj()
         let mutable __current : Aardvark.Base.Incremental.IModRef<CorrelationDrawing.Annotation> = Aardvark.Base.Incremental.EqModRef<CorrelationDrawing.Annotation>(__initial) :> Aardvark.Base.Incremental.IModRef<CorrelationDrawing.Annotation>
@@ -380,6 +444,7 @@ module Mutable =
         let _segments = MList.Create(__initial.segments, (fun v -> MList.Create(v)), (fun (m,v) -> MList.Update(m, v)), (fun v -> v :> alist<_>))
         let _visible = ResetMod.Create(__initial.visible)
         let _text = ResetMod.Create(__initial.text)
+        let _overrideStyle = MOption.Create(__initial.overrideStyle, (fun v -> MStyle.Create(v)), (fun (m,v) -> MStyle.Update(m, v)), (fun v -> v))
         
         member x.id = __current.Value.id
         member x.geometry = __current.Value.geometry
@@ -389,6 +454,7 @@ module Mutable =
         member x.segments = _segments :> alist<_>
         member x.visible = _visible :> IMod<_>
         member x.text = _text :> IMod<_>
+        member x.overrideStyle = _overrideStyle :> IMod<_>
         
         member x.Current = __current :> IMod<_>
         member x.Update(v : CorrelationDrawing.Annotation) =
@@ -400,6 +466,7 @@ module Mutable =
                 MList.Update(_segments, v.segments)
                 ResetMod.Update(_visible,v.visible)
                 ResetMod.Update(_text,v.text)
+                MOption.Update(_overrideStyle, v.overrideStyle)
                 
         
         static member Create(__initial : CorrelationDrawing.Annotation) : MAnnotation = MAnnotation(__initial)
@@ -463,6 +530,12 @@ module Mutable =
                     override x.Get(r) = r.text
                     override x.Set(r,v) = { r with text = v }
                     override x.Update(r,f) = { r with text = f r.text }
+                }
+            let overrideStyle =
+                { new Lens<CorrelationDrawing.Annotation, Microsoft.FSharp.Core.option<CorrelationDrawing.Style>>() with
+                    override x.Get(r) = r.overrideStyle
+                    override x.Set(r,v) = { r with overrideStyle = v }
+                    override x.Update(r,f) = { r with overrideStyle = f r.overrideStyle }
                 }
     
     

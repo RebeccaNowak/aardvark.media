@@ -89,7 +89,7 @@ let kitchenSink argv =
     //let app = RenderModelApp.app 
     //let app = AnnotationApp.app
     //let app = DragNDrop.App.app
-    let app = CorrelationDrawingApp.app
+    let app = SemanticApp.app
     //let app = TextInput.app
 
     //Config.shouldTimeUIUpdate <- true
@@ -110,7 +110,7 @@ let kitchenSink argv =
 
 
     WebPart.startServer 4321 [ 
-        MutableApp.toWebPart' runtime true (app |> App.start)
+        MutableApp.toWebPart' runtime true (app |> App.start )
         Suave.Files.browseHome
     ] 
 
