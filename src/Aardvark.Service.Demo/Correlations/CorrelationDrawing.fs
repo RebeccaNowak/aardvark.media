@@ -130,7 +130,7 @@ module CorrelationDrawing =
                     | None -> 
                         let id = Guid.NewGuid().ToString()                                     
                         {Annotation.initial id model.semanticsList.valueList with
-                            points = PList.ofList [p]; 
+                            points = PList.ofList [p];  
                             semanticId = model.selectedSemantic
                             geometry = model.geometry
                             projection = model.projection}//add annotation states

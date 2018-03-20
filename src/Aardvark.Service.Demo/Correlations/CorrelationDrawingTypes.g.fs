@@ -286,6 +286,7 @@ module Mutable =
         let _level = ResetMod.Create(__initial.level)
         
         member x.id = __current.Value.id
+        member x.timestamp = __current.Value.timestamp
         member x.disabled = _disabled :> IMod<_>
         member x.label = _label
         member x.size = _size :> IMod<_>
@@ -327,6 +328,12 @@ module Mutable =
                     override x.Get(r) = r.id
                     override x.Set(r,v) = { r with id = v }
                     override x.Update(r,f) = { r with id = f r.id }
+                }
+            let timestamp =
+                { new Lens<CorrelationDrawing.Semantic, Microsoft.FSharp.Core.string>() with
+                    override x.Get(r) = r.timestamp
+                    override x.Set(r,v) = { r with timestamp = v }
+                    override x.Update(r,f) = { r with timestamp = f r.timestamp }
                 }
             let disabled =
                 { new Lens<CorrelationDrawing.Semantic, Microsoft.FSharp.Core.bool>() with
@@ -378,12 +385,12 @@ module Mutable =
         let _semantics = MMap.Create(__initial.semantics, (fun v -> MSemantic.Create(v)), (fun (m,v) -> MSemantic.Update(m, v)), (fun v -> v))
         let _semanticsList = MList.Create(__initial.semanticsList, (fun v -> MSemantic.Create(v)), (fun (m,v) -> MSemantic.Update(m, v)), (fun v -> v))
         let _selectedSemantic = ResetMod.Create(__initial.selectedSemantic)
-        let _sorting = ResetMod.Create(__initial.sorting)
+        let _sortBy = ResetMod.Create(__initial.sortBy)
         
         member x.semantics = _semantics :> amap<_,_>
         member x.semanticsList = _semanticsList :> alist<_>
         member x.selectedSemantic = _selectedSemantic :> IMod<_>
-        member x.sorting = _sorting :> IMod<_>
+        member x.sortBy = _sortBy :> IMod<_>
         
         member x.Current = __current :> IMod<_>
         member x.Update(v : CorrelationDrawing.SemanticApp) =
@@ -393,7 +400,7 @@ module Mutable =
                 MMap.Update(_semantics, v.semantics)
                 MList.Update(_semanticsList, v.semanticsList)
                 ResetMod.Update(_selectedSemantic,v.selectedSemantic)
-                ResetMod.Update(_sorting,v.sorting)
+                ResetMod.Update(_sortBy,v.sortBy)
                 
         
         static member Create(__initial : CorrelationDrawing.SemanticApp) : MSemanticApp = MSemanticApp(__initial)
@@ -428,11 +435,11 @@ module Mutable =
                     override x.Set(r,v) = { r with selectedSemantic = v }
                     override x.Update(r,f) = { r with selectedSemantic = f r.selectedSemantic }
                 }
-            let sorting =
+            let sortBy =
                 { new Lens<CorrelationDrawing.SemanticApp, CorrelationDrawing.SemanticsSortingOption>() with
-                    override x.Get(r) = r.sorting
-                    override x.Set(r,v) = { r with sorting = v }
-                    override x.Update(r,f) = { r with sorting = f r.sorting }
+                    override x.Get(r) = r.sortBy
+                    override x.Set(r,v) = { r with sortBy = v }
+                    override x.Update(r,f) = { r with sortBy = f r.sortBy }
                 }
     
     
@@ -444,7 +451,9 @@ module Mutable =
         let _segments = MList.Create(__initial.segments, (fun v -> MList.Create(v)), (fun (m,v) -> MList.Update(m, v)), (fun v -> v :> alist<_>))
         let _visible = ResetMod.Create(__initial.visible)
         let _text = ResetMod.Create(__initial.text)
+        let _overrideGeometryType = MOption.Create(__initial.overrideGeometryType)
         let _overrideStyle = MOption.Create(__initial.overrideStyle, (fun v -> MStyle.Create(v)), (fun (m,v) -> MStyle.Update(m, v)), (fun v -> v))
+        let _overrideLevel = MOption.Create(__initial.overrideLevel)
         
         member x.id = __current.Value.id
         member x.geometry = __current.Value.geometry
@@ -454,7 +463,9 @@ module Mutable =
         member x.segments = _segments :> alist<_>
         member x.visible = _visible :> IMod<_>
         member x.text = _text :> IMod<_>
+        member x.overrideGeometryType = _overrideGeometryType :> IMod<_>
         member x.overrideStyle = _overrideStyle :> IMod<_>
+        member x.overrideLevel = _overrideLevel :> IMod<_>
         
         member x.Current = __current :> IMod<_>
         member x.Update(v : CorrelationDrawing.Annotation) =
@@ -466,7 +477,9 @@ module Mutable =
                 MList.Update(_segments, v.segments)
                 ResetMod.Update(_visible,v.visible)
                 ResetMod.Update(_text,v.text)
+                MOption.Update(_overrideGeometryType, v.overrideGeometryType)
                 MOption.Update(_overrideStyle, v.overrideStyle)
+                MOption.Update(_overrideLevel, v.overrideLevel)
                 
         
         static member Create(__initial : CorrelationDrawing.Annotation) : MAnnotation = MAnnotation(__initial)
@@ -531,11 +544,23 @@ module Mutable =
                     override x.Set(r,v) = { r with text = v }
                     override x.Update(r,f) = { r with text = f r.text }
                 }
+            let overrideGeometryType =
+                { new Lens<CorrelationDrawing.Annotation, Microsoft.FSharp.Core.option<CorrelationDrawing.GeometryType>>() with
+                    override x.Get(r) = r.overrideGeometryType
+                    override x.Set(r,v) = { r with overrideGeometryType = v }
+                    override x.Update(r,f) = { r with overrideGeometryType = f r.overrideGeometryType }
+                }
             let overrideStyle =
                 { new Lens<CorrelationDrawing.Annotation, Microsoft.FSharp.Core.option<CorrelationDrawing.Style>>() with
                     override x.Get(r) = r.overrideStyle
                     override x.Set(r,v) = { r with overrideStyle = v }
                     override x.Update(r,f) = { r with overrideStyle = f r.overrideStyle }
+                }
+            let overrideLevel =
+                { new Lens<CorrelationDrawing.Annotation, Microsoft.FSharp.Core.option<Microsoft.FSharp.Core.int>>() with
+                    override x.Get(r) = r.overrideLevel
+                    override x.Set(r,v) = { r with overrideLevel = v }
+                    override x.Update(r,f) = { r with overrideLevel = f r.overrideLevel }
                 }
     
     

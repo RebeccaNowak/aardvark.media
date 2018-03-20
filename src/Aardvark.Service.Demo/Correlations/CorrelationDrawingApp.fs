@@ -166,7 +166,11 @@ module CorrelationDrawingApp =
            
             drawing = 
                CorrelationDrawing.initial 
-                |> (CorrelationDrawing.insertSemantic (Semantic.initialHorizon (Guid.NewGuid().ToString())))
+                |> (CorrelationDrawing.insertSemantic (Semantic.initialHorizon0 (Guid.NewGuid().ToString())))
+                |> (CorrelationDrawing.insertSemantic (Semantic.initialHorizon1 (Guid.NewGuid().ToString())))
+                |> (CorrelationDrawing.insertSemantic (Semantic.initialHorizon2 (Guid.NewGuid().ToString())))
+                |> (CorrelationDrawing.insertSemantic (Semantic.initialHorizon3 (Guid.NewGuid().ToString())))
+                |> (CorrelationDrawing.insertSemantic (Semantic.initialHorizon4 (Guid.NewGuid().ToString())))
                 |> (CorrelationDrawing.insertSemantic (Semantic.initialGrainSize (Guid.NewGuid().ToString())))
                 |> (CorrelationDrawing.insertSemantic (Semantic.initialCrossbed (Guid.NewGuid().ToString())))
                       

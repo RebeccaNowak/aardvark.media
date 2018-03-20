@@ -64,6 +64,9 @@ type Semantic = {
    [<NonIncremental;PrimaryKey>]
    id                : string
 
+   [<NonIncremental>]
+   timestamp         : string
+
    disabled          : bool
    label             : TextInput
    size              : double
@@ -73,7 +76,7 @@ type Semantic = {
    level             : int
  }
 
- type SemanticsSortingOption = Label = 0 | Level = 1 | GeometryType = 2 | SemanticType = 3 | Id = 4
+ type SemanticsSortingOption = Label = 0 | Level = 1 | GeometryType = 2 | SemanticType = 3 | Id = 4 | Timestamp = 5
 
  [<DomainType>]
  type SemanticApp = {

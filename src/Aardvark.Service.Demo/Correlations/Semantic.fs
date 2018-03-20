@@ -21,6 +21,7 @@ module Semantic =
     let initial id = {
 
         id            = id
+        timestamp     = Time.getTimestamp
         disabled      = true
         label         = TextInput.init
         size          = 0.0
@@ -41,14 +42,54 @@ module Semantic =
         level         = 0
     }
 
-    let initialHorizon id = {
+    let initialHorizon0 id = {
       initial id with 
-        label         = {TextInput.init with text = "Horizon"}
+        label         = {TextInput.init with text = "Horizon0"}
         style         = {Style.color      = {c = C4b.Red};
                          Style.thickness  = {Numeric.init with value = 5.0}}
         geometry      = GeometryType.Line
         semanticType  = SemanticType.Metric
+        level         = 0
       }
+
+    let initialHorizon1 id = {
+      initial id with 
+        label         = {TextInput.init with text = "Horizon1"}
+        style         = {Style.color      = {c = C4b.DarkRed};
+                         Style.thickness  = {Numeric.init with value = 5.0}}
+        geometry      = GeometryType.Polygon
+        semanticType  = SemanticType.Metric
+        level         = 0
+      }
+
+    let initialHorizon2 id = {
+      initial id with 
+        label         = {TextInput.init with text = "Horizon2"}
+        style         = {Style.color      = {c = C4b.DarkMagenta};
+                         Style.thickness  = {Numeric.init with value = 5.0}}
+        geometry      = GeometryType.Line
+        semanticType  = SemanticType.Hierarchical
+        level         = 0
+      }
+
+    let initialHorizon3 id = {
+      initial id with 
+        label         = {TextInput.init with text = "Horizon3"}
+        style         = {Style.color      = {c = C4b.Magenta};
+                         Style.thickness  = {Numeric.init with value = 5.0}}
+        geometry      = GeometryType.Line
+        semanticType  = SemanticType.Metric
+      }
+
+    let initialHorizon4 id = {
+      initial id with 
+        label         = {TextInput.init with text = "Horizon4"}
+        style         = {Style.color      = {c = C4b.DarkBlue};
+                         Style.thickness  = {Numeric.init with value = 5.0}}
+        geometry      = GeometryType.Line
+        semanticType  = SemanticType.Metric
+      }
+
 
     let initialGrainSize id = {
       initial id with 
@@ -57,6 +98,7 @@ module Semantic =
                          Style.thickness  = {Numeric.init with value = 1.0}}
         geometry      = GeometryType.Line
         semanticType  = SemanticType.Metric
+        level         = 2
       }
 
     let initialCrossbed id = {
@@ -66,6 +108,17 @@ module Semantic =
                          Style.thickness  = {Numeric.init with value = 1.0}}
         geometry      = GeometryType.Line
         semanticType  = SemanticType.Metric
+        level         = 3
+      }
+
+    let impactBreccia id = {
+      initial id with 
+        label         = {TextInput.init with text = "Impact Breccia"}
+        style         = {Style.color      = {c = C4b.Black};
+                         Style.thickness  = {Numeric.init with value = 1.0}}
+        geometry      = GeometryType.Point
+        semanticType  = SemanticType.Angular
+        level         = 3
       }
     
 
@@ -134,14 +187,38 @@ module Semantic =
           ]
         ]
 
-      let domNodeColor = td [clazz "center aligned"; style lrPadding] 
-                            [Incremental.label (AttributeMap.union 
-                                      (AttributeMap.ofList [clazz "ui horizontal label"])
-                                      (AttributeMap.ofAMap (incrBgColorAttr s.style.color.c)))
-                                 (AList.ofList [Incremental.text (Mod.map(fun (x : C4b) -> colorToHexStr x) s.style.color.c)])
-                            ]
+      let domNodeColor = 
+        td  [clazz "center aligned"; style lrPadding] 
+            [Incremental.label (AttributeMap.union 
+                      (AttributeMap.ofList [clazz "ui horizontal label"])
+                      (AttributeMap.ofAMap (incrBgColorAttr s.style.color.c)))
+                  (AList.ofList [Incremental.text (Mod.map(fun (x : C4b) -> colorToHexStr x) s.style.color.c)])
+            ]
+
+      let domNodeLevel =  
+        td  [clazz "center aligned"; style lrPadding] 
+            [label [clazz "ui horizontal label"]
+                   [Incremental.text (Mod.map(fun x -> sprintf "%i" x) s.level)]
+            ]
+
+      let domNodeGeometryType =  
+        td [clazz "center aligned"; style lrPadding] 
+           [label [clazz "ui horizontal label"]
+                  [Incremental.text (Mod.map(fun x -> x.ToString()) s.geometry)]
+           ]
+
+      let domNodeSemanticType =  
+        td [clazz "center aligned"; style lrPadding] 
+           [label [clazz "ui horizontal label"]
+                  [Incremental.text (Mod.map(fun x -> x.ToString()) s.semanticType)]
+           ]
                          
-      [domNodeLbl;domNodeThickness;domNodeColor]
+      [domNodeLbl;
+       domNodeThickness;
+       domNodeColor;
+       domNodeLevel;
+       domNodeGeometryType;
+       domNodeSemanticType]
       
 
 
