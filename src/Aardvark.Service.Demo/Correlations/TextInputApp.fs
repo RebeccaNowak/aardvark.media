@@ -35,6 +35,8 @@ module TextInput =
       amap {
         yield attribute "type" "text"
         yield onChange (fun str -> ChangeText str)
+        let! colAttr = modColorToColorAttr model.bgColor
+        yield colAttr
         //let optS = Mod.force(model.size)
         //if optS.IsSome then yield attribute "size" (sprintf "%i" optS.Value)
       }

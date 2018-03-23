@@ -170,7 +170,10 @@ module SemanticApp =
                                   style "padding: 1px 5px 1px 5px"]) (
                 [thead [][tr[][th[][text "Label"];
                                 th[][text "Thickness"];
-                                th[][text "Colour"]]];
+                                th[][text "Colour"];
+                                th[][text "Level"];
+                                th[][text "Geometry Type"];
+                                th[][text "Semantic Type"]]];
                 Incremental.tbody  (AttributeMap.ofList []) domList]           
             )
         ]])

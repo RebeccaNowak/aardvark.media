@@ -18,6 +18,8 @@ module Semantic =
     [<Literal>]
     let ThicknessDefault = 1.0
 
+    let levels = [0;1;2;3;4;5;6;7;8]
+
     let initial id = {
 
         id            = id
@@ -128,6 +130,7 @@ module Semantic =
         | ColorPickerMessage  of ColorPicker.Action
         | ChangeThickness     of Numeric.Action
         | ChangeLabel         of TextInput.Action
+        | SetLevel            of int
 
     let update (sem : Semantic) (a : Action) = 
         match a with
@@ -141,27 +144,30 @@ module Semantic =
                 {sem with disabled = true}
             | Enable -> 
                 {sem with disabled = false}
+            | SetLevel i ->
+                {sem with level = i}
 
-
+    let intoTd (x) = 
+      td [clazz "center aligned"; style lrPadding] [x]
+      
 
     let viewEnabled (s : MSemantic) =
       let thNode = Numeric.view'' 
-                    NumericInputType.InputBox 
-                    s.style.thickness
-                    (AttributeMap.ofList [style "margin:auto; color:black; max-width:60px"])
-
-      let domNodeLabel =
-        td [clazz "center aligned"; style lrPadding] 
-            [TextInput.view' s.label] 
-            |> UI.map Action.ChangeLabel
-     
+                     NumericInputType.InputBox 
+                     s.style.thickness
+                     (AttributeMap.ofList [style "margin:auto; color:black; max-width:60px"])
 
       [
-        domNodeLabel;
-        td [clazz "center aligned"; style lrPadding] 
-           [(thNode |> UI.map ChangeThickness)];
-        td [clazz "center aligned"; style lrPadding] 
-           [ColorPicker.view s.style.color |> UI.map ColorPickerMessage]
+        (TextInput.view' s.label)
+          |> intoTd
+          |> UI.map Action.ChangeLabel;
+        thNode 
+          |> UI.map ChangeThickness
+          |> intoTd;
+        ColorPicker.view s.style.color 
+          |> UI.map ColorPickerMessage
+          |> intoTd;
+        Html.SemUi.dropDown' (AList.ofList levels) s.level SetLevel (fun x -> sprintf "%i" x)
       ]
        
       //          [div [clazz "item"] 
