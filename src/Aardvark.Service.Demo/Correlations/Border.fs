@@ -16,3 +16,8 @@ let std = sqrt (sumSquared / 7.0)
 
 
 
+let getAKey (m : Map<string, 'a>) =
+  m |> Map.toSeq |> Seq.map fst |> Seq.head
+
+Map.ofList[("ab","a");("cd","b");("ef","c")]
+  |> getAKey

@@ -181,9 +181,7 @@ module Semantic =
         (TextInput.view' 
           (model.style.color.c |> Mod.map (fun x -> 
             let c = colorToHexStr x
-            (sprintf "box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0.1) inset;
-                      border: 2px solid %s;
-                      background-color:%s" c  c))
+            (sprintf "box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0.1) inset; background-color:%s" c))
           )
           model.label)
           

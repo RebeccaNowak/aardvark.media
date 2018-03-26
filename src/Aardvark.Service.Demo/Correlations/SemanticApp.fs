@@ -13,9 +13,9 @@ module SemanticApp =
   type Action =
     | SetSemantic       of option<string>
     | AddSemantic
+    | DeleteSemantic
     | SemanticMessage   of Semantic.Action
     | SortBy            
-    | KeyDown           of key : Keys
 
 
     ///// INITIAL
@@ -86,8 +86,6 @@ module SemanticApp =
   ////// UPDATE 
   let update (model : SemanticApp) (action : Action) =
     match (action) with 
-//      | KeyDown Keys.S        -> 
-
       | SetSemantic sem       ->
         match sem with
           | Some s  ->
@@ -110,9 +108,29 @@ module SemanticApp =
         {model with semantics     = updatedSemantics
                     semanticsList = getSortedList updatedSemantics model.sortBy}
 
-      | AddSemantic -> insertSampleSemantic model 
+      | AddSemantic     -> insertSampleSemantic model 
 
-      | SortBy  ->
+      | DeleteSemantic  ->
+        let getAKey (m : hmap<string, 'a>) =
+          m |> HMap.toSeq |> Seq.map fst |> Seq.first
+
+        let rem =
+          model.semantics
+            |> HMap.remove model.selectedSemantic
+
+        match getAKey rem with
+          | Some k  -> 
+            let updatedSemantics = (rem |> HMap.alter k enableSemantic)
+            {model with 
+              semantics = updatedSemantics 
+              semanticsList = getSortedList updatedSemantics model.sortBy
+              selectedSemantic = k
+            }
+          | None   -> model
+
+
+
+      | SortBy          ->
         let newSort = next model.sortBy
         {model with sortBy = newSort
                     semanticsList = 
@@ -135,10 +153,13 @@ module SemanticApp =
            style "width:100%; height: 10%; float:middle; vertical-align: middle"][
         div [clazz "item"]
             [button [clazz "ui icon button"; onMouseClick (fun _ -> AddSemantic)] 
-                    [i [clazz "plus icon"] [] ] |> UtilitiesGUI.wrapToolTip "load"];
+                    [i [clazz "plus icon"] [] ] |> UtilitiesGUI.wrapToolTip "add"];
+        div [clazz "item"]
+            [button [clazz "ui icon button"; onMouseClick (fun _ -> DeleteSemantic)] 
+                    [i [clazz "minus icon"] [] ] |> UtilitiesGUI.wrapToolTip "delete"];
         div [clazz "item"] [
           button 
-            [clazz "ui icon button"; style "width: 25ch; text-align: left"; onMouseClick (fun _ -> SortBy;)]
+            [clazz "ui icon button"; style "width: 20ch; text-align: left"; onMouseClick (fun _ -> SortBy;)]
             [Incremental.text (Mod.map (fun x -> sprintf "sort: %s" (string x)) model.sortBy)]
         ]  
       ]
@@ -160,7 +181,7 @@ module SemanticApp =
             ]
 
     require (myCss) (
-      body [clazz "ui"; style "background: #1B1C1E;position:fixed;width:100%"; onKeyDown KeyDown] [
+      body [clazz "ui"; style "background: #1B1C1E;position:fixed;width:100%"] [
         div [] [
           menu
           //Html.SemUi.accordion "Semantics" "File Outline" true [

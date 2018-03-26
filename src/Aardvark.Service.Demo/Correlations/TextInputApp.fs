@@ -37,19 +37,15 @@ module TextInput =
         let! st = styleStr
         yield style st
         yield onChange (fun str -> ChangeText str)
-        //let! colAttr = incrBgColorAttr model.bgColor
-        //yield colAttr
       }
 
     let attributes =
       amap {
-        //let! optS = model.size
-        //if optS.IsSome then yield attribute "size" (sprintf "%i" optS.Value)
         let! txt = model.text
         yield attribute "value" txt
       }
-    Incremental.input (AttributeMap.ofAMap (AMap.union attr1 attributes))
-  
+    div [clazz "ui icon input"] [(Incremental.input (AttributeMap.ofAMap (AMap.union attr1 attributes)))]
+    //style "height: 1.4285em"
   let view (model : MTextInput) : DomNode<Action> =
     view' (Mod.constant "") model  
      
