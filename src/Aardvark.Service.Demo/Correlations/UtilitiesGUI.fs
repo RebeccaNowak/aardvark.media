@@ -6,6 +6,15 @@ open Aardvark.Base
 open Aardvark.UI
 
 module UtilitiesGUI = 
+    // SEMUI
+
+    let myCss = [
+              { kind = Stylesheet; name = "semui"; url = "https://cdn.jsdelivr.net/semantic-ui/2.2.6/semantic.min.css" }
+              { kind = Stylesheet; name = "semui-overrides"; url = "semui-overrides.css" }
+              { kind = Script; name = "semui"; url = "https://cdn.jsdelivr.net/semantic-ui/2.2.6/semantic.min.js" }
+            ]
+
+
     // GENERAL
     let colorToHexStr (color : C4b) = 
         let bytes = [| color.R; color.G; color.B |]
@@ -20,14 +29,19 @@ module UtilitiesGUI =
     let bgColorAttr (color : C4b) =
       style (sprintf "background: %s" (colorToHexStr color))
 
-    let incrBgColorAttr (colorMod : IMod<C4b>) = 
-      //Incremental.style ( 
-       // AttributeMap.ofAMap
-          amap { 
-            let! col =  colorMod
-            let str = (sprintf "background: %s" (colorToHexStr col))
-            yield style str
-          }
+    
+    let incrBgColorAMap (colorMod : IMod<C4b>) =      
+      amap { 
+        let! col =  colorMod
+        let str = (sprintf "background: %s" (colorToHexStr col))
+        yield style str
+      }
+
+    let incrBgColorAttr (colorMod : IMod<C4b>) =
+      colorMod 
+        |> Mod.map (fun x -> 
+                      style (sprintf "background-color: %s" (colorToHexStr x)))      
+
        
 
     let modColorToColorAttr (c : IMod<C4b>) =

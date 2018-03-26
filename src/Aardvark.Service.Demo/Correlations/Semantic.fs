@@ -44,6 +44,7 @@ module Semantic =
         level         = 0
     }
 
+    /////// DEFAULT SEMANTICS
     let initialHorizon0 id = {
       initial id with 
         label         = {TextInput.init with text = "Horizon0"}
@@ -123,108 +124,136 @@ module Semantic =
         level         = 3
       }
     
-
+    ////// ACTIONS
     type Action = 
         | Disable
         | Enable
         | ColorPickerMessage  of ColorPicker.Action
         | ChangeThickness     of Numeric.Action
-        | ChangeLabel         of TextInput.Action
+        | TextInputMessage    of TextInput.Action
         | SetLevel            of int
+        | SetGeometry         of GeometryType
+        | SetSemanticType     of SemanticType
 
-    let update (sem : Semantic) (a : Action) = 
+    ////// UPDATE
+    let update (model : Semantic) (a : Action) = 
         match a with
-            | ChangeLabel m -> 
-                {sem with label = TextInput.update sem.label m}
+            | TextInputMessage m -> 
+                {model with label = TextInput.update model.label m}
             | ColorPickerMessage m -> 
-                {sem with style = {sem.style with color = (ColorPicker.update sem.style.color m)}}
+                {model with 
+                  style = {model.style with 
+                            color = (ColorPicker.update model.style.color m)
+                          }
+                }
             | ChangeThickness m -> 
-                {sem with style = {sem.style with thickness = Numeric.update sem.style.thickness m}}
+                {model with 
+                  style = {model.style with 
+                            thickness = Numeric.update model.style.thickness m
+                          }
+                }
             | Disable -> 
-                {sem with disabled = true}
+                {model with disabled = true}
             | Enable -> 
-                {sem with disabled = false}
+                {model with disabled = false}
             | SetLevel i ->
-                {sem with level = i}
+                {model with level = i}
+            | SetGeometry geo ->
+                {model with geometry = geo}
+            | SetSemanticType st ->
+                {model with semanticType = st}
 
+    ////// HELPER FUNCTIONS
     let intoTd (x) = 
       td [clazz "center aligned"; style lrPadding] [x]
       
 
-    let viewEnabled (s : MSemantic) =
+    ////// VIEW
+    let viewEnabled (model : MSemantic) =
       let thNode = Numeric.view'' 
                      NumericInputType.InputBox 
-                     s.style.thickness
-                     (AttributeMap.ofList [style "margin:auto; color:black; max-width:60px"])
+                     model.style.thickness
+                     (AttributeMap.ofList 
+                        [style "margin:auto; color:black; max-width:60px"])
 
+      let labelNode = 
+
+        (TextInput.view' 
+          (model.style.color.c |> Mod.map (fun x -> 
+            let c = colorToHexStr x
+            (sprintf "box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0.1) inset;
+                      border: 2px solid %s;
+                      background-color:%s" c  c))
+          )
+          model.label)
+          
+        
       [
-        (TextInput.view' s.label)
+        labelNode
           |> intoTd
-          |> UI.map Action.ChangeLabel;
+          |> UI.map Action.TextInputMessage
         thNode 
           |> UI.map ChangeThickness
-          |> intoTd;
-        ColorPicker.view s.style.color 
+          |> intoTd
+        ColorPicker.view model.style.color 
           |> UI.map ColorPickerMessage
-          |> intoTd;
-        Html.SemUi.dropDown' (AList.ofList levels) s.level SetLevel (fun x -> sprintf "%i" x)
+          |> intoTd
+        Html.SemUi.dropDown' (AList.ofList levels) model.level SetLevel (fun x -> sprintf "%i" x)
+          |> intoTd
+        Html.SemUi.dropDown model.geometry SetGeometry
+          |> intoTd
+        Html.SemUi.dropDown model.semanticType SetSemanticType
+          |> intoTd
       ]
        
-      //          [div [clazz "item"] 
-//              [div [clazz "ui right labeled input"] [
-//                      label [clazz "ui label"] [text "Geometry"]  // style "color:white"
-//                      Html.SemUi.dropDown model.geometry SetGeometry]];  
-
-
     let viewDisabled (s : MSemantic) = 
       let domNodeLbl =
-        td [clazz "center aligned"; style lrPadding] [
+        intoTd <|
           Incremental.label 
             (AttributeMap.union 
                (AttributeMap.ofList [clazz "ui horizontal label"]) 
-               (AttributeMap.ofAMap (incrBgColorAttr s.style.color.c)))
+               (AttributeMap.ofAMap (incrBgColorAMap s.style.color.c)))
             (AList.ofList [Incremental.text (s.label.text)])
-        ]
+        
 
       let domNodeThickness = 
-        td [clazz "center aligned"; style lrPadding] [
+        intoTd <|
           label [clazz "ui horizontal label"] [
             Incremental.text (Mod.map(fun x -> sprintf "%.1f" x) s.style.thickness.value)
           ]
-        ]
+        
 
       let domNodeColor = 
-        td  [clazz "center aligned"; style lrPadding] 
-            [Incremental.label (AttributeMap.union 
-                      (AttributeMap.ofList [clazz "ui horizontal label"])
-                      (AttributeMap.ofAMap (incrBgColorAttr s.style.color.c)))
-                  (AList.ofList [Incremental.text (Mod.map(fun (x : C4b) -> colorToHexStr x) s.style.color.c)])
-            ]
+        intoTd <|
+          Incremental.label (AttributeMap.union 
+            (AttributeMap.ofList [clazz "ui horizontal label"])
+            (AttributeMap.ofAMap (incrBgColorAMap s.style.color.c)))
+            (AList.ofList [Incremental.text (Mod.map(fun (x : C4b) -> colorToHexStr x) s.style.color.c)])
+            
 
-      let domNodeLevel =  
-        td  [clazz "center aligned"; style lrPadding] 
-            [label [clazz "ui horizontal label"]
-                   [Incremental.text (Mod.map(fun x -> sprintf "%i" x) s.level)]
-            ]
+      let domNodeLevel = 
+        intoTd <| 
+          label [clazz "ui horizontal label"]
+                [Incremental.text (Mod.map(fun x -> sprintf "%i" x) s.level)]
+            
 
       let domNodeGeometryType =  
-        td [clazz "center aligned"; style lrPadding] 
-           [label [clazz "ui horizontal label"]
-                  [Incremental.text (Mod.map(fun x -> x.ToString()) s.geometry)]
-           ]
+        intoTd <|
+          label [clazz "ui horizontal label"]
+                [Incremental.text (Mod.map(fun x -> x.ToString()) s.geometry)]  
 
       let domNodeSemanticType =  
-        td [clazz "center aligned"; style lrPadding] 
-           [label [clazz "ui horizontal label"]
-                  [Incremental.text (Mod.map(fun x -> x.ToString()) s.semanticType)]
-           ]
-                         
+        intoTd <|
+          label [clazz "ui horizontal label"]
+                [Incremental.text (Mod.map(fun x -> x.ToString()) s.semanticType)]
+           
+                 
       [domNodeLbl;
-       domNodeThickness;
-       domNodeColor;
-       domNodeLevel;
-       domNodeGeometryType;
-       domNodeSemanticType]
+        domNodeThickness;
+        domNodeColor;
+        domNodeLevel;
+        domNodeGeometryType;
+        domNodeSemanticType]
       
 
 
