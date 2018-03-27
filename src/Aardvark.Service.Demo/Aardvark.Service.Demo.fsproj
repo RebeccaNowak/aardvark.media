@@ -95,7 +95,7 @@
     <Compile Include="Correlations\CorrelationPlot.fs" />
     <Compile Include="Correlations\CorrelationDrawing.fs" />
     <Compile Include="Correlations\CorrelationDrawingApp.fs" />
-
+    <Compile Include="Correlations\PagesApp.fs" />
     <Compile Include="SimpleTest.fs" />
     <Compile Include="Quicktest-Models.fs" />
     <Compile Include="QuickTest.fs" />

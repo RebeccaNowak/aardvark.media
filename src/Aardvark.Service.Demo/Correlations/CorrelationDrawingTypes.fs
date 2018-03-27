@@ -148,3 +148,22 @@ type CorrelationAppModel = {
     [<TreatAsValue>]
     future           : Option<CorrelationAppModel>     
 }
+
+[<DomainType>]
+type Pages = 
+    {
+        [<NonIncremental>]
+        past : Option<Pages>
+
+        [<NonIncremental>]
+        future : Option<Pages>
+
+        cameraState : CameraControllerState
+
+        cullMode : CullMode
+        fill : bool
+
+        dockConfig : DockConfig
+
+        semanticApp : SemanticApp
+    }

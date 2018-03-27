@@ -69,8 +69,7 @@ module SemanticApp =
   let insertSampleSemantic (model : SemanticApp) = 
     let id = System.Guid.NewGuid().ToString()
     let newSemantic = Semantic.Lens._labelText.Set(
-                        (Semantic.initial id),
-                        (sprintf "NewSemantic%i" (model.semantics.Count + 1)))
+                        (Semantic.initial id),"NewSemantic")
     insertSemantic newSemantic model
 
   let getInitialWithSamples =

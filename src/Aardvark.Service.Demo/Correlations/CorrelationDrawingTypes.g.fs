@@ -843,3 +843,90 @@ module Mutable =
                     override x.Set(r,v) = { r with future = v }
                     override x.Update(r,f) = { r with future = f r.future }
                 }
+    
+    
+    type MPages(__initial : CorrelationDrawing.Pages) =
+        inherit obj()
+        let mutable __current : Aardvark.Base.Incremental.IModRef<CorrelationDrawing.Pages> = Aardvark.Base.Incremental.EqModRef<CorrelationDrawing.Pages>(__initial) :> Aardvark.Base.Incremental.IModRef<CorrelationDrawing.Pages>
+        let _cameraState = Aardvark.UI.Primitives.Mutable.MCameraControllerState.Create(__initial.cameraState)
+        let _cullMode = ResetMod.Create(__initial.cullMode)
+        let _fill = ResetMod.Create(__initial.fill)
+        let _dockConfig = ResetMod.Create(__initial.dockConfig)
+        let _semanticApp = MSemanticApp.Create(__initial.semanticApp)
+        
+        member x.past = __current.Value.past
+        member x.future = __current.Value.future
+        member x.cameraState = _cameraState
+        member x.cullMode = _cullMode :> IMod<_>
+        member x.fill = _fill :> IMod<_>
+        member x.dockConfig = _dockConfig :> IMod<_>
+        member x.semanticApp = _semanticApp
+        
+        member x.Current = __current :> IMod<_>
+        member x.Update(v : CorrelationDrawing.Pages) =
+            if not (System.Object.ReferenceEquals(__current.Value, v)) then
+                __current.Value <- v
+                
+                Aardvark.UI.Primitives.Mutable.MCameraControllerState.Update(_cameraState, v.cameraState)
+                ResetMod.Update(_cullMode,v.cullMode)
+                ResetMod.Update(_fill,v.fill)
+                ResetMod.Update(_dockConfig,v.dockConfig)
+                MSemanticApp.Update(_semanticApp, v.semanticApp)
+                
+        
+        static member Create(__initial : CorrelationDrawing.Pages) : MPages = MPages(__initial)
+        static member Update(m : MPages, v : CorrelationDrawing.Pages) = m.Update(v)
+        
+        override x.ToString() = __current.Value.ToString()
+        member x.AsString = sprintf "%A" __current.Value
+        interface IUpdatable<CorrelationDrawing.Pages> with
+            member x.Update v = x.Update v
+    
+    
+    
+    [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+    module Pages =
+        [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+        module Lens =
+            let past =
+                { new Lens<CorrelationDrawing.Pages, Microsoft.FSharp.Core.Option<CorrelationDrawing.Pages>>() with
+                    override x.Get(r) = r.past
+                    override x.Set(r,v) = { r with past = v }
+                    override x.Update(r,f) = { r with past = f r.past }
+                }
+            let future =
+                { new Lens<CorrelationDrawing.Pages, Microsoft.FSharp.Core.Option<CorrelationDrawing.Pages>>() with
+                    override x.Get(r) = r.future
+                    override x.Set(r,v) = { r with future = v }
+                    override x.Update(r,f) = { r with future = f r.future }
+                }
+            let cameraState =
+                { new Lens<CorrelationDrawing.Pages, Aardvark.UI.Primitives.CameraControllerState>() with
+                    override x.Get(r) = r.cameraState
+                    override x.Set(r,v) = { r with cameraState = v }
+                    override x.Update(r,f) = { r with cameraState = f r.cameraState }
+                }
+            let cullMode =
+                { new Lens<CorrelationDrawing.Pages, Aardvark.Base.Rendering.CullMode>() with
+                    override x.Get(r) = r.cullMode
+                    override x.Set(r,v) = { r with cullMode = v }
+                    override x.Update(r,f) = { r with cullMode = f r.cullMode }
+                }
+            let fill =
+                { new Lens<CorrelationDrawing.Pages, Microsoft.FSharp.Core.bool>() with
+                    override x.Get(r) = r.fill
+                    override x.Set(r,v) = { r with fill = v }
+                    override x.Update(r,f) = { r with fill = f r.fill }
+                }
+            let dockConfig =
+                { new Lens<CorrelationDrawing.Pages, Aardvark.UI.Primitives.DockConfig>() with
+                    override x.Get(r) = r.dockConfig
+                    override x.Set(r,v) = { r with dockConfig = v }
+                    override x.Update(r,f) = { r with dockConfig = f r.dockConfig }
+                }
+            let semanticApp =
+                { new Lens<CorrelationDrawing.Pages, CorrelationDrawing.SemanticApp>() with
+                    override x.Get(r) = r.semanticApp
+                    override x.Set(r,v) = { r with semanticApp = v }
+                    override x.Update(r,f) = { r with semanticApp = f r.semanticApp }
+                }
