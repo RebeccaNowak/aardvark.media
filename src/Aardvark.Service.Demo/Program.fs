@@ -89,7 +89,7 @@ let kitchenSink argv =
     //let app = RenderModelApp.app 
     //let app = AnnotationApp.app
     //let app = DragNDrop.App.app
-    let app = Pages.app
+    let app = SemanticApp.app
     //let app = TextInput.app
 
     //Config.shouldTimeUIUpdate <- true
