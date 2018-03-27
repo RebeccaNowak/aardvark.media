@@ -12,7 +12,7 @@ open UtilitiesGUI
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Annotation =
 
-  let initial (id : string) (semanticsList : plist<Semantic>) = 
+  let initial (id : string) = 
       {     
           id = id
 
@@ -37,17 +37,11 @@ module Annotation =
                                 | Some s -> {anno with semanticId = s}
                                 | None -> anno
 
-  let view (model : MAnnotation) (cdModel : MCorrelationDrawingModel) = 
+  let view (model : MAnnotation)  (semanticApp : MSemanticApp) = 
     let semanticsNode =       
-      let getSemanticLabel (id : string) = 
-        (AMap.tryFind id cdModel.semantics)
-          |> Mod.bind (fun x ->
-                        match x with 
-                          | Some s -> s.label.text
-                          | None -> Mod.constant "-NONE-")
       td [clazz "center aligned"; style lrPadding] 
          [label  [clazz "ui label"] 
-                 [Incremental.text (model.semanticId |> Mod.bind (fun x -> getSemanticLabel x))]]
+                 [Incremental.text (SemanticApp.getLabel semanticApp model.semanticId)]]
 
 //      td [clazz "center aligned"; style lrPadding] 
 //         [(DropdownList.view' cdModel.semanticsList
@@ -73,55 +67,38 @@ module Annotation =
     [semanticsNode;geometryTypeNode;projectionNode;annotationTextNode]
     
         
-  /////////////////////////
-
-        //@Thomas: is there a simpler way to do this?
-    //@Thomas: performance: use of Mod.bind
-  let getColor (anno : IMod<Option<MAnnotation>>) (cdModel : MCorrelationDrawingModel) = 
+  ///////// HELPER FUNCTIONS
+  let getColor (anno : IMod<Option<MAnnotation>>) (semanticApp : MSemanticApp) = 
     anno |> 
       Mod.bind (fun (a : Option<MAnnotation>) -> 
         match a with
-          | Some a ->
-              let sem = 
-                a.semanticId |>
-                  Mod.bind (fun id -> AMap.tryFind id cdModel.semantics)
-
-              sem |> 
-                Mod.bind (fun (se : option<MSemantic>) ->
-                  match se with
-                    | Some s -> s.style.color.c
-                    | None -> Mod.constant C4b.Red)
+          | Some a -> SemanticApp.getColor semanticApp a.semanticId
           | None -> Mod.constant C4b.Red)
 
 
-  let getColor' (anno : MAnnotation) (cdModel : MCorrelationDrawingModel) = 
-    let sem = Mod.bind (fun id -> AMap.tryFind id cdModel.semantics) anno.semanticId
-    Mod.bind (fun (se : option<MSemantic>) ->
-      match se with
-                  | Some s -> s.style.color.c
-                  | None -> Mod.constant C4b.Red) sem
+//  let getColor' (anno : MAnnotation) (semanticApp : MSemanticApp) = 
+//    let sem = Mod.bind (fun id -> AMap.tryFind id cdModel.semantics) anno.semanticId
+//    Mod.bind (fun (se : option<MSemantic>) ->
+//      match se with
+//                  | Some s -> s.style.color.c
+//                  | None -> Mod.constant C4b.Red) sem
 
   
     
 
-  let getThickness (anno : IMod<Option<MAnnotation>>) (cdModel : MCorrelationDrawingModel) = 
+  let getThickness (anno : IMod<Option<MAnnotation>>) (semanticApp : MSemanticApp) = 
     Mod.bind (fun (a : Option<MAnnotation>)
                   -> match a with
-                      | Some a ->
-                          let sem = Mod.bind (fun id -> AMap.tryFind id cdModel.semantics) a.semanticId
-                          Mod.bind (fun (se : option<MSemantic>) ->
-                            match se with
-                                        | Some s -> s.style.thickness.value
-                                        | None -> Mod.constant Semantic.ThicknessDefault) sem
+                      | Some a -> SemanticApp.getThickness semanticApp a.semanticId
                       | None -> Mod.constant Semantic.ThicknessDefault) anno   
 
 
-  let getThickness' (anno : MAnnotation) (cdModel : MCorrelationDrawingModel) = 
-    let sem = Mod.bind (fun id -> AMap.tryFind id cdModel.semantics) anno.semanticId
-    Mod.bind (fun (se : option<MSemantic>) ->
-      match se with
-                  | Some s -> s.style.thickness.value
-                  | None -> Mod.constant Semantic.ThicknessDefault) sem      
+//  let getThickness' (anno : MAnnotation) (cdModel : MCorrelationDrawingModel) = 
+//    let sem = Mod.bind (fun id -> AMap.tryFind id cdModel.semantics) anno.semanticId
+//    Mod.bind (fun (se : option<MSemantic>) ->
+//      match se with
+//                  | Some s -> s.style.thickness.value
+//                  | None -> Mod.constant Semantic.ThicknessDefault) sem      
                                                
         
 

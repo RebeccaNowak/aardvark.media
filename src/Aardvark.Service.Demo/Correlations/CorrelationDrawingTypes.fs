@@ -97,7 +97,7 @@ type Annotation = {
     [<NonIncremental>]
     projection        : Projection
 
-    semanticId            : string
+    semanticId              : string
     points                : plist<V3d>
     segments              : plist<plist<V3d>> //list<Segment>
     visible               : bool
@@ -121,6 +121,8 @@ type LogModel = {
 
 }
 
+type AnnotationParameters = {Point:V3d;semanticId:string}
+
 [<DomainType>]
 type CorrelationDrawingModel = {
     draw                : bool 
@@ -128,9 +130,9 @@ type CorrelationDrawingModel = {
     working             : option<Annotation>
     projection          : Projection //TODO move to semantic
     geometry            : GeometryType //TODO move to semantic
-    semantics           : hmap<string, Semantic>
-    semanticsList       : DropdownList<Semantic>
-    selectedSemantic    : string
+//    semantics           : hmap<string, Semantic>
+//    semanticsList       : DropdownList<Semantic>
+    selectedSemantic    : Semantic
     selectedAnnotation  : option<string>
     annotations         : plist<Annotation>
     exportPath          : string
@@ -140,30 +142,25 @@ type CorrelationDrawingModel = {
 type CorrelationAppModel = {
     camera           : CameraControllerState
     rendering        : RenderingParameters
-    drawing          : CorrelationDrawingModel
-
-    [<TreatAsValue>]
-    history          : Option<CorrelationAppModel> 
-
-    [<TreatAsValue>]
-    future           : Option<CorrelationAppModel>     
+    drawing          : CorrelationDrawingModel 
 }
 
 [<DomainType>]
 type Pages = 
     {
         [<NonIncremental>]
-        past : Option<Pages>
+        past        : Option<Pages>
 
         [<NonIncremental>]
-        future : Option<Pages>
+        future      : Option<Pages>
 
         cameraState : CameraControllerState
 
-        cullMode : CullMode
-        fill : bool
+        cullMode    : CullMode
+        fill        : bool
 
-        dockConfig : DockConfig
+        dockConfig  : DockConfig
 
+        drawingApp  : CorrelationAppModel
         semanticApp : SemanticApp
     }

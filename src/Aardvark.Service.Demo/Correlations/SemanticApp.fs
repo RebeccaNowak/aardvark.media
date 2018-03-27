@@ -26,8 +26,34 @@ module SemanticApp =
     sortBy            = SemanticsSortingOption.Timestamp
   }
 
+  ///// convenience functions Semantics
 
-  ///// convienience functions
+  let getColor (model : MSemanticApp) (semanticId : IMod<string>) =
+    let sem = Mod.bind (fun id -> AMap.tryFind id model.semantics) semanticId
+    Mod.bind (fun (se : option<MSemantic>) ->
+      match se with
+                  | Some s -> s.style.color.c
+                  | None -> Mod.constant C4b.Red) sem
+
+
+  let getThickness (model : MSemanticApp) (semanticId : IMod<string>) =
+    let sem = Mod.bind (fun id -> AMap.tryFind id model.semantics) semanticId
+    Mod.bind (fun (se : option<MSemantic>) ->
+      match se with
+                  | Some s -> s.style.thickness.value
+                  | None -> Mod.constant 1.0) sem
+
+  let getLabel (model : MSemanticApp) (semanticId : IMod<string>) = 
+    let sem = Mod.bind (fun id -> AMap.tryFind id model.semantics) semanticId
+    sem
+        |> Mod.bind (fun x ->
+                          match x with 
+                            | Some s -> s.label.text
+                            | None -> Mod.constant "-NONE-")
+
+ 
+
+  ///// convienience functions II
 
   let next (e : SemanticsSortingOption) = 
     let plusOneMod (x : int) (m : int) = (x + 1) % m
@@ -151,14 +177,14 @@ module SemanticApp =
       div [clazz "ui horizontal inverted menu";
            style "width:100%; height: 10%; float:middle; vertical-align: middle"][
         div [clazz "item"]
-            [button [clazz "ui icon button"; onMouseClick (fun _ -> AddSemantic)] 
+            [button [clazz "ui small icon button"; onMouseClick (fun _ -> AddSemantic)] 
                     [i [clazz "plus icon"] [] ] |> UtilitiesGUI.wrapToolTip "add"];
         div [clazz "item"]
-            [button [clazz "ui icon button"; onMouseClick (fun _ -> DeleteSemantic)] 
+            [button [clazz "ui small icon button"; onMouseClick (fun _ -> DeleteSemantic)] 
                     [i [clazz "minus icon"] [] ] |> UtilitiesGUI.wrapToolTip "delete"];
         div [clazz "item"] [
           button 
-            [clazz "ui icon button"; style "width: 20ch; text-align: left"; onMouseClick (fun _ -> SortBy;)]
+            [clazz "ui small icon button"; style "width: 20ch; text-align: left"; onMouseClick (fun _ -> SortBy;)]
             [Incremental.text (Mod.map (fun x -> sprintf "sort: %s" (string x)) model.sortBy)]
         ]  
       ]

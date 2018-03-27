@@ -24,6 +24,7 @@ module Pages =
       | Redo
       | SetCullMode of CullMode
       | ToggleFill
+      | CorrelationDrawingMessage of CorrelationDrawingApp.Action
       | SemanticAppMessage of SemanticApp.Action
 
   let initial   = 
@@ -48,12 +49,15 @@ module Pages =
                 useCachedConfig true
             }
         semanticApp = SemanticApp.getInitialWithSamples
+        drawingApp = CorrelationDrawingApp.initial
     }
 
   let update (model : Pages) (msg : Action) =
       match msg with
           | SemanticAppMessage m -> 
               {model with semanticApp = SemanticApp.update model.semanticApp m}
+          | CorrelationDrawingMessage m ->
+              {model with drawingApp = CorrelationDrawingApp.update model.drawingApp m}
           | Camera m -> 
               { model with cameraState = CameraController.update model.cameraState m }
 
@@ -138,7 +142,7 @@ module Pages =
 
             | Some "render" -> 
                 body [] [
-                    renderControl
+                    CorrelationDrawingApp.view model.drawingApp |> UI.map CorrelationDrawingMessage
                 ]
 
 //            | Some "meta" ->

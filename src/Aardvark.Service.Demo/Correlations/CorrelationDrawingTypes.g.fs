@@ -653,9 +653,7 @@ module Mutable =
         let _working = MOption.Create(__initial.working, (fun v -> MAnnotation.Create(v)), (fun (m,v) -> MAnnotation.Update(m, v)), (fun v -> v))
         let _projection = ResetMod.Create(__initial.projection)
         let _geometry = ResetMod.Create(__initial.geometry)
-        let _semantics = MMap.Create(__initial.semantics, (fun v -> MSemantic.Create(v)), (fun (m,v) -> MSemantic.Update(m, v)), (fun v -> v))
-        let _semanticsList = MDropdownList.Create(__initial.semanticsList, (fun v -> MSemantic.Create(v)), (fun (m,v) -> MSemantic.Update(m, v)), (fun v -> v))
-        let _selectedSemantic = ResetMod.Create(__initial.selectedSemantic)
+        let _selectedSemantic = MSemantic.Create(__initial.selectedSemantic)
         let _selectedAnnotation = MOption.Create(__initial.selectedAnnotation)
         let _annotations = MList.Create(__initial.annotations, (fun v -> MAnnotation.Create(v)), (fun (m,v) -> MAnnotation.Update(m, v)), (fun v -> v))
         let _exportPath = ResetMod.Create(__initial.exportPath)
@@ -665,9 +663,7 @@ module Mutable =
         member x.working = _working :> IMod<_>
         member x.projection = _projection :> IMod<_>
         member x.geometry = _geometry :> IMod<_>
-        member x.semantics = _semantics :> amap<_,_>
-        member x.semanticsList = _semanticsList
-        member x.selectedSemantic = _selectedSemantic :> IMod<_>
+        member x.selectedSemantic = _selectedSemantic
         member x.selectedAnnotation = _selectedAnnotation :> IMod<_>
         member x.annotations = _annotations :> alist<_>
         member x.exportPath = _exportPath :> IMod<_>
@@ -682,9 +678,7 @@ module Mutable =
                 MOption.Update(_working, v.working)
                 ResetMod.Update(_projection,v.projection)
                 ResetMod.Update(_geometry,v.geometry)
-                MMap.Update(_semantics, v.semantics)
-                MDropdownList.Update(_semanticsList, v.semanticsList)
-                ResetMod.Update(_selectedSemantic,v.selectedSemantic)
+                MSemantic.Update(_selectedSemantic, v.selectedSemantic)
                 MOption.Update(_selectedAnnotation, v.selectedAnnotation)
                 MList.Update(_annotations, v.annotations)
                 ResetMod.Update(_exportPath,v.exportPath)
@@ -734,20 +728,8 @@ module Mutable =
                     override x.Set(r,v) = { r with geometry = v }
                     override x.Update(r,f) = { r with geometry = f r.geometry }
                 }
-            let semantics =
-                { new Lens<CorrelationDrawing.CorrelationDrawingModel, Aardvark.Base.hmap<Microsoft.FSharp.Core.string,CorrelationDrawing.Semantic>>() with
-                    override x.Get(r) = r.semantics
-                    override x.Set(r,v) = { r with semantics = v }
-                    override x.Update(r,f) = { r with semantics = f r.semantics }
-                }
-            let semanticsList =
-                { new Lens<CorrelationDrawing.CorrelationDrawingModel, CorrelationDrawing.DropdownList<CorrelationDrawing.Semantic>>() with
-                    override x.Get(r) = r.semanticsList
-                    override x.Set(r,v) = { r with semanticsList = v }
-                    override x.Update(r,f) = { r with semanticsList = f r.semanticsList }
-                }
             let selectedSemantic =
-                { new Lens<CorrelationDrawing.CorrelationDrawingModel, Microsoft.FSharp.Core.string>() with
+                { new Lens<CorrelationDrawing.CorrelationDrawingModel, CorrelationDrawing.Semantic>() with
                     override x.Get(r) = r.selectedSemantic
                     override x.Set(r,v) = { r with selectedSemantic = v }
                     override x.Update(r,f) = { r with selectedSemantic = f r.selectedSemantic }
@@ -778,14 +760,10 @@ module Mutable =
         let _camera = Aardvark.UI.Primitives.Mutable.MCameraControllerState.Create(__initial.camera)
         let _rendering = MRenderingParameters.Create(__initial.rendering)
         let _drawing = MCorrelationDrawingModel.Create(__initial.drawing)
-        let _history = ResetMod.Create(__initial.history)
-        let _future = ResetMod.Create(__initial.future)
         
         member x.camera = _camera
         member x.rendering = _rendering
         member x.drawing = _drawing
-        member x.history = _history :> IMod<_>
-        member x.future = _future :> IMod<_>
         
         member x.Current = __current :> IMod<_>
         member x.Update(v : CorrelationDrawing.CorrelationAppModel) =
@@ -795,8 +773,6 @@ module Mutable =
                 Aardvark.UI.Primitives.Mutable.MCameraControllerState.Update(_camera, v.camera)
                 MRenderingParameters.Update(_rendering, v.rendering)
                 MCorrelationDrawingModel.Update(_drawing, v.drawing)
-                _history.Update(v.history)
-                _future.Update(v.future)
                 
         
         static member Create(__initial : CorrelationDrawing.CorrelationAppModel) : MCorrelationAppModel = MCorrelationAppModel(__initial)
@@ -831,18 +807,6 @@ module Mutable =
                     override x.Set(r,v) = { r with drawing = v }
                     override x.Update(r,f) = { r with drawing = f r.drawing }
                 }
-            let history =
-                { new Lens<CorrelationDrawing.CorrelationAppModel, Microsoft.FSharp.Core.Option<CorrelationDrawing.CorrelationAppModel>>() with
-                    override x.Get(r) = r.history
-                    override x.Set(r,v) = { r with history = v }
-                    override x.Update(r,f) = { r with history = f r.history }
-                }
-            let future =
-                { new Lens<CorrelationDrawing.CorrelationAppModel, Microsoft.FSharp.Core.Option<CorrelationDrawing.CorrelationAppModel>>() with
-                    override x.Get(r) = r.future
-                    override x.Set(r,v) = { r with future = v }
-                    override x.Update(r,f) = { r with future = f r.future }
-                }
     
     
     type MPages(__initial : CorrelationDrawing.Pages) =
@@ -852,6 +816,7 @@ module Mutable =
         let _cullMode = ResetMod.Create(__initial.cullMode)
         let _fill = ResetMod.Create(__initial.fill)
         let _dockConfig = ResetMod.Create(__initial.dockConfig)
+        let _drawingApp = MCorrelationAppModel.Create(__initial.drawingApp)
         let _semanticApp = MSemanticApp.Create(__initial.semanticApp)
         
         member x.past = __current.Value.past
@@ -860,6 +825,7 @@ module Mutable =
         member x.cullMode = _cullMode :> IMod<_>
         member x.fill = _fill :> IMod<_>
         member x.dockConfig = _dockConfig :> IMod<_>
+        member x.drawingApp = _drawingApp
         member x.semanticApp = _semanticApp
         
         member x.Current = __current :> IMod<_>
@@ -871,6 +837,7 @@ module Mutable =
                 ResetMod.Update(_cullMode,v.cullMode)
                 ResetMod.Update(_fill,v.fill)
                 ResetMod.Update(_dockConfig,v.dockConfig)
+                MCorrelationAppModel.Update(_drawingApp, v.drawingApp)
                 MSemanticApp.Update(_semanticApp, v.semanticApp)
                 
         
@@ -923,6 +890,12 @@ module Mutable =
                     override x.Get(r) = r.dockConfig
                     override x.Set(r,v) = { r with dockConfig = v }
                     override x.Update(r,f) = { r with dockConfig = f r.dockConfig }
+                }
+            let drawingApp =
+                { new Lens<CorrelationDrawing.Pages, CorrelationDrawing.CorrelationAppModel>() with
+                    override x.Get(r) = r.drawingApp
+                    override x.Set(r,v) = { r with drawingApp = v }
+                    override x.Update(r,f) = { r with drawingApp = f r.drawingApp }
                 }
             let semanticApp =
                 { new Lens<CorrelationDrawing.Pages, CorrelationDrawing.SemanticApp>() with
