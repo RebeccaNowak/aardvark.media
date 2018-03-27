@@ -51,12 +51,6 @@ module CorrelationDrawingApp =
         | Undo
         | Redo
                        
-    let stash (model : CorrelationAppModel) =
-        { model with history = Some model; future = None }
-
-    let clearUndoRedo (model : CorrelationAppModel) =
-        { model with history = None; future = None }
-
     let update (model : CorrelationAppModel) (act : Action) =
         match act, model.drawing.draw with
             | CameraMessage m, false -> 
@@ -74,14 +68,6 @@ module CorrelationDrawingApp =
                     Serialization.load ".\drawing"
             | Clear,_ ->
                     { model with drawing = { model.drawing with annotations = PList.empty }}            
-            | Undo, _ -> 
-                match model.history with
-                    | Some h -> { h with future = Some model }
-                    | None -> model
-            | Redo, _ ->
-                match model.future with
-                    | Some f -> f
-                    | None -> model
             | KeyDown k, _ -> 
                     let d = CorrelationDrawing.update model.drawing (CorrelationDrawing.Action.KeyDown k)
                     { model with drawing = d }
@@ -155,30 +141,14 @@ module CorrelationDrawingApp =
 
             ]
         ]
-//          ]
         ) 
 
 
     let initial : CorrelationAppModel =
         {
-            camera           = { ArcBallController.initial with view = CameraView.lookAt (23.0 * V3d.OIO) V3d.Zero V3d.OOI}
-            rendering        = RenderingPars.initial
-           
-            drawing = 
-               CorrelationDrawing.initial 
-                |> (CorrelationDrawing.insertSemantic (Semantic.initialHorizon0 (Guid.NewGuid().ToString())))
-                |> (CorrelationDrawing.insertSemantic (Semantic.initialHorizon1 (Guid.NewGuid().ToString())))
-                |> (CorrelationDrawing.insertSemantic (Semantic.initialHorizon2 (Guid.NewGuid().ToString())))
-                |> (CorrelationDrawing.insertSemantic (Semantic.initialHorizon3 (Guid.NewGuid().ToString())))
-                |> (CorrelationDrawing.insertSemantic (Semantic.initialHorizon4 (Guid.NewGuid().ToString())))
-                |> (CorrelationDrawing.insertSemantic (Semantic.initialGrainSize (Guid.NewGuid().ToString())))
-                |> (CorrelationDrawing.insertSemantic (Semantic.initialCrossbed (Guid.NewGuid().ToString())))
-                      
-
-           
-
-            history = None
-            future = None
+            camera    = { ArcBallController.initial with view = CameraView.lookAt (23.0 * V3d.OIO) V3d.Zero V3d.OOI}
+            rendering = RenderingPars.initial
+            drawing   = CorrelationDrawing.initial 
         }
 
     let app : App<CorrelationAppModel,MCorrelationAppModel,Action> =
