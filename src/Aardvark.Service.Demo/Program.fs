@@ -91,6 +91,7 @@ let kitchenSink argv =
     //let app = DragNDrop.App.app
     let app = Pages.app
     //let app = TextInput.app
+    //let app = AnimationDemo.AnimationDemoApp.app
 
     //Config.shouldTimeUIUpdate <- true
     //Config.shouldTimeJsCodeGeneration <- true
