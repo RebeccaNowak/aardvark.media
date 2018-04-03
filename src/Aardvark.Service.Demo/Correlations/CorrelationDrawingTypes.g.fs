@@ -653,7 +653,6 @@ module Mutable =
         let _working = MOption.Create(__initial.working, (fun v -> MAnnotation.Create(v)), (fun (m,v) -> MAnnotation.Update(m, v)), (fun v -> v))
         let _projection = ResetMod.Create(__initial.projection)
         let _geometry = ResetMod.Create(__initial.geometry)
-        let _selectedSemantic = MSemantic.Create(__initial.selectedSemantic)
         let _selectedAnnotation = MOption.Create(__initial.selectedAnnotation)
         let _annotations = MList.Create(__initial.annotations, (fun v -> MAnnotation.Create(v)), (fun (m,v) -> MAnnotation.Update(m, v)), (fun v -> v))
         let _exportPath = ResetMod.Create(__initial.exportPath)
@@ -663,7 +662,6 @@ module Mutable =
         member x.working = _working :> IMod<_>
         member x.projection = _projection :> IMod<_>
         member x.geometry = _geometry :> IMod<_>
-        member x.selectedSemantic = _selectedSemantic
         member x.selectedAnnotation = _selectedAnnotation :> IMod<_>
         member x.annotations = _annotations :> alist<_>
         member x.exportPath = _exportPath :> IMod<_>
@@ -678,7 +676,6 @@ module Mutable =
                 MOption.Update(_working, v.working)
                 ResetMod.Update(_projection,v.projection)
                 ResetMod.Update(_geometry,v.geometry)
-                MSemantic.Update(_selectedSemantic, v.selectedSemantic)
                 MOption.Update(_selectedAnnotation, v.selectedAnnotation)
                 MList.Update(_annotations, v.annotations)
                 ResetMod.Update(_exportPath,v.exportPath)
@@ -727,12 +724,6 @@ module Mutable =
                     override x.Get(r) = r.geometry
                     override x.Set(r,v) = { r with geometry = v }
                     override x.Update(r,f) = { r with geometry = f r.geometry }
-                }
-            let selectedSemantic =
-                { new Lens<CorrelationDrawing.CorrelationDrawingModel, CorrelationDrawing.Semantic>() with
-                    override x.Get(r) = r.selectedSemantic
-                    override x.Set(r,v) = { r with selectedSemantic = v }
-                    override x.Update(r,f) = { r with selectedSemantic = f r.selectedSemantic }
                 }
             let selectedAnnotation =
                 { new Lens<CorrelationDrawing.CorrelationDrawingModel, Microsoft.FSharp.Core.option<Microsoft.FSharp.Core.string>>() with

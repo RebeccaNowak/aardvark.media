@@ -132,7 +132,7 @@ type CorrelationDrawingModel = {
     geometry            : GeometryType //TODO move to semantic
 //    semantics           : hmap<string, Semantic>
 //    semanticsList       : DropdownList<Semantic>
-    selectedSemantic    : Semantic
+    //selectedSemantic    : Semantic
     selectedAnnotation  : option<string>
     annotations         : plist<Annotation>
     exportPath          : string

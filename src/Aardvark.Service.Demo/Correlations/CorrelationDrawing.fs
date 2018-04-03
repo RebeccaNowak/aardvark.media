@@ -38,7 +38,7 @@ module CorrelationDrawing =
 //        semantics = hmap.Empty
 //        semanticsList = DropdownList.init
 //        selectedSemantic = "" 
-        selectedSemantic = Semantic.initial (Guid.NewGuid().ToString())
+        //selectedSemantic = Semantic.initial (Guid.NewGuid().ToString())
         selectedAnnotation = None
         annotations = plist.Empty
         exportPath = @"."
@@ -48,7 +48,7 @@ module CorrelationDrawing =
         | SetSemantic       of option<string>
         | AddSemantic
         | DoNothing
-        | SemanticMessage   of Semantic.Action
+        //| SemanticMessage   of Semantic.Action
         | AnnotationMessage of Annotation.Action
         | SetGeometry       of GeometryType
         | SetProjection     of Projection
@@ -114,7 +114,7 @@ module CorrelationDrawing =
       
 
 
-    let update (model : CorrelationDrawingModel) (act : Action) =
+    let update (model : CorrelationDrawingModel) (selectedSemantic : string) (act : Action) =
         match (act, model.draw) with
             | DoNothing, _ -> model
             | KeyDown Keys.LeftCtrl, _ ->                     
@@ -126,22 +126,22 @@ module CorrelationDrawing =
             | AddPoint m, true -> 
                 let working = 
                   match model.working with
-                    | Some w ->                                     
+                    | Some w  ->                                     
                         { w with points = w.points |> PList.append m }
-                    | None -> 
+                    | None    -> 
                         let id = Guid.NewGuid().ToString()                                     
                         {Annotation.initial id with
-                            points = PList.ofList [m];  
-                            semanticId = model.selectedSemantic.id
-                            geometry = model.geometry
-                            projection = model.projection}//add annotation states
+                            points      = PList.ofList [m];  
+                            semanticId  = selectedSemantic
+                            geometry    = model.geometry
+                            projection  = model.projection}//add annotation states
 
                 let model = { model with working = Some working }
 
                 let model = match (working.geometry, (working.points |> PList.count)) with
                               | GeometryType.Point, 1 -> model |> finishAndAppend
                               | GeometryType.Line, 10 -> model |> finishAndAppend
-                              | _ -> model
+                              | _                     -> model
 
                 model                 
                 
@@ -165,31 +165,11 @@ module CorrelationDrawing =
 //                                  semanticsList = newList;
 //                                  semantics = update2}
 //                  | None -> model
-//            | SemanticMessage sem, _ ->
-//                let fUpdate (semO : Option<Semantic>) = 
-//                    match semO with
-//                        | Some s -> Some( Semantic.update s sem)
-//                        | None -> None //TODO something useful
-//                let updatedSemantics = (HMap.alter model.selectedSemantic fUpdate model.semantics)
-//                let sortedList = (sortedPlistFromHmap updatedSemantics (fun (x : Semantic) -> x.label.text))
-//                {model with semantics = updatedSemantics; 
-//                            semanticsList = {model.semanticsList with valueList = sortedList}
-//                }
-//            | AddSemantic, _ -> insertSampleSemantic model 
+
             | SetGeometry mode, _ ->
                     { model with geometry = mode }
             | SetProjection mode, _ ->
-                    { model with projection = mode }
-//            | KeyDown Keys.D0, _ -> 
-//                    {model with semantic = Semantic.Horizon0 }               
-//            | KeyDown Keys.D1, _ -> 
-//                    {model with semantic = Semantic.Horizon1 }               
-//            | KeyDown Keys.D2, _ -> 
-//                    {model with semantic = Semantic.Horizon2 }               
-//            | KeyDown Keys.D3, _ -> 
-//                    {model with semantic = Semantic.Horizon3 }               
-//            | KeyDown Keys.D4, _ -> 
-//                    {model with semantic = Semantic.Horizon4 }               
+                    { model with projection = mode }        
             | SetExportPath s, _ ->
                     { model with exportPath = s }
             | Export, _ ->

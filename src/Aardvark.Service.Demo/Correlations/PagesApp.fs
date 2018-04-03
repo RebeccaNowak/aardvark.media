@@ -5,7 +5,7 @@ module Pages =
 
   open Aardvark.UI
   open Aardvark.UI.Primitives
-
+  open Aardvark.Application
   open Aardvark.Base
   open Aardvark.Base.Incremental
   open Aardvark.Base.Rendering
@@ -18,20 +18,22 @@ module Pages =
 
 
   type Action = 
-      | Camera of CameraController.Message
+      | Camera                        of CameraController.Message
       | CenterScene
-      | UpdateConfig of DockConfig
+      | UpdateConfig                  of DockConfig
       | Export
       | Save
       | Load
       | Clear
       | Undo
       | Redo
-      | SetCullMode of CullMode
+      | SetCullMode                   of CullMode
       | ToggleFill
-      | CorrelationDrawingAppMessage of CorrelationDrawingApp.Action
-      | CorrelationDrawingMessage of CorrelationDrawing.Action
-      | SemanticAppMessage of SemanticApp.Action
+      | CorrelationDrawingAppMessage  of CorrelationDrawingApp.Action
+      | CorrelationDrawingMessage     of CorrelationDrawing.Action
+      | SemanticAppMessage            of SemanticApp.Action
+//      | KeyDown                       of key : Keys
+//      | KeyUp                         of key : Keys   
 
   let initial   = 
     { 
@@ -43,16 +45,14 @@ module Pages =
         dockConfig =
             config {
                 content (
-                    horizontal 10.0 [
-                        element { id "render"; title "Render View"; weight 20 }
-                        vertical 5.0 [
-                            element { id "controls"; title "Controls"; weight 5 }
-                            element { id "semantics"; title "Semantics"; weight 5 }
-                        ]
-                    ]
+                  vertical 1.0 [
+                    element { id "controls"; title "Controls"; weight 1 }
+                    stack 9.0 (Some "render") [dockelement {id "render"; title "Render View"; weight 5};
+                                               dockelement { id "semantics"; title "Semantics"; weight 5}]
+                  ]
                 )
                 appName "CDPages"
-                useCachedConfig true
+                useCachedConfig false
             }
         semanticApp = SemanticApp.getInitialWithSamples
         drawingApp = CorrelationDrawingApp.initial
@@ -60,10 +60,12 @@ module Pages =
 
   let update (model : Pages) (msg : Action) =
       match msg with
-          | SemanticAppMessage m -> 
-              {model with semanticApp = SemanticApp.update model.semanticApp m}
+          | SemanticAppMessage m ->
+//            match m with
+//              | SemanticApp.Action.SetSemantic s ->
+                {model with semanticApp = SemanticApp.update model.semanticApp m}
           | CorrelationDrawingAppMessage m ->
-              {model with drawingApp = CorrelationDrawingApp.update model.drawingApp m}
+              {model with drawingApp = CorrelationDrawingApp.update model.drawingApp model.semanticApp.selectedSemantic m}
           | Camera m -> 
               { model with cameraState = CameraController.update model.cameraState m }
 
@@ -96,6 +98,8 @@ module Pages =
               match model.future with
                   | Some f -> { f with past = Some model; cameraState = model.cameraState }
                   | None -> model
+
+          | _   -> model
 
   let viewScene (model : MPages) =
       Sg.box (Mod.constant C4b.Green) (Mod.constant Box3d.Unit)
@@ -146,12 +150,12 @@ module Pages =
               div [clazz "item"]
                   [button [clazz "ui icon button"; onMouseClick (fun _ -> Redo)] 
                           [i [clazz "small arrow right icon"] [] ] |> wrapToolTip "redo"]]
-
-      div [style "vertical-align: middle"]
-          [div [clazz "ui horizontal inverted menu";style "width:100%; height: 10%; float:middle; vertical-align: middle"]
-                      (List.append foo (List.map (fun x -> x |> UI.map CorrelationDrawingMessage) 
-                                                  (CorrelationDrawing.UI.viewAnnotationTools model.drawingApp.drawing model.semanticApp)))]
-
+      body [style "width: 100%; height:100%; background: transparent; overflow: auto";] [
+        div [style "vertical-align: middle"]
+            [div [clazz "ui horizontal inverted menu";style "float:middle; vertical-align: middle"]
+                        (List.append foo (List.map (fun x -> x |> UI.map CorrelationDrawingMessage) 
+                                                    (CorrelationDrawing.UI.viewAnnotationTools model.drawingApp.drawing model.semanticApp)))]
+      ]
     
 
     let renderControl =
@@ -163,27 +167,12 @@ module Pages =
         match Map.tryFind "page" request.queryParams with
             | Some "controls" -> 
                 require Html.semui (
-                    body [  style "width: 100%; height:100%; background: transparent; overflow: auto"; ] [
-                        table [clazz "ui very compact unstackable striped inverted table"; style "border-radius: 0;"] [
-                            tr [] [
-                                td [] [text "CullMode"]
-                                td [] [Html.SemUi.dropDown model.cullMode SetCullMode]
-                            ]
-                            tr [] [
-                                td [] [text "Fill"]
-                                td [] [toggleBox "" model.fill ToggleFill]
-                            ]
-                        ]
-                        br []
-                        br []
-                        button [style "position: absolute; bottom: 5px; left: 5px;"; clazz "ui small button"; onClick (fun _ -> CenterScene)] [text "Center Scene"]
-                    ]
+                    menu
                 )
 
-            | Some "render" -> 
-                body [] [
-                    CorrelationDrawingApp.view model.drawingApp model.semanticApp |> UI.map CorrelationDrawingAppMessage
-                ]
+            | Some "render" -> // renderControl
+                (CorrelationDrawingApp.view model.drawingApp model.semanticApp) 
+                  |> UI.map CorrelationDrawingAppMessage
 
 //            | Some "meta" ->
 //                body [] [
@@ -191,9 +180,10 @@ module Pages =
 //                ]
 
             | Some "semantics" ->
-              SemanticApp.viewSemantics model.semanticApp 
-                |> UI.map SemanticAppMessage
-
+              body [] [
+                SemanticApp.viewSemantics model.semanticApp 
+                  |> UI.map SemanticAppMessage
+              ]
 
             | Some other ->
                 let msg = sprintf "Unknown page: %A" other

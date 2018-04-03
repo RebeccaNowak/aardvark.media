@@ -46,22 +46,28 @@ module CorrelationDrawingApp =
         | KeyUp                     of key : Keys      
 
                        
-    let update (model : CorrelationAppModel) (act : Action) =
+    let update (model : CorrelationAppModel) (selectedSemantic : string) (act : Action) =
         match act, model.drawing.draw with
             | CameraMessage m, false -> 
-                    { model with camera = ArcBallController.update model.camera m }      
+                { model with camera = ArcBallController.update model.camera m }      
             | DrawingMessage m, _ ->
-                    { model with drawing = CorrelationDrawing.update model.drawing m }      
+                { model with drawing = CorrelationDrawing.update model.drawing selectedSemantic m }      
             | DrawingSemanticMessage m, _ ->
-                {model with drawing = CorrelationDrawing.update model.drawing m}          
+                {model with drawing = CorrelationDrawing.update model.drawing selectedSemantic m}          
             | AnnotationMessage m, _ ->
-                {model with drawing = CorrelationDrawing.update model.drawing m}          
+                {model with drawing = CorrelationDrawing.update model.drawing selectedSemantic m}          
             | KeyDown k, _ -> 
-                    let d = CorrelationDrawing.update model.drawing (CorrelationDrawing.Action.KeyDown k)
-                    { model with drawing = d }
+                let d = CorrelationDrawing.update 
+                          model.drawing 
+                          selectedSemantic 
+                          (CorrelationDrawing.Action.KeyDown k)
+                { model with drawing = d }
             | KeyUp k, _ -> 
-                    let d = CorrelationDrawing.update model.drawing (CorrelationDrawing.Action.KeyUp k)
-                    { model with drawing = d }
+                let d = CorrelationDrawing.update 
+                          model.drawing 
+                          selectedSemantic 
+                          (CorrelationDrawing.Action.KeyUp k)
+                { model with drawing = d }
             | _ -> model
                        
     let myCss = [
@@ -76,7 +82,7 @@ module CorrelationDrawingApp =
 
                  
         require (myCss) (
-            body [clazz "ui"; style "background: #1B1C1E;position:fixed;width:100%"] [
+            body [clazz "ui"; style "background: #1B1C1E; width: 100%; height:100%; overflow: auto;"] [
               div [] [
                 ArcBallController.controlledControl model.camera CameraMessage frustum
                     (AttributeMap.ofList [
