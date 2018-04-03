@@ -24,7 +24,7 @@ module Semantic =
 
         id            = id
         timestamp     = Time.getTimestamp
-        disabled      = true
+        state         = SemanticState.New
         label         = TextInput.init
         size          = 0.0
         style         = 
@@ -126,8 +126,7 @@ module Semantic =
     
     ////// ACTIONS
     type Action = 
-        | Disable
-        | Enable
+        | SetState            of SemanticState
         | ColorPickerMessage  of ColorPicker.Action
         | ChangeThickness     of Numeric.Action
         | TextInputMessage    of TextInput.Action
@@ -152,10 +151,8 @@ module Semantic =
                             thickness = Numeric.update model.style.thickness m
                           }
                 }
-            | Disable -> 
-                {model with disabled = true}
-            | Enable -> 
-                {model with disabled = false}
+            | SetState state -> 
+                {model with state = state}
             | SetLevel i ->
                 {model with level = i}
             | SetGeometry geo ->
@@ -169,7 +166,7 @@ module Semantic =
       
 
     ////// VIEW
-    let viewEnabled (model : MSemantic) =
+    let viewNew (model : MSemantic) =
       let thNode = Numeric.view'' 
                      NumericInputType.InputBox 
                      model.style.thickness
@@ -177,12 +174,8 @@ module Semantic =
                         [style "margin:auto; color:black; max-width:60px"])
 
       let labelNode = 
-
-        (TextInput.view' 
-          (model.style.color.c |> Mod.map (fun x -> 
-            let c = colorToHexStr x
-            (sprintf "box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0.1) inset; background-color:%s" c))
-          )
+        (TextInput.view'' 
+          "box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0.1) inset"
           model.label)
           
         
@@ -202,15 +195,56 @@ module Semantic =
           |> intoTd
         Html.SemUi.dropDown model.semanticType SetSemanticType
           |> intoTd
+        button [][]
+        button [][]
+
+      ]
+
+
+    let viewEdit (model : MSemantic) =
+      let thNode = Numeric.view'' 
+                     NumericInputType.InputBox 
+                     model.style.thickness
+                     (AttributeMap.ofList 
+                        [style "margin:auto; color:black; max-width:60px"])
+
+      let labelNode = 
+        (TextInput.view'' 
+          "box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0.1) inset"
+          model.label)
+          
+      let domNodeGeometryType =  
+        intoTd <|
+          label [clazz "ui horizontal label"]
+                [Incremental.text (Mod.map(fun x -> x.ToString()) model.geometry)]  
+
+      let domNodeSemanticType =  
+        intoTd <|
+          label [clazz "ui horizontal label"]
+                [Incremental.text (Mod.map(fun x -> x.ToString()) model.semanticType)]
+      [
+        labelNode
+          |> intoTd
+          |> UI.map Action.TextInputMessage
+        thNode 
+          |> UI.map ChangeThickness
+          |> intoTd
+        ColorPicker.view model.style.color 
+          |> UI.map ColorPickerMessage
+          |> intoTd
+        Html.SemUi.dropDown' (AList.ofList levels) model.level SetLevel (fun x -> sprintf "%i" x)
+          |> intoTd
+        domNodeGeometryType
+        domNodeSemanticType
       ]
        
-    let viewDisabled (s : MSemantic) = 
+    let viewDisplay (s : MSemantic) = 
       let domNodeLbl =
         intoTd <|
           Incremental.label 
-            (AttributeMap.union 
+            //(AttributeMap.union 
                (AttributeMap.ofList [clazz "ui horizontal label"]) 
-               (AttributeMap.ofAMap (incrBgColorAMap s.style.color.c)))
+               //(AttributeMap.ofAMap (incrBgColorAMap s.style.color.c)))
             (AList.ofList [Incremental.text (s.label.text)])
         
 
@@ -258,5 +292,6 @@ module Semantic =
     let view (model : MSemantic) : IMod<list<DomNode<Action>>> =
         Mod.map (fun d -> 
           match d with
-            | true  -> viewDisabled model
-            | false -> viewEnabled model) model.disabled
+            | SemanticState.Display  -> viewDisplay model
+            | SemanticState.Edit -> viewEdit model
+            | SemanticState.New -> viewNew model) model.state

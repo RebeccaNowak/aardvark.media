@@ -277,7 +277,7 @@ module Mutable =
     type MSemantic(__initial : CorrelationDrawing.Semantic) =
         inherit obj()
         let mutable __current : Aardvark.Base.Incremental.IModRef<CorrelationDrawing.Semantic> = Aardvark.Base.Incremental.EqModRef<CorrelationDrawing.Semantic>(__initial) :> Aardvark.Base.Incremental.IModRef<CorrelationDrawing.Semantic>
-        let _disabled = ResetMod.Create(__initial.disabled)
+        let _state = ResetMod.Create(__initial.state)
         let _label = MTextInput.Create(__initial.label)
         let _size = ResetMod.Create(__initial.size)
         let _style = MStyle.Create(__initial.style)
@@ -287,7 +287,7 @@ module Mutable =
         
         member x.id = __current.Value.id
         member x.timestamp = __current.Value.timestamp
-        member x.disabled = _disabled :> IMod<_>
+        member x.state = _state :> IMod<_>
         member x.label = _label
         member x.size = _size :> IMod<_>
         member x.style = _style
@@ -300,7 +300,7 @@ module Mutable =
             if not (System.Object.ReferenceEquals(__current.Value, v)) then
                 __current.Value <- v
                 
-                ResetMod.Update(_disabled,v.disabled)
+                ResetMod.Update(_state,v.state)
                 MTextInput.Update(_label, v.label)
                 ResetMod.Update(_size,v.size)
                 MStyle.Update(_style, v.style)
@@ -335,11 +335,11 @@ module Mutable =
                     override x.Set(r,v) = { r with timestamp = v }
                     override x.Update(r,f) = { r with timestamp = f r.timestamp }
                 }
-            let disabled =
-                { new Lens<CorrelationDrawing.Semantic, Microsoft.FSharp.Core.bool>() with
-                    override x.Get(r) = r.disabled
-                    override x.Set(r,v) = { r with disabled = v }
-                    override x.Update(r,f) = { r with disabled = f r.disabled }
+            let state =
+                { new Lens<CorrelationDrawing.Semantic, CorrelationDrawing.SemanticState>() with
+                    override x.Get(r) = r.state
+                    override x.Set(r,v) = { r with state = v }
+                    override x.Update(r,f) = { r with state = f r.state }
                 }
             let label =
                 { new Lens<CorrelationDrawing.Semantic, CorrelationDrawing.TextInput>() with
@@ -386,11 +386,13 @@ module Mutable =
         let _semanticsList = MList.Create(__initial.semanticsList, (fun v -> MSemantic.Create(v)), (fun (m,v) -> MSemantic.Update(m, v)), (fun v -> v))
         let _selectedSemantic = ResetMod.Create(__initial.selectedSemantic)
         let _sortBy = ResetMod.Create(__initial.sortBy)
+        let _creatingNew = ResetMod.Create(__initial.creatingNew)
         
         member x.semantics = _semantics :> amap<_,_>
         member x.semanticsList = _semanticsList :> alist<_>
         member x.selectedSemantic = _selectedSemantic :> IMod<_>
         member x.sortBy = _sortBy :> IMod<_>
+        member x.creatingNew = _creatingNew :> IMod<_>
         
         member x.Current = __current :> IMod<_>
         member x.Update(v : CorrelationDrawing.SemanticApp) =
@@ -401,6 +403,7 @@ module Mutable =
                 MList.Update(_semanticsList, v.semanticsList)
                 ResetMod.Update(_selectedSemantic,v.selectedSemantic)
                 ResetMod.Update(_sortBy,v.sortBy)
+                ResetMod.Update(_creatingNew,v.creatingNew)
                 
         
         static member Create(__initial : CorrelationDrawing.SemanticApp) : MSemanticApp = MSemanticApp(__initial)
@@ -440,6 +443,12 @@ module Mutable =
                     override x.Get(r) = r.sortBy
                     override x.Set(r,v) = { r with sortBy = v }
                     override x.Update(r,f) = { r with sortBy = f r.sortBy }
+                }
+            let creatingNew =
+                { new Lens<CorrelationDrawing.SemanticApp, Microsoft.FSharp.Core.bool>() with
+                    override x.Get(r) = r.creatingNew
+                    override x.Set(r,v) = { r with creatingNew = v }
+                    override x.Update(r,f) = { r with creatingNew = f r.creatingNew }
                 }
     
     

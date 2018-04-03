@@ -132,7 +132,7 @@ module Pages =
           )
   
     let menu = 
-      let foo = [div [clazz "item"]
+      let menuItems = [div [clazz "item"]
                   [button [clazz "ui icon button"; onMouseClick (fun _ -> Save)] 
                           [i [clazz "small save icon"] [] ] |> wrapToolTip "save"];
               div [clazz "item"]
@@ -152,9 +152,10 @@ module Pages =
                           [i [clazz "small arrow right icon"] [] ] |> wrapToolTip "redo"]]
       body [style "width: 100%; height:100%; background: transparent; overflow: auto";] [
         div [style "vertical-align: middle"]
-            [div [clazz "ui horizontal inverted menu";style "float:middle; vertical-align: middle"]
-                        (List.append foo (List.map (fun x -> x |> UI.map CorrelationDrawingMessage) 
-                                                    (CorrelationDrawing.UI.viewAnnotationTools model.drawingApp.drawing model.semanticApp)))]
+            [div [clazz "ui horizontal inverted menu";
+                  style "float:middle; vertical-align: middle"]
+                 menuItems
+            ]
       ]
     
 

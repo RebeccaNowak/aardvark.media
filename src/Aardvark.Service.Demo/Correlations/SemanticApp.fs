@@ -24,6 +24,7 @@ module SemanticApp =
     selectedSemantic  = ""
     semanticsList     = plist.Empty
     sortBy            = SemanticsSortingOption.Timestamp
+    creatingNew       = false
   }
 
   ///// convenience functions Semantics
@@ -61,10 +62,10 @@ module SemanticApp =
     enum<SemanticsSortingOption>(plusOneMod eInt 6) // hardcoded :(
 
   let enableSemantic (s : option<Semantic>) = 
-    (Option.map (fun x -> Semantic.update x Semantic.Enable) s)
+    (Option.map (fun x -> Semantic.update x (Semantic.SetState SemanticState.Edit)) s)
 
   let disableSemantic (s : option<Semantic>) = 
-    (Option.map (fun x -> Semantic.update x Semantic.Disable) s)
+    (Option.map (fun x -> Semantic.update x (Semantic.SetState SemanticState.Display)) s)
 
 
   let sortFunction (sortBy : SemanticsSortingOption) = 
@@ -110,8 +111,8 @@ module SemanticApp =
 
   ////// UPDATE 
   let update (model : SemanticApp) (action : Action) =
-    match (action) with 
-      | SetSemantic sem       ->
+    match (action, model.creatingNew) with 
+      | SetSemantic sem, false ->
         match sem with
           | Some s  ->
               let updatedSemantics = 
@@ -124,7 +125,7 @@ module SemanticApp =
                           semantics         = updatedSemantics}
           | None    -> model
 
-      | SemanticMessage sem   ->
+      | SemanticMessage sem, false   ->
         let fUpdate (semO : Option<Semantic>) = 
             match semO with
                 | Some s  -> Some(Semantic.update s sem)
@@ -133,9 +134,10 @@ module SemanticApp =
         {model with semantics     = updatedSemantics
                     semanticsList = getSortedList updatedSemantics model.sortBy}
 
-      | AddSemantic     -> insertSampleSemantic model 
-
-      | DeleteSemantic  ->
+      | AddSemantic, false     -> 
+          {insertSampleSemantic model with creatingNew = true}
+          
+      | DeleteSemantic, false  ->
         let getAKey (m : hmap<string, 'a>) =
           m |> HMap.toSeq |> Seq.map fst |> Seq.first
 
@@ -153,9 +155,7 @@ module SemanticApp =
             }
           | None   -> model
 
-
-
-      | SortBy          ->
+      | SortBy, false          ->
         let newSort = next model.sortBy
         {model with sortBy = newSort
                     semanticsList = 
@@ -178,10 +178,10 @@ module SemanticApp =
            style "width:100%; height: 10%; float:middle; vertical-align: middle"][
         div [clazz "item"]
             [button [clazz "ui small icon button"; onMouseClick (fun _ -> AddSemantic)] 
-                    [i [clazz "plus icon"] [] ] |> UtilitiesGUI.wrapToolTip "add"];
+                    [i [clazz "small plus icon"] [] ] |> UtilitiesGUI.wrapToolTip "add"];
         div [clazz "item"]
             [button [clazz "ui small icon button"; onMouseClick (fun _ -> DeleteSemantic)] 
-                    [i [clazz "minus icon"] [] ] |> UtilitiesGUI.wrapToolTip "delete"];
+                    [i [clazz "small minus icon"] [] ] |> UtilitiesGUI.wrapToolTip "delete"];
         div [clazz "item"] [
           button 
             [clazz "ui small icon button"; style "width: 20ch; text-align: left"; onMouseClick (fun _ -> SortBy;)]
@@ -196,13 +196,12 @@ module SemanticApp =
           yield (tr 
                   ([style UtilitiesGUI.tinyPadding; onClick (fun str -> SetSemantic (Some mSem.id))]) 
                   (List.map (fun x -> x |> UI.map SemanticMessage) domNode))
-                
       } 
 
     let myCss = [
-              { kind = Stylesheet; name = "semui"; url = "https://cdn.jsdelivr.net/semantic-ui/2.2.6/semantic.min.css" }
-              { kind = Stylesheet; name = "semui-overrides"; url = "semui-overrides.css" }
-              { kind = Script; name = "semui"; url = "https://cdn.jsdelivr.net/semantic-ui/2.2.6/semantic.min.js" }
+              { kind = Stylesheet;  name = "semui";           url = "https://cdn.jsdelivr.net/semantic-ui/2.2.6/semantic.min.css" }
+              { kind = Stylesheet;  name = "semui-overrides"; url = "semui-overrides.css" }
+              { kind = Script;      name = "semui";           url = "https://cdn.jsdelivr.net/semantic-ui/2.2.6/semantic.min.js" }
             ]
 
     require (myCss) (
@@ -215,11 +214,11 @@ module SemanticApp =
             ([clazz "ui celled striped selectable inverted table unstackable";
                                   style "padding: 1px 5px 1px 5px"]) (
                 [thead [][tr[][th[][text "Label"];
-                                th[][text "Thickness"];
-                                th[][text "Colour"];
-                                th[][text "Level"];
-                                th[][text "Geometry Type"];
-                                th[][text "Semantic Type"]]];
+                               th[][text "Thickness"];
+                               th[][text "Colour"];
+                               th[][text "Level"];
+                               th[][text "Default Geometry Type"];
+                               th[][text "Semantic Type"]]];
                 Incremental.tbody  (AttributeMap.ofList []) domList]           
             )
         ]])

@@ -46,6 +46,23 @@ module TextInput =
       }
     div [clazz "ui icon input"] [(Incremental.input (AttributeMap.ofAMap (AMap.union attr1 attributes)))]
     //style "height: 1.4285em"
+
+  let view'' (styleStr : string) (model : MTextInput): DomNode<Action> = 
+    let attr1 =
+      amap {
+        yield attribute "type" "text"
+        //let! st = styleStr
+        yield style styleStr
+        yield onChange (fun str -> ChangeText str)
+      }
+
+    let attributes =
+      amap {
+        let! txt = model.text
+        yield attribute "value" txt
+      }
+    div [clazz "ui icon input"] [(Incremental.input (AttributeMap.ofAMap (AMap.union attr1 attributes)))]
+
   let view (model : MTextInput) : DomNode<Action> =
     view' (Mod.constant "") model  
      

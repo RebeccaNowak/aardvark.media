@@ -239,19 +239,23 @@ module CorrelationDrawing =
                   (List.map (fun x -> x |> UI.map AnnotationMessage) (Annotation.view a semanticApp))
                 )
             }  
-
-          Html.SemUi.accordion "Annotations" "File Outline" true [
-            table 
-              ([clazz "ui celled striped selectable inverted table unstackable"; 
-                style "padding: 1px 5px 1px 5px"]) 
-              [thead [][tr[][th[][text "Semantic"];
-                                    th[][text "Geometry"];
-                                    th[][text "Projection"];
-                                    th[][text "Text"]
-                       ]];
-              Incremental.tbody (AttributeMap.ofList []) domList]    
+          div [] [
+            div[clazz "ui horizontal inverted menu"; 
+                style "float:middle; vertical-align: middle"] 
+                (viewAnnotationTools model semanticApp)
+            Html.SemUi.accordion "Annotations" "File Outline" true [
+              table 
+                ([clazz "ui celled striped selectable inverted table unstackable"; 
+                  style "padding: 1px 5px 1px 5px"]) 
+                [thead [][tr[][th[][text "Semantic"];
+                                      th[][text "Geometry"];
+                                      th[][text "Projection"];
+                                      th[][text "Text"]
+                          ]];
+                Incremental.tbody (AttributeMap.ofList []) domList]    
+            ]
           ]
-
+          
 //        let viewSemantics (model : MCorrelationDrawingModel) = 
 //          let domList = 
 //            alist {                 

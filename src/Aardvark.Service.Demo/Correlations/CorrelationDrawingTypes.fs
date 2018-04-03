@@ -58,6 +58,7 @@ module RenderingPars =
         cullMode = CullMode.None
     }
 
+type SemanticState = New | Edit | Display
 
 [<DomainType>]
 type Semantic = {
@@ -67,7 +68,7 @@ type Semantic = {
    [<NonIncremental>]
    timestamp         : string
 
-   disabled          : bool
+   state             : SemanticState
    label             : TextInput
    size              : double
    style             : Style
@@ -84,6 +85,7 @@ type Semantic = {
    semanticsList       : plist<Semantic>
    selectedSemantic    : string
    sortBy              : SemanticsSortingOption
+   creatingNew         : bool
  }
 
 [<DomainType>]
