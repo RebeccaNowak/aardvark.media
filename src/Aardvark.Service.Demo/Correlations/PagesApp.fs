@@ -9,6 +9,7 @@ module Pages =
   open Aardvark.Base
   open Aardvark.Base.Incremental
   open Aardvark.Base.Rendering
+  open UtilitiesGUI
 
   let initialCamera = { 
           CameraController.initial with 
@@ -20,11 +21,16 @@ module Pages =
       | Camera of CameraController.Message
       | CenterScene
       | UpdateConfig of DockConfig
+      | Export
+      | Save
+      | Load
+      | Clear
       | Undo
       | Redo
       | SetCullMode of CullMode
       | ToggleFill
-      | CorrelationDrawingMessage of CorrelationDrawingApp.Action
+      | CorrelationDrawingAppMessage of CorrelationDrawingApp.Action
+      | CorrelationDrawingMessage of CorrelationDrawing.Action
       | SemanticAppMessage of SemanticApp.Action
 
   let initial   = 
@@ -56,7 +62,7 @@ module Pages =
       match msg with
           | SemanticAppMessage m -> 
               {model with semanticApp = SemanticApp.update model.semanticApp m}
-          | CorrelationDrawingMessage m ->
+          | CorrelationDrawingAppMessage m ->
               {model with drawingApp = CorrelationDrawingApp.update model.drawingApp m}
           | Camera m -> 
               { model with cameraState = CameraController.update model.cameraState m }
@@ -72,6 +78,14 @@ module Pages =
 
           | ToggleFill ->
               { model with fill = not model.fill; past = Some model }
+
+          | Save -> 
+//                  Serialization.save model ".\drawing"
+                  model
+          | Load -> model
+//                  Serialization.load ".\drawing"
+          | Clear -> model
+//                  { model with drawing = { model.drawing with annotations = PList.empty }}            
 
           | Undo ->
               match model.past with
@@ -112,7 +126,33 @@ module Pages =
                   label [] [text str]
               ]
           )
+  
+    let menu = 
+      let foo = [div [clazz "item"]
+                  [button [clazz "ui icon button"; onMouseClick (fun _ -> Save)] 
+                          [i [clazz "small save icon"] [] ] |> wrapToolTip "save"];
+              div [clazz "item"]
+                  [button [clazz "ui icon button"; onMouseClick (fun _ -> Load)] 
+                          [i [clazz "small folder outline icon"] [] ] |> wrapToolTip "load"];
+              div [clazz "item"]
+                  [button [clazz "ui icon button"; onMouseClick (fun _ -> Clear)]
+                          [i [clazz "small file outline icon"] [] ] |> wrapToolTip "clear"];
+              div [clazz "item"]
+                  [button [clazz "ui icon button"; onMouseClick (fun _ -> Export)]
+                          [i [clazz "small external icon"] [] ] |> wrapToolTip "export"];
+              div [clazz "item"]
+                  [button [clazz "ui icon button"; onMouseClick (fun _ -> Undo)] 
+                          [i [clazz "small arrow left icon"] [] ] |> wrapToolTip "undo"];
+              div [clazz "item"]
+                  [button [clazz "ui icon button"; onMouseClick (fun _ -> Redo)] 
+                          [i [clazz "small arrow right icon"] [] ] |> wrapToolTip "redo"]]
 
+      div [style "vertical-align: middle"]
+          [div [clazz "ui horizontal inverted menu";style "width:100%; height: 10%; float:middle; vertical-align: middle"]
+                      (List.append foo (List.map (fun x -> x |> UI.map CorrelationDrawingMessage) 
+                                                  (CorrelationDrawing.UI.viewAnnotationTools model.drawingApp.drawing model.semanticApp)))]
+
+    
 
     let renderControl =
         CameraController.controlledControl model.cameraState Camera (Frustum.perspective 60.0 0.1 100.0 1.0 |> Mod.constant) 
@@ -142,7 +182,7 @@ module Pages =
 
             | Some "render" -> 
                 body [] [
-                    CorrelationDrawingApp.view model.drawingApp |> UI.map CorrelationDrawingMessage
+                    CorrelationDrawingApp.view model.drawingApp model.semanticApp |> UI.map CorrelationDrawingAppMessage
                 ]
 
 //            | Some "meta" ->

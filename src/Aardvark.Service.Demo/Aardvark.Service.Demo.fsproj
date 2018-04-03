@@ -90,6 +90,7 @@
     <Compile Include="Correlations\Semantic.fs" />
     <Compile Include="Correlations\SemanticApp.fs" />
     <Compile Include="Correlations\Annotation.fs" />
+    <Compile Include="Correlations\AnnotationApp.fs" />
     <Compile Include="Correlations\Border.fs" />
     <Compile Include="Correlations\GeologicalLog.fs" />
     <Compile Include="Correlations\CorrelationPlot.fs" />

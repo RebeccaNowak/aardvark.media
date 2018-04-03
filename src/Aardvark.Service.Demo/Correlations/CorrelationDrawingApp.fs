@@ -44,12 +44,7 @@ module CorrelationDrawingApp =
         | AnnotationMessage         of CorrelationDrawing.Action
         | KeyDown                   of key : Keys
         | KeyUp                     of key : Keys      
-        | Export
-        | Save
-        | Load
-        | Clear
-        | Undo
-        | Redo
+
                        
     let update (model : CorrelationAppModel) (act : Action) =
         match act, model.drawing.draw with
@@ -61,13 +56,6 @@ module CorrelationDrawingApp =
                 {model with drawing = CorrelationDrawing.update model.drawing m}          
             | AnnotationMessage m, _ ->
                 {model with drawing = CorrelationDrawing.update model.drawing m}          
-            | Save, _ -> 
-                    Serialization.save model ".\drawing"
-                    model
-            | Load, _ -> 
-                    Serialization.load ".\drawing"
-            | Clear,_ ->
-                    { model with drawing = { model.drawing with annotations = PList.empty }}            
             | KeyDown k, _ -> 
                     let d = CorrelationDrawing.update model.drawing (CorrelationDrawing.Action.KeyDown k)
                     { model with drawing = d }
@@ -82,43 +70,13 @@ module CorrelationDrawingApp =
                   { kind = Script; name = "semui"; url = "https://cdn.jsdelivr.net/semantic-ui/2.2.6/semantic.min.js" }
                 ]
     
-    let view (model : MCorrelationAppModel) =
+    let view (model : MCorrelationAppModel) (semanticApp : MSemanticApp)=
         let frustum =
             Mod.constant (Frustum.perspective 60.0 0.1 100.0 1.0)
 
-        let menu = 
-          let foo = [div [clazz "item"]
-                      [button [clazz "ui icon button"; onMouseClick (fun _ -> Save)] 
-                              [i [clazz "small save icon"] [] ] |> wrapToolTip "save"];
-                  div [clazz "item"]
-                      [button [clazz "ui icon button"; onMouseClick (fun _ -> Load)] 
-                              [i [clazz "small folder outline icon"] [] ] |> wrapToolTip "load"];
-                  div [clazz "item"]
-                      [button [clazz "ui icon button"; onMouseClick (fun _ -> Clear)]
-                              [i [clazz "small file outline icon"] [] ] |> wrapToolTip "clear"];
-                  div [clazz "item"]
-                      [button [clazz "ui icon button"; onMouseClick (fun _ -> Export)]
-                              [i [clazz "small external icon"] [] ] |> wrapToolTip "export"];
-                  div [clazz "item"]
-                      [button [clazz "ui icon button"; onMouseClick (fun _ -> Undo)] 
-                              [i [clazz "small arrow left icon"] [] ] |> wrapToolTip "undo"];
-                  div [clazz "item"]
-                      [button [clazz "ui icon button"; onMouseClick (fun _ -> Redo)] 
-                              [i [clazz "small arrow right icon"] [] ] |> wrapToolTip "redo"];
-                  div [clazz "item"]
-                      [button [clazz "ui icon button"; 
-                                onMouseClick (fun _ -> Action.DrawingSemanticMessage CorrelationDrawing.AddSemantic)] 
-                              [i [clazz "small plus icon"] [] ]]]
-
-          div [style "vertical-align: middle"] [
-          // div [style "width:100%; height: 10%; vertical-align: middle"] [
-            div [clazz "ui horizontal inverted menu";style "width:100%; height: 10%; float:middle; vertical-align: middle"]
-                (List.append foo (List.map (fun x -> x |> UI.map DrawingMessage) 
-                                           (CorrelationDrawing.UI.viewAnnotationTools model.drawing)))]
                  
         require (myCss) (
             body [clazz "ui"; style "background: #1B1C1E;position:fixed;width:100%"] [
-              menu
               div [] [
                 ArcBallController.controlledControl model.camera CameraMessage frustum
                     (AttributeMap.ofList [
@@ -127,7 +85,7 @@ module CorrelationDrawingApp =
                                 attribute "style" "width:70%; height: 100%; float: left;"]
                     )
                     (
-                        CorrelationDrawing.Sg.view model.drawing model.camera.view
+                        CorrelationDrawing.Sg.view model.drawing semanticApp model.camera.view
                             |> Sg.map DrawingMessage
                             |> Sg.fillMode (model.rendering.fillMode)
                                     
@@ -136,13 +94,15 @@ module CorrelationDrawingApp =
               ]
             
               div [clazz "scrolling content"; style "width:30%; height: 100%; float: right; overflow-y: scroll"] [
-                  CorrelationDrawing.UI.viewAnnotations model.drawing  |> UI.map AnnotationMessage   
-                  CorrelationDrawing.UI.viewSemantics model.drawing |> UI.map DrawingSemanticMessage
+                  CorrelationDrawing.UI.viewAnnotations model.drawing semanticApp |> UI.map AnnotationMessage   
+                  //CorrelationDrawing.SemanticApp.viewSemantics model. |> UI.map DrawingSemanticMessage
 
             ]
         ]
         ) 
 
+//    let view' (model : MCorrelationAppModel) =
+//      view model SemanticApp.initial
 
     let initial : CorrelationAppModel =
         {
@@ -151,14 +111,14 @@ module CorrelationDrawingApp =
             drawing   = CorrelationDrawing.initial 
         }
 
-    let app : App<CorrelationAppModel,MCorrelationAppModel,Action> =
-        {
-            unpersist = Unpersist.instance
-            threads = fun model -> ArcBallController.threads model.camera |> ThreadPool.map CameraMessage
-            initial = initial
-            update = update
-            view = view
-        }
-
-    let start () = App.start app
+//    let app : App<CorrelationAppModel,MCorrelationAppModel,Action> =
+//        {
+//            unpersist = Unpersist.instance
+//            threads = fun model -> ArcBallController.threads model.camera |> ThreadPool.map CameraMessage
+//            initial = initial
+//            update = update
+//            view = view'
+//        }
+//
+//    let start () = App.start app
 
