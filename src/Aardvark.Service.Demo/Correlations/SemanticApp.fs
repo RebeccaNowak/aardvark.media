@@ -5,6 +5,7 @@ open Aardvark.Base.Incremental
 open Aardvark.Base
 open Aardvark.Application
 open Aardvark.UI
+open UtilitiesGUI
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module SemanticApp = 
@@ -13,6 +14,8 @@ module SemanticApp =
   type Action =
     | SetSemantic       of option<string>
     | AddSemantic
+    | CancelNew
+    | SaveNew
     | DeleteSemantic
     | SemanticMessage   of Semantic.Action
     | SortBy            
@@ -61,6 +64,9 @@ module SemanticApp =
     let eInt = int e
     enum<SemanticsSortingOption>(plusOneMod eInt 6) // hardcoded :(
 
+  let setState (state : SemanticState) (s : option<Semantic>)  = 
+    (Option.map (fun x -> Semantic.update x (Semantic.SetState state)) s)
+
   let enableSemantic (s : option<Semantic>) = 
     (Option.map (fun x -> Semantic.update x (Semantic.SetState SemanticState.Edit)) s)
 
@@ -68,11 +74,12 @@ module SemanticApp =
     (Option.map (fun x -> Semantic.update x (Semantic.SetState SemanticState.Display)) s)
 
 
+
   let sortFunction (sortBy : SemanticsSortingOption) = 
     match sortBy with
       | SemanticsSortingOption.Label        -> fun (x : Semantic) -> x.label.text
       | SemanticsSortingOption.Level        -> fun (x : Semantic) -> (sprintf "%03i" x.level)
-      | SemanticsSortingOption.GeometryType -> fun (x : Semantic) -> x.geometry.ToString()
+//      | SemanticsSortingOption.GeometryType -> fun (x : Semantic) -> x.geometry.ToString()
       | SemanticsSortingOption.SemanticType -> fun (x : Semantic) -> x.semanticType.ToString()
       | SemanticsSortingOption.Id           -> fun (x : Semantic) -> x.id
       | SemanticsSortingOption.Timestamp    -> fun (x : Semantic) -> x.timestamp
@@ -82,10 +89,28 @@ module SemanticApp =
                     (sortBy  : SemanticsSortingOption) =
     UtilitiesDatastructures.sortedPlistFromHmap list (sortFunction sortBy)
 
-  let insertSemantic (s : Semantic) (model : SemanticApp) = 
+  let deleteSemantic (model : SemanticApp)=
+      let getAKey (m : hmap<string, 'a>) =
+        m |> HMap.toSeq |> Seq.map fst |> Seq.first
+
+      let rem =
+        model.semantics
+          |> HMap.remove model.selectedSemantic
+
+      match getAKey rem with
+        | Some k  -> 
+          let updatedSemantics = (rem |> HMap.alter k enableSemantic)
+          {model with 
+            semantics = updatedSemantics 
+            semanticsList = getSortedList updatedSemantics model.sortBy
+            selectedSemantic = k
+          }
+        | None   -> model
+
+  let insertSemantic (s : Semantic) (state : SemanticState) (model : SemanticApp) = 
     let newSemantics = (model.semantics.Add(s.id, s)
         |> HMap.alter model.selectedSemantic disableSemantic
-        |> HMap.alter s.id enableSemantic)
+        |> HMap.alter s.id (setState state))
 
     {model with selectedSemantic  = s.id
                 semantics         = newSemantics
@@ -97,17 +122,17 @@ module SemanticApp =
     let id = System.Guid.NewGuid().ToString()
     let newSemantic = Semantic.Lens._labelText.Set(
                         (Semantic.initial id),"NewSemantic")
-    insertSemantic newSemantic model
+    insertSemantic newSemantic SemanticState.New model
 
   let getInitialWithSamples =
     initial
-      |> insertSemantic (Semantic.initialHorizon0 (System.Guid.NewGuid().ToString()))
-      |> insertSemantic (Semantic.initialHorizon1 (System.Guid.NewGuid().ToString()))
-      |> insertSemantic (Semantic.initialHorizon2 (System.Guid.NewGuid().ToString()))
-      |> insertSemantic (Semantic.initialHorizon3 (System.Guid.NewGuid().ToString()))
-      |> insertSemantic (Semantic.initialHorizon4 (System.Guid.NewGuid().ToString()))
-      |> insertSemantic (Semantic.initialCrossbed (System.Guid.NewGuid().ToString()))
-      |> insertSemantic (Semantic.initialGrainSize (System.Guid.NewGuid().ToString()))
+      |> insertSemantic (Semantic.initialHorizon0 (System.Guid.NewGuid().ToString())) SemanticState.Display
+      |> insertSemantic (Semantic.initialHorizon1 (System.Guid.NewGuid().ToString())) SemanticState.Display
+      |> insertSemantic (Semantic.initialHorizon2 (System.Guid.NewGuid().ToString())) SemanticState.Display
+      |> insertSemantic (Semantic.initialHorizon3 (System.Guid.NewGuid().ToString())) SemanticState.Display
+      |> insertSemantic (Semantic.initialHorizon4 (System.Guid.NewGuid().ToString())) SemanticState.Display
+      |> insertSemantic (Semantic.initialCrossbed (System.Guid.NewGuid().ToString())) SemanticState.Display
+      |> insertSemantic (Semantic.initialGrainSize (System.Guid.NewGuid().ToString())) SemanticState.Edit
 
   ////// UPDATE 
   let update (model : SemanticApp) (action : Action) =
@@ -125,7 +150,7 @@ module SemanticApp =
                           semantics         = updatedSemantics}
           | None    -> model
 
-      | SemanticMessage sem, false   ->
+      | SemanticMessage sem, _   ->
         let fUpdate (semO : Option<Semantic>) = 
             match semO with
                 | Some s  -> Some(Semantic.update s sem)
@@ -137,24 +162,7 @@ module SemanticApp =
       | AddSemantic, false     -> 
           {insertSampleSemantic model with creatingNew = true}
           
-      | DeleteSemantic, false  ->
-        let getAKey (m : hmap<string, 'a>) =
-          m |> HMap.toSeq |> Seq.map fst |> Seq.first
-
-        let rem =
-          model.semantics
-            |> HMap.remove model.selectedSemantic
-
-        match getAKey rem with
-          | Some k  -> 
-            let updatedSemantics = (rem |> HMap.alter k enableSemantic)
-            {model with 
-              semantics = updatedSemantics 
-              semanticsList = getSortedList updatedSemantics model.sortBy
-              selectedSemantic = k
-            }
-          | None   -> model
-
+      | DeleteSemantic, false  -> deleteSemantic model
       | SortBy, false          ->
         let newSort = next model.sortBy
         {model with sortBy = newSort
@@ -166,9 +174,20 @@ module SemanticApp =
         }
 
 
-      | _                     -> model
-
-
+      | SaveNew, true   -> 
+        let updatedSemantics = 
+              model.semantics
+                |> HMap.alter model.selectedSemantic enableSemantic
+        {
+          model with creatingNew   = false
+                     semanticsList = getSortedList updatedSemantics model.sortBy 
+                     semantics     = updatedSemantics
+         }
+      | CancelNew, true -> 
+        {
+          deleteSemantic model with creatingNew = false
+        }
+      | _ -> model
 
   ///// VIEW
 
@@ -192,10 +211,47 @@ module SemanticApp =
     let domList = 
       alist {                 
         for mSem in model.semanticsList do
-          let! domNode = Semantic.view mSem
-          yield (tr 
-                  ([style UtilitiesGUI.tinyPadding; onClick (fun str -> SetSemantic (Some mSem.id))]) 
-                  (List.map (fun x -> x |> UI.map SemanticMessage) domNode))
+          let! state = mSem.state
+          let! c = model.creatingNew
+          if state = SemanticState.New then 
+            let! domNode = Semantic.view mSem
+            let menu =
+              (div[clazz "ui buttons"; style "vertical-align: top; horizontal-align: middle"]
+                    [button[clazz "compact ui button"; onMouseClick (fun _ -> SaveNew)][text "Save"];
+                     div[clazz "or"][];
+                     button[clazz "compact ui button"; onMouseClick (fun _ -> CancelNew)][text "Cancel"]
+                  ]
+              )
+//            yield (tr [] [ 
+//                     td [clazz "middle aligned"; style lrPadding;attribute "colspan" (sprintf "%i" domNode.Length)][
+//                      table [][
+//                       tr 
+//                          [style UtilitiesGUI.tinyPadding; onClick (fun str -> SetSemantic (Some mSem.id))]
+//                          (List.map (fun x -> x |> UI.map SemanticMessage) domNode)
+//                       tr
+//                          [style UtilitiesGUI.tinyPadding]
+//                          [td [clazz "middle aligned"; style lrPadding;attribute "colspan" (sprintf "%i" domNode.Length)][menu]]
+//                      ]
+//                     ]
+//                   ]
+//                  )
+
+            yield (tr 
+                    ([clazz "active";style UtilitiesGUI.tinyPadding; onClick (fun str -> SetSemantic (Some mSem.id))])
+                    ((List.map (fun x -> x |> UI.map SemanticMessage) domNode))
+                  )
+            yield (tr
+                    [clazz "active"; style UtilitiesGUI.tinyPadding]
+                    [td [clazz "center aligned"; style lrPadding;attribute "colspan" (sprintf "%i" domNode.Length)][menu]]
+                  )
+          else
+            let! domNode = Semantic.view mSem              
+            yield (tr 
+                    ([style UtilitiesGUI.tinyPadding; onClick (fun str -> SetSemantic (Some mSem.id))]) 
+                    (List.map (fun x -> x |> UI.map SemanticMessage) domNode))
+//          yield div [clazz "ui flowing popup top left"]
+//                    [button [][text "test"];
+//                     button [][text "test"]]
       } 
 
     let myCss = [
@@ -217,7 +273,7 @@ module SemanticApp =
                                th[][text "Thickness"];
                                th[][text "Colour"];
                                th[][text "Level"];
-                               th[][text "Default Geometry Type"];
+//                               th[][text "Default Geometry Type"];
                                th[][text "Semantic Type"]]];
                 Incremental.tbody  (AttributeMap.ofList []) domList]           
             )

@@ -21,3 +21,5 @@ let getAKey (m : Map<string, 'a>) =
 
 Map.ofList[("ab","a");("cd","b");("ef","c")]
   |> getAKey
+
+sprintf "\"%i\"" 3

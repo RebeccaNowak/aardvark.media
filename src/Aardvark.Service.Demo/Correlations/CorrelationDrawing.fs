@@ -245,7 +245,7 @@ module CorrelationDrawing =
                 (viewAnnotationTools model semanticApp)
             Html.SemUi.accordion "Annotations" "File Outline" true [
               table 
-                ([clazz "ui celled striped selectable inverted table unstackable"; 
+                ([clazz "ui celled striped inverted table unstackable"; 
                   style "padding: 1px 5px 1px 5px"]) 
                 [thead [][tr[][th[][text "Semantic"];
                                       th[][text "Geometry"];

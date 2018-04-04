@@ -131,8 +131,10 @@ module Semantic =
         | ChangeThickness     of Numeric.Action
         | TextInputMessage    of TextInput.Action
         | SetLevel            of int
-        | SetGeometry         of GeometryType
+//        | SetGeometry         of GeometryType
         | SetSemanticType     of SemanticType
+        | Save
+        | Cancel
 
     ////// UPDATE
     let update (model : Semantic) (a : Action) = 
@@ -155,10 +157,11 @@ module Semantic =
                 {model with state = state}
             | SetLevel i ->
                 {model with level = i}
-            | SetGeometry geo ->
-                {model with geometry = geo}
+//            | SetGeometry geo ->
+//                {model with geometry = geo}
             | SetSemanticType st ->
                 {model with semanticType = st}
+            | _ -> model
 
     ////// HELPER FUNCTIONS
     let intoTd (x) = 
@@ -191,12 +194,10 @@ module Semantic =
           |> intoTd
         Html.SemUi.dropDown' (AList.ofList levels) model.level SetLevel (fun x -> sprintf "%i" x)
           |> intoTd
-        Html.SemUi.dropDown model.geometry SetGeometry
-          |> intoTd
+//        Html.SemUi.dropDown model.geometry SetGeometry
+//          |> intoTd
         Html.SemUi.dropDown model.semanticType SetSemanticType
           |> intoTd
-        button [][]
-        button [][]
 
       ]
 
@@ -213,10 +214,10 @@ module Semantic =
           "box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0.1) inset"
           model.label)
           
-      let domNodeGeometryType =  
-        intoTd <|
-          label [clazz "ui horizontal label"]
-                [Incremental.text (Mod.map(fun x -> x.ToString()) model.geometry)]  
+//      let domNodeGeometryType =  
+//        intoTd <|
+//          label [clazz "ui horizontal label"]
+//                [Incremental.text (Mod.map(fun x -> x.ToString()) model.geometry)]  
 
       let domNodeSemanticType =  
         intoTd <|
@@ -234,7 +235,7 @@ module Semantic =
           |> intoTd
         Html.SemUi.dropDown' (AList.ofList levels) model.level SetLevel (fun x -> sprintf "%i" x)
           |> intoTd
-        domNodeGeometryType
+//        domNodeGeometryType
         domNodeSemanticType
       ]
        
@@ -269,10 +270,10 @@ module Semantic =
                 [Incremental.text (Mod.map(fun x -> sprintf "%i" x) s.level)]
             
 
-      let domNodeGeometryType =  
-        intoTd <|
-          label [clazz "ui horizontal label"]
-                [Incremental.text (Mod.map(fun x -> x.ToString()) s.geometry)]  
+//      let domNodeGeometryType =  
+//        intoTd <|
+//          label [clazz "ui horizontal label"]
+//                [Incremental.text (Mod.map(fun x -> x.ToString()) s.geometry)]  
 
       let domNodeSemanticType =  
         intoTd <|
@@ -284,7 +285,7 @@ module Semantic =
         domNodeThickness;
         domNodeColor;
         domNodeLevel;
-        domNodeGeometryType;
+//        domNodeGeometryType;
         domNodeSemanticType]
       
 
