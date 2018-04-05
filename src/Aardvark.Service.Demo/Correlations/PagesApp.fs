@@ -45,11 +45,15 @@ module Pages =
         dockConfig =
             config {
                 content (
-                  vertical 1.0 [
-                    element { id "controls"; title "Controls"; weight 1 }
-                    stack 9.0 (Some "render") [dockelement {id "render"; title "Render View"; weight 5};
-                                               dockelement { id "semantics"; title "Semantics"; weight 5}]
-                  ]
+                  //vertical 1.0 [
+                    //element { id "controls"; title "Controls"; weight 1 }
+                    horizontal 1.0 [
+                      element {id "render"; title "Render View"; weight 5}
+                      element {id "semantics"; title "Semantics"; weight 5}
+//                      stack 9.0 (Some "render") [dockelement {id "render"; title "Render View"; weight 5};
+//                                                 dockelement { id "semantics"; title "Semantics"; weight 5}]
+                    ]
+                  //]
                 )
                 appName "CDPages"
                 useCachedConfig false

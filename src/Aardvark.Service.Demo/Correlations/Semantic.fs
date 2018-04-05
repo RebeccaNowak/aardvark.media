@@ -241,33 +241,43 @@ module Semantic =
        
     let viewDisplay (s : MSemantic) = 
       let domNodeLbl =
-        intoTd <|
-          Incremental.label 
+        intoTd <| Incremental.text (s.label.text)
+          //Incremental.label 
             //(AttributeMap.union 
-               (AttributeMap.ofList [clazz "ui horizontal label"]) 
+              // (AttributeMap.ofList [clazz "ui horizontal label"]) 
                //(AttributeMap.ofAMap (incrBgColorAMap s.style.color.c)))
-            (AList.ofList [Incremental.text (s.label.text)])
+           // (AList.ofList [Incremental.text (s.label.text)])
         
 
       let domNodeThickness = 
         intoTd <|
-          label [clazz "ui horizontal label"] [
+          //label [clazz "ui horizontal label"] [
             Incremental.text (Mod.map(fun x -> sprintf "%.1f" x) s.style.thickness.value)
-          ]
+         // ]
         
 
       let domNodeColor = 
+        let iconAttr =
+          amap {
+            yield clazz "circle icon"
+            let! c = s.style.color.c
+            yield style (sprintf "color:%s" (colorToHexStr c))
+          }  
         intoTd <|
-          Incremental.label (AttributeMap.union 
-            (AttributeMap.ofList [clazz "ui horizontal label"])
-            (AttributeMap.ofAMap (incrBgColorAMap s.style.color.c)))
-            (AList.ofList [Incremental.text (Mod.map(fun (x : C4b) -> colorToHexStr x) s.style.color.c)])
+          div[] [
+            Incremental.i (AttributeMap.ofAMap iconAttr) (AList.ofList [])
+            Incremental.text (Mod.map(fun (x : C4b) -> colorToHexStr x) s.style.color.c)
+          ]
+//          Incremental.label (AttributeMap.union 
+//            (AttributeMap.ofList [clazz "ui horizontal label"])
+//            (AttributeMap.ofAMap (incrBgColorAMap s.style.color.c)))
+//            (AList.ofList [Incremental.text (Mod.map(fun (x : C4b) -> colorToHexStr x) s.style.color.c)])
             
 
       let domNodeLevel = 
         intoTd <| 
-          label [clazz "ui horizontal label"]
-                [Incremental.text (Mod.map(fun x -> sprintf "%i" x) s.level)]
+         // label [clazz "ui horizontal label"]
+                Incremental.text (Mod.map(fun x -> sprintf "%i" x) s.level)
             
 
 //      let domNodeGeometryType =  
@@ -277,8 +287,8 @@ module Semantic =
 
       let domNodeSemanticType =  
         intoTd <|
-          label [clazz "ui horizontal label"]
-                [Incremental.text (Mod.map(fun x -> x.ToString()) s.semanticType)]
+          //label [clazz "ui horizontal label"]
+                Incremental.text (Mod.map(fun x -> x.ToString()) s.semanticType)
            
                  
       [domNodeLbl;

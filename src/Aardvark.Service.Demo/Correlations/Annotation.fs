@@ -49,24 +49,24 @@ module Annotation =
       td [clazz "center aligned"; style lrPadding] 
          [
           Incremental.i (AttributeMap.ofAMap iconAttr) (AList.ofList []);
-          label  [clazz "ui label"] 
-                 [Incremental.text (SemanticApp.getLabel semanticApp model.semanticId)]]
+          //label  [clazz "ui label"] 
+                 Incremental.text (SemanticApp.getLabel semanticApp model.semanticId)]
 
         
     let geometryTypeNode =
       td [clazz "center aligned"; style lrPadding] 
-         [label  [clazz "ui label"] 
-                 [text (model.geometry.ToString())]]
+         //[label  [clazz "ui label"] 
+                 [text (model.geometry.ToString())]
 
     let projectionNode =
       td [clazz "center aligned"; style lrPadding] 
-         [label  [clazz "ui label"] 
-                 [text (model.projection.ToString())]]
+         //[label  [clazz "ui label"] 
+                 [text (model.projection.ToString())]
 
     let annotationTextNode = 
         td [clazz "center aligned"; style lrPadding] 
-           [label  [clazz "ui label"] 
-                   [Incremental.text model.text]]
+           //[label  [clazz "ui label"] 
+                   [Incremental.text model.text]
     
     [semanticsNode;geometryTypeNode;projectionNode;annotationTextNode]
     

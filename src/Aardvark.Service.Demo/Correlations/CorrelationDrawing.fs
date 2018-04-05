@@ -205,12 +205,12 @@ module CorrelationDrawing =
 //                        (fun x -> x.label.text)
 //                        (fun x -> (Mod.map (fun y -> not y) x.disabled))]];          
           [div [clazz "item"] 
-              [div [clazz "ui right labeled input"] [
-                      label [clazz "ui label"] [text "Geometry"]  // style "color:white"
+              [div [clazz "ui small right labeled input"] [
+                      label [clazz "ui basic label"] [text "Geometry"]  // style "color:white"
                       Html.SemUi.dropDown model.geometry SetGeometry]];
           div [clazz "item"] 
-              [div [clazz "ui right labeled input"] [
-                      label [clazz "ui label"] [text "Projections"]
+              [div [clazz "ui small right labeled input"] [
+                      label [clazz "ui basic label"] [text "Projections"]
                       Html.SemUi.dropDown model.projection SetProjection]]]
 
 
@@ -240,7 +240,7 @@ module CorrelationDrawing =
                 )
             }  
           div [] [
-            div[clazz "ui horizontal inverted menu"; 
+            div[clazz "ui compact horizontal inverted menu"; 
                 style "float:middle; vertical-align: middle"] 
                 (viewAnnotationTools model semanticApp)
             Html.SemUi.accordion "Annotations" "File Outline" true [
