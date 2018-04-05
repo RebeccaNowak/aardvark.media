@@ -42,6 +42,8 @@ module Annotation =
       let iconAttr =
         amap {
           yield clazz "circle icon"
+          let! c = SemanticApp.getColor semanticApp model.semanticId
+          yield style (sprintf "color:%s" (colorToHexStr c))
 //          yield attribute "color" "blue"
         }      
       td [clazz "center aligned"; style lrPadding] 
