@@ -38,17 +38,19 @@ module Annotation =
                                 | None -> anno
 
   let view (model : MAnnotation)  (semanticApp : MSemanticApp) = 
-    let semanticsNode =       
+    let semanticsNode = 
+      let iconAttr =
+        amap {
+          yield clazz "circle icon"
+//          yield attribute "color" "blue"
+        }      
       td [clazz "center aligned"; style lrPadding] 
-         [label  [clazz "ui label"] 
+         [
+          Incremental.i (AttributeMap.ofAMap iconAttr) (AList.ofList []);
+          label  [clazz "ui label"] 
                  [Incremental.text (SemanticApp.getLabel semanticApp model.semanticId)]]
 
-//      td [clazz "center aligned"; style lrPadding] 
-//         [(DropdownList.view' cdModel.semanticsList
-//                              (Option.map (fun y -> y.id) >> SetSemantic)
-//                              (fun x -> x.label.text)
-//                              (fun x -> Mod.map (fun y -> x.id = y) model.semanticId))]
-          
+        
     let geometryTypeNode =
       td [clazz "center aligned"; style lrPadding] 
          [label  [clazz "ui label"] 

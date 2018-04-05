@@ -13,7 +13,7 @@ module Pages =
 
   let initialCamera = { 
           CameraController.initial with 
-              view = CameraView.lookAt (V3d.III * 3.0) V3d.OOO V3d.OOI
+              view = CameraView.lookAt (V3d.III * 3.0) V3d.OOO Mars.Terrain.up //V3d.OOI
       }
 
 

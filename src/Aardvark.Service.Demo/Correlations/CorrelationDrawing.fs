@@ -289,7 +289,12 @@ module CorrelationDrawing =
                 return distF * size / 800.0 //needs hfov at this point
             }
 
-        let mkISg color size trafo =         
+        let mkISg color size trafo =      
+//            (Mars.Terrain.mkISg()
+//                |> Sg.effect Mars.Terrain.defaultEffects
+//                |> Sg.andAlso (pickSg []
+//
+//            )
             Sg.sphere 5 color size 
                     |> Sg.shader {
                         do! DefaultSurfaces.trafo
@@ -299,21 +304,27 @@ module CorrelationDrawing =
                     |> Sg.noEvents
                     |> Sg.trafo(trafo) 
         
-        let canvas =             
-            Sg.sphere' 8 (new C4b(247,127,90)) 20.0
-                |> Sg.shader {
-                    do! DefaultSurfaces.trafo
-                    do! DefaultSurfaces.vertexColor
-                    do! DefaultSurfaces.simpleLighting
-                }
-                |> Sg.requirePicking
-                |> Sg.noEvents 
-                    |> Sg.withEvents [
-                        Sg.onMouseMove (fun p -> (Action.Move p))
-                        Sg.onClick(fun p -> Action.AddPoint p)
-                        Sg.onLeave (fun _ -> Action.Exit)
-                    ]  
-                |> Sg.onOff (Mod.constant true)
+        let pick = 
+          Mars.Terrain.pickSg [
+            Sg.onMouseMove (fun p -> (Action.Move p))
+            Sg.onClick(fun p -> Action.AddPoint p)
+            Sg.onLeave (fun _ -> Action.Exit)
+            ]
+//         Sg.sphere' 8 (new C4b(247,127,90)) 20.0
+//                |> Sg.shader {
+//                    do! DefaultSurfaces.trafo
+//                    do! DefaultSurfaces.vertexColor
+//                    do! DefaultSurfaces.simpleLighting
+//                }  
+//         ] |> Sg.ofList
+//              |> Sg.requirePicking
+//              |> Sg.noEvents 
+//                  |> Sg.withEvents [
+//                      Sg.onMouseMove (fun p -> (Action.Move p))
+//                      Sg.onClick(fun p -> Action.AddPoint p)
+//                      Sg.onLeave (fun _ -> Action.Exit)
+//                  ]  
+//              |> Sg.onOff (Mod.constant true)
               //  |> Sg.map DrawingMessage
 
         let edgeLines (close : bool) (points : alist<V3d>) =
@@ -398,7 +409,8 @@ module CorrelationDrawing =
                         yield! annotation' semanticApp a cam
                 } |> Sg.set
 
-            [canvas; 
+            [[Mars.Terrain.mkISg() |> Sg.effect Mars.Terrain.defaultEffects
+                                |> Sg.noEvents] |> Sg.ofList; pick;
              brush model.hoverPosition (SemanticApp.getColor semanticApp semanticApp.selectedSemantic);
              annotations] @ annotation semanticApp model.working cam
             |> Sg.ofList
