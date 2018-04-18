@@ -5,8 +5,10 @@ open Aardvark.Base
 open Aardvark.Base.Incremental
 open Aardvark.Base.Incremental.Operators
 open Aardvark.Base.Rendering
+open Aardvark.Rendering.Text
 open Aardvark.UI
 open UtilitiesGUI
+open UtilitiesDatastructures
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
@@ -79,15 +81,10 @@ module Annotation =
           | Some a -> SemanticApp.getColor semanticApp a.semanticId
           | None -> Mod.constant C4b.Red)
 
-
-//  let getColor' (anno : MAnnotation) (semanticApp : MSemanticApp) = 
-//    let sem = Mod.bind (fun id -> AMap.tryFind id cdModel.semantics) anno.semanticId
-//    Mod.bind (fun (se : option<MSemantic>) ->
-//      match se with
-//                  | Some s -> s.style.color.c
-//                  | None -> Mod.constant C4b.Red) sem
-
-  
+  let getColor' (anno : MAnnotation) (semanticApp : MSemanticApp) = 
+    SemanticApp.getColor semanticApp anno.semanticId
+    
+ 
     
 
   let getThickness (anno : IMod<Option<MAnnotation>>) (semanticApp : MSemanticApp) = 
@@ -96,13 +93,47 @@ module Annotation =
                       | Some a -> SemanticApp.getThickness semanticApp a.semanticId
                       | None -> Mod.constant Semantic.ThicknessDefault) anno   
 
+  let calcElevation (v : V3d) =
+    v.Y
 
-//  let getThickness' (anno : MAnnotation) (cdModel : MCorrelationDrawingModel) = 
-//    let sem = Mod.bind (fun id -> AMap.tryFind id cdModel.semantics) anno.semanticId
-//    Mod.bind (fun (se : option<MSemantic>) ->
-//      match se with
-//                  | Some s -> s.style.thickness.value
-//                  | None -> Mod.constant Semantic.ThicknessDefault) sem      
-                                               
-        
+  let getAvgElevation (anno : MAnnotation) =
+    anno.points
+      |> AList.averageOf calcElevation
+
+  let getMinElevation (anno : MAnnotation) = 
+    anno.points
+      |> AList.minBy calcElevation
+
+  let getMaxElevation (anno : MAnnotation) = 
+    anno.points
+      |> AList.maxBy calcElevation
+
+  let getRangeMinMax (anno : MAnnotation) =
+    let min = anno.points
+                |> AList.minBy calcElevation
+    let max = anno.points
+                |> AList.maxBy calcElevation
+    Mod.map2 (fun (x : V3d) (y : V3d) -> V2d(x.Y,y.Y)) min max
+
+  let getRange (anno : MAnnotation) =
+    let min = anno.points
+                |> AList.minBy calcElevation
+    let max = anno.points
+                |> AList.maxBy calcElevation
+    Mod.map2 (fun (mi : V3d) (ma : V3d) -> (ma.Y - mi.Y)) min max
+
+
+  let getMinElevation' (annos : alist<MAnnotation>) =
+    AList.toArray (annos |> AList.map (fun x -> getAvgElevation x))
+      |> Array.min
+
+  let getMaxElevation' (annos : alist<MAnnotation>) =
+    AList.toArray (annos |> AList.map (fun x -> getAvgElevation x))
+      |> Array.max
+
+  let getMinMaxElevation (annos : alist<MAnnotation>) =
+    let avgs = (annos |> AList.map (fun x -> getAvgElevation x))
+    Mod.map2 (fun  (x : float) (y : float) -> V2d(x,y)) (avgs |> AList.min) (avgs |> AList.max)
+
+
 

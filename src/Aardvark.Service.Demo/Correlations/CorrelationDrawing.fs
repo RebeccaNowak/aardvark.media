@@ -35,20 +35,16 @@ module CorrelationDrawing =
         working = None
         projection = Projection.Viewpoint
         geometry = GeometryType.Line
-//        semantics = hmap.Empty
-//        semanticsList = DropdownList.init
-//        selectedSemantic = "" 
-        //selectedSemantic = Semantic.initial (Guid.NewGuid().ToString())
         selectedAnnotation = None
         annotations = plist.Empty
         exportPath = @"."
+        log = GeologicalLog.intial (Guid.NewGuid().ToString())
     }
 
     type Action =
         | SetSemantic       of option<string>
         | AddSemantic
         | DoNothing
-        //| SemanticMessage   of Semantic.Action
         | AnnotationMessage of Annotation.Action
         | SetGeometry       of GeometryType
         | SetProjection     of Projection
@@ -60,58 +56,18 @@ module CorrelationDrawing =
         | KeyUp             of key : Keys      
         | Export
            
-//    let disableSemantic (semO : Option<Semantic>) =
-//        match semO with
-//            | Some s -> Some(Semantic.update s Semantic.Disable)
-//            | None -> None
-//
-//    let enableSemantic (semO : Option<Semantic>) =
-//        match semO with
-//            | Some s -> Some(Semantic.update s Semantic.Enable)
-//            | None -> None //TODO something useful
-//
-//    let insertSemantic (semantic : Semantic) (model : CorrelationDrawingModel) = 
-//        let newSemantics = (model.semantics.Add(semantic.id, semantic)
-//            |> HMap.alter model.selectedSemantic disableSemantic
-//            |> HMap.alter semantic.id enableSemantic)
-//                               
-//        let updatedList = sortedPlistFromHmap newSemantics (fun (x : Semantic) -> x.label.text)
-//
-//        {model with selectedSemantic = semantic.id;
-//                    semanticsList = {model.semanticsList with valueList = updatedList;
-//                                                              selected = Some semantic}; 
-//                    semantics = newSemantics;
-//        }
-//
-//    let insertSampleSemantic (model : CorrelationDrawingModel) = 
-//        let id = Guid.NewGuid().ToString()
-//        let newSemantic = Semantic.Lens._labelText.Set(
-//                            (Semantic.initial id),
-//                            (sprintf "Semantic%i" (model.semantics.Count + 1)))
-//        insertSemantic newSemantic model
-
-        
-//    let getMSemantic (model : MCorrelationDrawingModel) =
-//        let selected = model.selectedSemantic            
-//        Mod.bind (fun s -> AMap.tryFind s model.semantics) selected
-        
+       
     let finishAndAppend (model : CorrelationDrawingModel) = 
-        let anns = match model.working with
-                            | Some w -> model.annotations |> PList.append w
-                            | None -> model.annotations
-        { model with working = None; annotations = anns }
+        let (anns, log) = match model.working with
+                            | Some w ->
+                                let newLog = GeologicalLog.update model.log (GeologicalLog.AddNode w)
+                                let annos  = model.annotations |> PList.append w
+                                (annos, newLog)
+                            | None -> (model.annotations, model.log)
 
-//    let setSelectedSemanticInMap (model : CorrelationDrawingModel) (semId : string)=
-//        let update1 = HMap.alter model.selectedSemantic disableSemantic model.semantics
-//        HMap.alter semId enableSemantic update1
-        
-//    let getCurrentColor (model : MCorrelationDrawingModel) =
-//        let mapping (s : option<MSemantic>) : IMod<C4b> =
-//                                                  match s with
-//                                                    | Some y -> y.style.color.c
-//                                                    | None -> Mod.constant C4b.VRVisGreen
-//        Mod.bind (fun x -> mapping x) (getMSemantic model)
-      
+        { model with  working       = None 
+                      annotations   = anns
+                      log           = log}
 
 
     let update (model : CorrelationDrawingModel) (selectedSemantic : string) (act : Action) =
@@ -127,16 +83,18 @@ module CorrelationDrawing =
                 let working = 
                   match model.working with
                     | Some w  ->                                     
-                        { w with points = w.points |> PList.append m }
+                        let newAnno = { w with points = w.points |> PList.append m }
+                        newAnno
                     | None    -> 
-                        let id = Guid.NewGuid().ToString()                                     
-                        {Annotation.initial id with
-                            points      = PList.ofList [m];  
-                            semanticId  = selectedSemantic
-                            geometry    = model.geometry
-                            projection  = model.projection}//add annotation states
+                        let id      = Guid.NewGuid().ToString()                                     
+                        let newAnno = {Annotation.initial id with
+                                        points      = PList.ofList [m];  
+                                        semanticId  = selectedSemantic
+                                        geometry    = model.geometry
+                                        projection  = model.projection}//add annotation states
+                        newAnno
 
-                let model = { model with working = Some working }
+                let model = {model with working  = Some working}
 
                 let model = match (working.geometry, (working.points |> PList.count)) with
                               | GeometryType.Point, 1 -> model |> finishAndAppend
@@ -149,23 +107,6 @@ module CorrelationDrawing =
                     model |> finishAndAppend
             | Exit, _ -> 
                     { model with hoverPosition = None }
-//            | SetSemantic sem, _ ->
-//                match sem with
-//                  | Some s ->
-//                      let update1 = HMap.alter model.selectedSemantic disableSemantic model.semantics
-//                      let update2 = HMap.alter s enableSemantic update1
-//                      
-//                      let updatedList = sortedPlistFromHmap update2 (fun (x : Semantic) -> x.label.text)
-//                      
-//                      let newList = DropdownList.update 
-//                                          model.semanticsList 
-//                                          (DropdownList.Action.SetList(updatedList))
-//                      
-//                      {model with selectedSemantic = s; 
-//                                  semanticsList = newList;
-//                                  semantics = update2}
-//                  | None -> model
-
             | SetGeometry mode, _ ->
                     { model with geometry = mode }
             | SetProjection mode, _ ->
@@ -193,17 +134,7 @@ module CorrelationDrawing =
                       | None -> DoNothing //AddSemantic // TODO?
                    
           let mapping = Option.map (fun (y : MSemantic) -> y.id)
-
-
-          //div [clazz "item"] [label [] [text "Export Path"; Html.SemUi.textBox  model.exportPath SetExportPath]];
-//          [div [clazz "item"] 
-//              [div [clazz "ui right labeled input"] [
-//                      label [clazz "ui label"] [text "Semantic"] 
-//                      DropdownList.view' 
-//                        semanticApp.semanticsList
-//                        (Option.map (fun y -> y.id) >> SetSemantic)
-//                        (fun x -> x.label.text)
-//                        (fun x -> (Mod.map (fun y -> not y) x.disabled))]];          
+       
           [div [clazz "item"] 
               [div [clazz "ui small right labeled input"] [
                       label [clazz "ui basic label"] [text "Geometry"]  // style "color:white"
@@ -214,21 +145,6 @@ module CorrelationDrawing =
                       Html.SemUi.dropDown model.projection SetProjection]]]
 
 
-
-
-//            Html.SemUi.accordion "Annotation Tools" "Write" true [
-//              Html.table [                            
-//                Html.row "Export Path:" [Html.SemUi.textBox  model.exportPath SetExportPath ]
-//                Html.row "Geometry:"    [Html.SemUi.dropDown model.geometry   SetGeometry]
-//                Html.row "Projections:" [Html.SemUi.dropDown model.projection SetProjection]
-//                Html.row "Semantic:"    [DropdownList.view' model.semanticsList 
-//                                                           (Option.map (fun y -> y.id) >> SetSemantic)
-//                                                           (fun x -> x.label.text)
-//                                                           (fun x -> (Mod.map (fun y -> not y) x.disabled))
-//                                        ]
-//              ]                               
-//           ]   
-            
 
         let viewAnnotations (model : MCorrelationDrawingModel) (semanticApp : MSemanticApp) = 
           let domList = 
@@ -256,27 +172,6 @@ module CorrelationDrawing =
             ]
           ]
           
-//        let viewSemantics (model : MCorrelationDrawingModel) = 
-//          let domList = 
-//            alist {                 
-//              for mSem in model.semanticsList.valueList do
-//                let! domNode = Semantic.view mSem
-//                yield (tr 
-//                        ([style tinyPadding; onClick (fun str -> SetSemantic (Some mSem.id))]) 
-//                        (List.map (fun x -> x |> UI.map SemanticMessage) domNode)) //|> UI.map SemanticMessage
-//                
-//              } 
-
-//          Html.SemUi.accordion "Semantics" "File Outline" true [
-//            table
-//              ([clazz "ui celled striped selectable inverted table unstackable";
-//                                    style "padding: 1px 5px 1px 5px"]) (
-//                  [thead [][tr[][th[][text "Label"];
-//                                 th[][text "Thickness"];
-//                                 th[][text "Colour"]]];
-//                  Incremental.tbody  (AttributeMap.ofList []) domList]           
-//              )
-//          ]
 
 
     module Sg =        
@@ -288,47 +183,23 @@ module CorrelationDrawing =
                 let distF = V3d.Dot(v.Forward, distV)
                 return distF * size / 800.0 //needs hfov at this point
             }
-
-        let mkISg color size trafo =      
-//            (Mars.Terrain.mkISg()
-//                |> Sg.effect Mars.Terrain.defaultEffects
-//                |> Sg.andAlso (pickSg []
-//
-//            )
-            Sg.sphere 5 color size 
-                    |> Sg.shader {
-                        do! DefaultSurfaces.trafo
-                        do! DefaultSurfaces.vertexColor
-                        do! DefaultSurfaces.simpleLighting
-                    }
-                    |> Sg.noEvents
-                    |> Sg.trafo(trafo) 
         
+        let makeLblSg (str : string) (pos : V3d) =
+          Sg.text (Font.create "courier" FontStyle.Regular) C4b.White (Mod.constant str)
+              |> Sg.billboard
+              |> Sg.noEvents
+              |> Sg.depthTest (Mod.constant DepthTestMode.None)
+              |> Sg.trafo(Mod.constant (Trafo3d.Translation pos))          
+
+
         let pick = 
           Mars.Terrain.pickSg [
             Sg.onMouseMove (fun p -> (Action.Move p))
             Sg.onClick(fun p -> Action.AddPoint p)
             Sg.onLeave (fun _ -> Action.Exit)
             ]
-//         Sg.sphere' 8 (new C4b(247,127,90)) 20.0
-//                |> Sg.shader {
-//                    do! DefaultSurfaces.trafo
-//                    do! DefaultSurfaces.vertexColor
-//                    do! DefaultSurfaces.simpleLighting
-//                }  
-//         ] |> Sg.ofList
-//              |> Sg.requirePicking
-//              |> Sg.noEvents 
-//                  |> Sg.withEvents [
-//                      Sg.onMouseMove (fun p -> (Action.Move p))
-//                      Sg.onClick(fun p -> Action.AddPoint p)
-//                      Sg.onLeave (fun _ -> Action.Exit)
-//                  ]  
-//              |> Sg.onOff (Mod.constant true)
-              //  |> Sg.map DrawingMessage
 
         let edgeLines (close : bool) (points : alist<V3d>) =
-            
             points |> AList.toMod |> Mod.map (fun l ->
                 let list = PList.toList l
                 let head = list |> List.tryHead
@@ -340,25 +211,36 @@ module CorrelationDrawing =
                                     |> List.toArray
                     | None -> [||]                         
             )
+
+        let makeSphereSg color size trafo =      
+          Sg.sphere 5 color size 
+                  |> Sg.shader {
+                      do! DefaultSurfaces.trafo
+                      do! DefaultSurfaces.vertexColor
+                      do! DefaultSurfaces.simpleLighting
+                  }
+                  |> Sg.noEvents
+                  |> Sg.trafo(trafo)
             
-        let brush (hovered : IMod<Trafo3d option>) (color : IMod<C4b>) = //(size : IMod<float>)= 
+        let makeBrushSg (hovered : IMod<Trafo3d option>) (color : IMod<C4b>) = //(size : IMod<float>)= 
             let trafo =
                 hovered |> Mod.map (function o -> match o with 
                                                     | Some t-> t
                                                     | None -> Trafo3d.Scale(V3d.Zero))
-
-            //mkISg (Mod.constant C4b.Blue) (Mod.constant 0.05) trafo
-            mkISg (color) (Mod.constant 0.05) trafo
+            makeSphereSg (color) (Mod.constant 0.05) trafo
        
-        let dots (points : alist<V3d>) (color : IMod<C4b>) (view : IMod<CameraView>) =            
+        let makeDotsSg (points : alist<V3d>) (color : IMod<C4b>) (view : IMod<CameraView>) =            
             
             aset {
                 for p in points |> ASet.ofAList do
-                    yield mkISg color (computeScale view (Mod.constant p) 5.0) (Mod.constant (Trafo3d.Translation(p)))
+                    yield makeSphereSg 
+                            color 
+                            (computeScale view (Mod.constant p) 5.0) 
+                            (Mod.constant (Trafo3d.Translation(p)))
             } 
             |> Sg.set
            
-        let lines (points : alist<V3d>) (color : IMod<C4b>) (width : IMod<float>) = 
+        let makeLinesSg (points : alist<V3d>) (color : IMod<C4b>) (width : IMod<float>) = 
             edgeLines false points
                 |> Sg.lines color
                 |> Sg.effect [
@@ -371,10 +253,9 @@ module CorrelationDrawing =
                 |> Sg.pass (RenderPass.after "lines" RenderPassOrder.Arbitrary RenderPass.main)
                 |> Sg.depthTest (Mod.constant DepthTestMode.None)
 
-        let annotation (semanticApp : MSemanticApp)
-                       (anno        : IMod<Option<MAnnotation>>)
-                       (view        : IMod<CameraView>) = 
-            //alist builder?
+        let createAnnotationSgs (semanticApp : MSemanticApp)
+                                (anno        : IMod<Option<MAnnotation>>)
+                                (view        : IMod<CameraView>) = 
           let points = 
               anno |> AList.bind (fun o -> 
                   match o with
@@ -387,14 +268,20 @@ module CorrelationDrawing =
               m |> Mod.bind (function | None -> defaultValue | Some v -> f v)
           let color = Annotation.getColor anno semanticApp
           let thickness = Annotation.getThickness anno semanticApp 
-          [lines points color thickness; dots points color view]
+          [makeLinesSg points color thickness; makeDotsSg points color view]
           
-        let annotation' (semanticApp  : MSemanticApp)
+
+        let createAnnotationSgs' (semanticApp  : MSemanticApp)
                         (anno         : MAnnotation)
                         (view         : IMod<CameraView>) =      
           let color = SemanticApp.getColor semanticApp anno.semanticId
           let thickness = SemanticApp.getThickness semanticApp anno.semanticId
-          [lines anno.points color thickness; dots anno.points color view] |> ASet.ofList
+          [makeLinesSg anno.points color thickness;
+           makeDotsSg anno.points color view;
+          ] |> ASet.ofList
+
+
+
 
         let view (model       : MCorrelationDrawingModel)
                  (semanticApp : MSemanticApp) 
@@ -404,13 +291,25 @@ module CorrelationDrawing =
             let annoSet = ASet.ofAList model.annotations 
 
             let annotations =
+                let id = Guid.NewGuid().ToString()   
+               
                 aset {
                     for a in annoSet do
-                        yield! annotation' semanticApp a cam
-                } |> Sg.set
+                        yield! createAnnotationSgs' semanticApp a cam
+                } |> Sg.set         
+                
 
-            [[Mars.Terrain.mkISg() |> Sg.effect Mars.Terrain.defaultEffects
-                                |> Sg.noEvents] |> Sg.ofList; pick;
-             brush model.hoverPosition (SemanticApp.getColor semanticApp semanticApp.selectedSemantic);
-             annotations] @ annotation semanticApp model.working cam
+            [
+              [Mars.Terrain.mkISg() 
+                |> Sg.effect Mars.Terrain.defaultEffects
+                |> Sg.noEvents
+              ] 
+              |> Sg.ofList;
+              pick;
+              makeBrushSg model.hoverPosition (SemanticApp.getColor semanticApp semanticApp.selectedSemantic);
+              annotations;
+              (GeologicalLog.sg model.log model.annotations semanticApp cam) |> Sg.noEvents
+            ] @ createAnnotationSgs semanticApp model.working cam
             |> Sg.ofList
+            
+            

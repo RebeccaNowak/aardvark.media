@@ -86,6 +86,7 @@
     <Compile Include="Correlations\UtilitiesDatastructures.fs" />
     <Compile Include="Correlations\UtilitiesGUI.fs" />
     <Compile Include="Correlations\Utilities.fs" />
+    <Compile Include="Correlations\OrientationCube.fs" />
     <Compile Include="Correlations\TextInputApp.fs" />
     <Compile Include="Correlations\DropdownApp.fs" />
     <Compile Include="Correlations\Semantic.fs" />
@@ -93,6 +94,7 @@
     <Compile Include="Correlations\Annotation.fs" />
     <Compile Include="Correlations\AnnotationApp.fs" />
     <Compile Include="Correlations\Border.fs" />
+    <Compile Include="Correlations\LogNode.fs" />
     <Compile Include="Correlations\GeologicalLog.fs" />
     <Compile Include="Correlations\CorrelationPlot.fs" />
     <Compile Include="Correlations\CorrelationDrawing.fs" />

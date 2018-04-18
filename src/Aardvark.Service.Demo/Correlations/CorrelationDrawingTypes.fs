@@ -91,15 +91,15 @@ type Semantic = {
 [<DomainType>]
 type Annotation = {     
     [<NonIncremental;PrimaryKey>]
-    id                : string
+    id                    : string
     
     [<NonIncremental>]
-    geometry          : GeometryType
+    geometry              : GeometryType
 
     [<NonIncremental>]
-    projection        : Projection
+    projection            : Projection
 
-    semanticId              : string
+    semanticId            : string
     points                : plist<V3d>
     segments              : plist<plist<V3d>> //list<Segment>
     visible               : bool
@@ -110,17 +110,46 @@ type Annotation = {
 }
 
 [<DomainType>]
+type Horizon = {
+  [<NonIncremental;PrimaryKey>]
+  id          : string
+
+  annotation  : Annotation
+  children    : plist<Annotation>
+
+
+}
+
+
+[<DomainType>]
 type Border = {
     annotations : plist<Annotation>
 }
 
-[<DomainType>]
-type LogModel = {
-    [<NonIncremental;PrimaryKey>]
-    id      : string
-    //borders : alist<Annotation>
-    range   : V2d //?
 
+[<DomainType>]
+type LogNode = {
+    annotation  : Annotation
+
+    elevation   : float
+    [<NonIncremental>]
+    pos         : V3d
+    [<NonIncremental>]
+    size        : V3d
+
+    colour      : C4b //remove
+    nodeType    : SemanticType //remove
+    index       : int
+}
+
+[<DomainType>]
+type GeologicalLog = {
+    [<NonIncremental;PrimaryKey>]
+    id        : string
+    nodes     : plist<LogNode>
+    borders   : plist<Border>
+    range     : V2d //?
+    camera    : CameraControllerState
 }
 
 type AnnotationParameters = {Point:V3d;semanticId:string}
@@ -138,6 +167,7 @@ type CorrelationDrawingModel = {
     selectedAnnotation  : option<string>
     annotations         : plist<Annotation>
     exportPath          : string
+    log                 : GeologicalLog
 }
 
 [<DomainType>]
@@ -165,4 +195,5 @@ type Pages =
 
         drawingApp  : CorrelationAppModel
         semanticApp : SemanticApp
+        log         : GeologicalLog
     }

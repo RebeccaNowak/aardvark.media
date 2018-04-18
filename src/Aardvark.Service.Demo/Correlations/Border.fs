@@ -1,25 +1,48 @@
-﻿module Border
+﻿namespace CorrelationDrawing
 
-//let li = [5.0;13.0;9.0;1.0;24.0;5.0;53.0;57.0]
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module Border =
 
-let li = [5.0;13.0;9.0;1.0;24.0;5.0;5.0;8.0]
-let sum = li |> List.fold (fun acc elem -> acc + elem) 0.0
-let mean = sum / 8.0
-              
-let li2 = List.map (fun x -> x - mean) li
-let liSquared = List.map (fun x -> x**2.0) li2
-let sumSquared = 
-          li2 
-             |> List.fold (fun acc elem -> acc + elem**2.0) 0.0
-let std = sqrt (sumSquared / 7.0)
+  open Aardvark.Base
+  open Aardvark.Base.Incremental
+  open Aardvark.Base.Incremental.Operators
+  open Aardvark.Base.Rendering
+  open Aardvark.UI
+  open Aardvark.Rendering.Text
+
+  let initial id : Border = {
+    annotations = plist.Empty
+  }
+
+  let getAvgY (points : alist<V3d>) =
+    (AList.toList points) |> List.averageBy  (fun x -> x.Y)
+
+  let getMinY (points : alist<V3d>) =
+    (AList.toList points) |> List.minBy  (fun x -> x.Y)
+    
+  module Sg =
+
+    let createLabel (str : string) (pos : V3d) =
+      Sg.text (Font.create "courier" FontStyle.Regular) C4b.White (Mod.constant str)
+          |> Sg.billboard
+          |> Sg.noEvents
+          |> Sg.trafo(Mod.constant (Trafo3d.Translation pos))
+
+    
+
+    let view' (annos : alist<MAnnotation>)  =
+        let sortedAnnos = annos |> AList.sortBy (fun x -> getAvgY x.points)
+        sortedAnnos |> AList.map (fun x -> createLabel x.id (getMinY x.points))
+          |> AList.toList
+          |> Sg.ofList
+          
+
+    let view (model : MBorder)  =
+        let sortedAnnos = model.annotations |> AList.sortBy (fun x -> getAvgY x.points)
+        sortedAnnos |> AList.map (fun x -> createLabel x.id (getMinY x.points))
+          |> AList.toList
+          |> Sg.ofList
+//        for anno in sortedAnnos |> AList.toList do
+//          createLabel anno.id
 
 
-
-
-let getAKey (m : Map<string, 'a>) =
-  m |> Map.toSeq |> Seq.map fst |> Seq.head
-
-Map.ofList[("ab","a");("cd","b");("ef","c")]
-  |> getAKey
-
-sprintf "\"%i\"" 3

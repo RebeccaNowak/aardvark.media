@@ -112,7 +112,7 @@ module CorrelationDrawingApp =
 
     let initial : CorrelationAppModel =
         {
-            camera    = { ArcBallController.initial with view = CameraView.lookAt (23.0 * V3d.OIO) V3d.Zero V3d.OOI}
+            camera    = { ArcBallController.initial with view = CameraView.lookAt (23.0 * V3d.OIO) V3d.Zero Mars.Terrain.up}
             rendering = RenderingPars.initial
             drawing   = CorrelationDrawing.initial 
         }

@@ -89,7 +89,7 @@ let kitchenSink argv =
     //let app = RenderModelApp.app 
     //let app = AnnotationApp.app
     //let app = DragNDrop.App.app
-    let app = Pages.app
+    //let app = Pages.start form runtime 
     //let app = TextInput.app
     //let app = AnimationDemo.AnimationDemoApp.app
 
@@ -109,9 +109,9 @@ let kitchenSink argv =
 //        Suave.Files.browseHome
 //    ]  
 
-
+    let app = Pages.start form runtime
     WebPart.startServer 4321 [ 
-        MutableApp.toWebPart' runtime true (app |> App.start )
+        MutableApp.toWebPart' runtime true app
         Suave.Files.browseHome
     ] 
 

@@ -2,7 +2,7 @@
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Pages =
-
+  open System.Windows.Forms
   open Aardvark.UI
   open Aardvark.UI.Primitives
   open Aardvark.Application
@@ -19,6 +19,7 @@ module Pages =
 
   type Action = 
       | Camera                        of CameraController.Message
+      | LogMessage                    of GeologicalLog.Action
       | CenterScene
       | UpdateConfig                  of DockConfig
       | Export
@@ -45,6 +46,7 @@ module Pages =
         dockConfig =
             config {
                 content (
+                 // element {id "render"; title "Render View"; weight 5}
                   //vertical 1.0 [
                     //element { id "controls"; title "Controls"; weight 1 }
                     horizontal 1.0 [
@@ -59,7 +61,8 @@ module Pages =
                 useCachedConfig false
             }
         semanticApp = SemanticApp.getInitialWithSamples
-        drawingApp = CorrelationDrawingApp.initial
+        drawingApp  = CorrelationDrawingApp.initial
+        log         = GeologicalLog.intial (System.Guid.NewGuid().ToString())
     }
 
   let update (model : Pages) (msg : Action) =
@@ -73,6 +76,8 @@ module Pages =
           | Camera m -> 
               { model with cameraState = CameraController.update model.cameraState m }
 
+          | LogMessage m ->
+            { model with log = GeologicalLog.update model.log m}
           | CenterScene -> 
               { model with cameraState = initialCamera }
 
@@ -116,9 +121,8 @@ module Pages =
       |> Sg.fillMode (model.fill |> Mod.map (function true -> FillMode.Fill | false -> FillMode.Line))
 
 
-  let view (model : MPages) =
+  let view  (w : Form) (runtime : IRuntime) (model : MPages) =
     let toggleBox (str : string) (state : IMod<bool>) (toggle : 'msg) =
-
           let attributes = 
               amap {
                       yield attribute "type" "checkbox"
@@ -136,7 +140,8 @@ module Pages =
           )
   
     let menu = 
-      let menuItems = [div [clazz "item"]
+      let menuItems = [
+              div [clazz "item"]
                   [button [clazz "ui icon button"; onMouseClick (fun _ -> Save)] 
                           [i [clazz "small save icon"] [] ] |> wrapToolTip "save"];
               div [clazz "item"]
@@ -179,10 +184,9 @@ module Pages =
                 (CorrelationDrawingApp.view model.drawingApp model.semanticApp) 
                   |> UI.map CorrelationDrawingAppMessage
 
-//            | Some "meta" ->
-//                body [] [
-//                    button [onClick (fun _ -> Undo)] [text "Undo"]
-//                ]
+            | Some "correlation" ->
+                GeologicalLog.view runtime model.log
+                  |> UI.map LogMessage
 
             | Some "semantics" ->
               body [] [
@@ -206,11 +210,21 @@ module Pages =
   let threads (model : Pages) = 
       CameraController.threads model.cameraState |> ThreadPool.map Camera
 
-  let app =                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
-      {
-          unpersist = Unpersist.instance     
-          threads   = threads 
+
+  let start (w : Form) (runtime: IRuntime) =
+      App.start {
+          unpersist = Unpersist.instance
+          threads = threads
+          view = view w runtime
+          update = update
           initial = initial
-          update = update 
-          view = view
       }
+
+//  let app =                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
+//      {
+//          unpersist = Unpersist.instance     
+//          threads   = pool runtime signature 
+//          initial   = initial
+//          update    = update 
+//          view      = view
+//      }

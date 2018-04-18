@@ -573,6 +573,59 @@ module Mutable =
                 }
     
     
+    type MHorizon(__initial : CorrelationDrawing.Horizon) =
+        inherit obj()
+        let mutable __current : Aardvark.Base.Incremental.IModRef<CorrelationDrawing.Horizon> = Aardvark.Base.Incremental.EqModRef<CorrelationDrawing.Horizon>(__initial) :> Aardvark.Base.Incremental.IModRef<CorrelationDrawing.Horizon>
+        let _annotation = MAnnotation.Create(__initial.annotation)
+        let _children = MList.Create(__initial.children, (fun v -> MAnnotation.Create(v)), (fun (m,v) -> MAnnotation.Update(m, v)), (fun v -> v))
+        
+        member x.id = __current.Value.id
+        member x.annotation = _annotation
+        member x.children = _children :> alist<_>
+        
+        member x.Current = __current :> IMod<_>
+        member x.Update(v : CorrelationDrawing.Horizon) =
+            if not (System.Object.ReferenceEquals(__current.Value, v)) then
+                __current.Value <- v
+                
+                MAnnotation.Update(_annotation, v.annotation)
+                MList.Update(_children, v.children)
+                
+        
+        static member Create(__initial : CorrelationDrawing.Horizon) : MHorizon = MHorizon(__initial)
+        static member Update(m : MHorizon, v : CorrelationDrawing.Horizon) = m.Update(v)
+        
+        override x.ToString() = __current.Value.ToString()
+        member x.AsString = sprintf "%A" __current.Value
+        interface IUpdatable<CorrelationDrawing.Horizon> with
+            member x.Update v = x.Update v
+    
+    
+    
+    [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+    module Horizon =
+        [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+        module Lens =
+            let id =
+                { new Lens<CorrelationDrawing.Horizon, Microsoft.FSharp.Core.string>() with
+                    override x.Get(r) = r.id
+                    override x.Set(r,v) = { r with id = v }
+                    override x.Update(r,f) = { r with id = f r.id }
+                }
+            let annotation =
+                { new Lens<CorrelationDrawing.Horizon, CorrelationDrawing.Annotation>() with
+                    override x.Get(r) = r.annotation
+                    override x.Set(r,v) = { r with annotation = v }
+                    override x.Update(r,f) = { r with annotation = f r.annotation }
+                }
+            let children =
+                { new Lens<CorrelationDrawing.Horizon, Aardvark.Base.plist<CorrelationDrawing.Annotation>>() with
+                    override x.Get(r) = r.children
+                    override x.Set(r,v) = { r with children = v }
+                    override x.Update(r,f) = { r with children = f r.children }
+                }
+    
+    
     type MBorder(__initial : CorrelationDrawing.Border) =
         inherit obj()
         let mutable __current : Aardvark.Base.Incremental.IModRef<CorrelationDrawing.Border> = Aardvark.Base.Incremental.EqModRef<CorrelationDrawing.Border>(__initial) :> Aardvark.Base.Incremental.IModRef<CorrelationDrawing.Border>
@@ -610,47 +663,161 @@ module Mutable =
                 }
     
     
-    type MLogModel(__initial : CorrelationDrawing.LogModel) =
+    type MLogNode(__initial : CorrelationDrawing.LogNode) =
         inherit obj()
-        let mutable __current : Aardvark.Base.Incremental.IModRef<CorrelationDrawing.LogModel> = Aardvark.Base.Incremental.EqModRef<CorrelationDrawing.LogModel>(__initial) :> Aardvark.Base.Incremental.IModRef<CorrelationDrawing.LogModel>
-        let _range = ResetMod.Create(__initial.range)
+        let mutable __current : Aardvark.Base.Incremental.IModRef<CorrelationDrawing.LogNode> = Aardvark.Base.Incremental.EqModRef<CorrelationDrawing.LogNode>(__initial) :> Aardvark.Base.Incremental.IModRef<CorrelationDrawing.LogNode>
+        let _annotation = MAnnotation.Create(__initial.annotation)
+        let _elevation = ResetMod.Create(__initial.elevation)
+        let _colour = ResetMod.Create(__initial.colour)
+        let _nodeType = ResetMod.Create(__initial.nodeType)
+        let _index = ResetMod.Create(__initial.index)
         
-        member x.id = __current.Value.id
-        member x.range = _range :> IMod<_>
+        member x.annotation = _annotation
+        member x.elevation = _elevation :> IMod<_>
+        member x.pos = __current.Value.pos
+        member x.size = __current.Value.size
+        member x.colour = _colour :> IMod<_>
+        member x.nodeType = _nodeType :> IMod<_>
+        member x.index = _index :> IMod<_>
         
         member x.Current = __current :> IMod<_>
-        member x.Update(v : CorrelationDrawing.LogModel) =
+        member x.Update(v : CorrelationDrawing.LogNode) =
             if not (System.Object.ReferenceEquals(__current.Value, v)) then
                 __current.Value <- v
                 
-                ResetMod.Update(_range,v.range)
+                MAnnotation.Update(_annotation, v.annotation)
+                ResetMod.Update(_elevation,v.elevation)
+                ResetMod.Update(_colour,v.colour)
+                ResetMod.Update(_nodeType,v.nodeType)
+                ResetMod.Update(_index,v.index)
                 
         
-        static member Create(__initial : CorrelationDrawing.LogModel) : MLogModel = MLogModel(__initial)
-        static member Update(m : MLogModel, v : CorrelationDrawing.LogModel) = m.Update(v)
+        static member Create(__initial : CorrelationDrawing.LogNode) : MLogNode = MLogNode(__initial)
+        static member Update(m : MLogNode, v : CorrelationDrawing.LogNode) = m.Update(v)
         
         override x.ToString() = __current.Value.ToString()
         member x.AsString = sprintf "%A" __current.Value
-        interface IUpdatable<CorrelationDrawing.LogModel> with
+        interface IUpdatable<CorrelationDrawing.LogNode> with
             member x.Update v = x.Update v
     
     
     
     [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-    module LogModel =
+    module LogNode =
+        [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+        module Lens =
+            let annotation =
+                { new Lens<CorrelationDrawing.LogNode, CorrelationDrawing.Annotation>() with
+                    override x.Get(r) = r.annotation
+                    override x.Set(r,v) = { r with annotation = v }
+                    override x.Update(r,f) = { r with annotation = f r.annotation }
+                }
+            let elevation =
+                { new Lens<CorrelationDrawing.LogNode, Microsoft.FSharp.Core.float>() with
+                    override x.Get(r) = r.elevation
+                    override x.Set(r,v) = { r with elevation = v }
+                    override x.Update(r,f) = { r with elevation = f r.elevation }
+                }
+            let pos =
+                { new Lens<CorrelationDrawing.LogNode, Aardvark.Base.V3d>() with
+                    override x.Get(r) = r.pos
+                    override x.Set(r,v) = { r with pos = v }
+                    override x.Update(r,f) = { r with pos = f r.pos }
+                }
+            let size =
+                { new Lens<CorrelationDrawing.LogNode, Aardvark.Base.V3d>() with
+                    override x.Get(r) = r.size
+                    override x.Set(r,v) = { r with size = v }
+                    override x.Update(r,f) = { r with size = f r.size }
+                }
+            let colour =
+                { new Lens<CorrelationDrawing.LogNode, Aardvark.Base.C4b>() with
+                    override x.Get(r) = r.colour
+                    override x.Set(r,v) = { r with colour = v }
+                    override x.Update(r,f) = { r with colour = f r.colour }
+                }
+            let nodeType =
+                { new Lens<CorrelationDrawing.LogNode, CorrelationDrawing.SemanticType>() with
+                    override x.Get(r) = r.nodeType
+                    override x.Set(r,v) = { r with nodeType = v }
+                    override x.Update(r,f) = { r with nodeType = f r.nodeType }
+                }
+            let index =
+                { new Lens<CorrelationDrawing.LogNode, Microsoft.FSharp.Core.int>() with
+                    override x.Get(r) = r.index
+                    override x.Set(r,v) = { r with index = v }
+                    override x.Update(r,f) = { r with index = f r.index }
+                }
+    
+    
+    type MGeologicalLog(__initial : CorrelationDrawing.GeologicalLog) =
+        inherit obj()
+        let mutable __current : Aardvark.Base.Incremental.IModRef<CorrelationDrawing.GeologicalLog> = Aardvark.Base.Incremental.EqModRef<CorrelationDrawing.GeologicalLog>(__initial) :> Aardvark.Base.Incremental.IModRef<CorrelationDrawing.GeologicalLog>
+        let _nodes = MList.Create(__initial.nodes, (fun v -> MLogNode.Create(v)), (fun (m,v) -> MLogNode.Update(m, v)), (fun v -> v))
+        let _borders = MList.Create(__initial.borders, (fun v -> MBorder.Create(v)), (fun (m,v) -> MBorder.Update(m, v)), (fun v -> v))
+        let _range = ResetMod.Create(__initial.range)
+        let _camera = Aardvark.UI.Primitives.Mutable.MCameraControllerState.Create(__initial.camera)
+        
+        member x.id = __current.Value.id
+        member x.nodes = _nodes :> alist<_>
+        member x.borders = _borders :> alist<_>
+        member x.range = _range :> IMod<_>
+        member x.camera = _camera
+        
+        member x.Current = __current :> IMod<_>
+        member x.Update(v : CorrelationDrawing.GeologicalLog) =
+            if not (System.Object.ReferenceEquals(__current.Value, v)) then
+                __current.Value <- v
+                
+                MList.Update(_nodes, v.nodes)
+                MList.Update(_borders, v.borders)
+                ResetMod.Update(_range,v.range)
+                Aardvark.UI.Primitives.Mutable.MCameraControllerState.Update(_camera, v.camera)
+                
+        
+        static member Create(__initial : CorrelationDrawing.GeologicalLog) : MGeologicalLog = MGeologicalLog(__initial)
+        static member Update(m : MGeologicalLog, v : CorrelationDrawing.GeologicalLog) = m.Update(v)
+        
+        override x.ToString() = __current.Value.ToString()
+        member x.AsString = sprintf "%A" __current.Value
+        interface IUpdatable<CorrelationDrawing.GeologicalLog> with
+            member x.Update v = x.Update v
+    
+    
+    
+    [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+    module GeologicalLog =
         [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
         module Lens =
             let id =
-                { new Lens<CorrelationDrawing.LogModel, Microsoft.FSharp.Core.string>() with
+                { new Lens<CorrelationDrawing.GeologicalLog, Microsoft.FSharp.Core.string>() with
                     override x.Get(r) = r.id
                     override x.Set(r,v) = { r with id = v }
                     override x.Update(r,f) = { r with id = f r.id }
                 }
+            let nodes =
+                { new Lens<CorrelationDrawing.GeologicalLog, Aardvark.Base.plist<CorrelationDrawing.LogNode>>() with
+                    override x.Get(r) = r.nodes
+                    override x.Set(r,v) = { r with nodes = v }
+                    override x.Update(r,f) = { r with nodes = f r.nodes }
+                }
+            let borders =
+                { new Lens<CorrelationDrawing.GeologicalLog, Aardvark.Base.plist<CorrelationDrawing.Border>>() with
+                    override x.Get(r) = r.borders
+                    override x.Set(r,v) = { r with borders = v }
+                    override x.Update(r,f) = { r with borders = f r.borders }
+                }
             let range =
-                { new Lens<CorrelationDrawing.LogModel, Aardvark.Base.V2d>() with
+                { new Lens<CorrelationDrawing.GeologicalLog, Aardvark.Base.V2d>() with
                     override x.Get(r) = r.range
                     override x.Set(r,v) = { r with range = v }
                     override x.Update(r,f) = { r with range = f r.range }
+                }
+            let camera =
+                { new Lens<CorrelationDrawing.GeologicalLog, Aardvark.UI.Primitives.CameraControllerState>() with
+                    override x.Get(r) = r.camera
+                    override x.Set(r,v) = { r with camera = v }
+                    override x.Update(r,f) = { r with camera = f r.camera }
                 }
     
     
@@ -665,6 +832,7 @@ module Mutable =
         let _selectedAnnotation = MOption.Create(__initial.selectedAnnotation)
         let _annotations = MList.Create(__initial.annotations, (fun v -> MAnnotation.Create(v)), (fun (m,v) -> MAnnotation.Update(m, v)), (fun v -> v))
         let _exportPath = ResetMod.Create(__initial.exportPath)
+        let _log = MGeologicalLog.Create(__initial.log)
         
         member x.draw = _draw :> IMod<_>
         member x.hoverPosition = _hoverPosition :> IMod<_>
@@ -674,6 +842,7 @@ module Mutable =
         member x.selectedAnnotation = _selectedAnnotation :> IMod<_>
         member x.annotations = _annotations :> alist<_>
         member x.exportPath = _exportPath :> IMod<_>
+        member x.log = _log
         
         member x.Current = __current :> IMod<_>
         member x.Update(v : CorrelationDrawing.CorrelationDrawingModel) =
@@ -688,6 +857,7 @@ module Mutable =
                 MOption.Update(_selectedAnnotation, v.selectedAnnotation)
                 MList.Update(_annotations, v.annotations)
                 ResetMod.Update(_exportPath,v.exportPath)
+                MGeologicalLog.Update(_log, v.log)
                 
         
         static member Create(__initial : CorrelationDrawing.CorrelationDrawingModel) : MCorrelationDrawingModel = MCorrelationDrawingModel(__initial)
@@ -751,6 +921,12 @@ module Mutable =
                     override x.Get(r) = r.exportPath
                     override x.Set(r,v) = { r with exportPath = v }
                     override x.Update(r,f) = { r with exportPath = f r.exportPath }
+                }
+            let log =
+                { new Lens<CorrelationDrawing.CorrelationDrawingModel, CorrelationDrawing.GeologicalLog>() with
+                    override x.Get(r) = r.log
+                    override x.Set(r,v) = { r with log = v }
+                    override x.Update(r,f) = { r with log = f r.log }
                 }
     
     
@@ -818,6 +994,7 @@ module Mutable =
         let _dockConfig = ResetMod.Create(__initial.dockConfig)
         let _drawingApp = MCorrelationAppModel.Create(__initial.drawingApp)
         let _semanticApp = MSemanticApp.Create(__initial.semanticApp)
+        let _log = MGeologicalLog.Create(__initial.log)
         
         member x.past = __current.Value.past
         member x.future = __current.Value.future
@@ -827,6 +1004,7 @@ module Mutable =
         member x.dockConfig = _dockConfig :> IMod<_>
         member x.drawingApp = _drawingApp
         member x.semanticApp = _semanticApp
+        member x.log = _log
         
         member x.Current = __current :> IMod<_>
         member x.Update(v : CorrelationDrawing.Pages) =
@@ -839,6 +1017,7 @@ module Mutable =
                 ResetMod.Update(_dockConfig,v.dockConfig)
                 MCorrelationAppModel.Update(_drawingApp, v.drawingApp)
                 MSemanticApp.Update(_semanticApp, v.semanticApp)
+                MGeologicalLog.Update(_log, v.log)
                 
         
         static member Create(__initial : CorrelationDrawing.Pages) : MPages = MPages(__initial)
@@ -902,4 +1081,10 @@ module Mutable =
                     override x.Get(r) = r.semanticApp
                     override x.Set(r,v) = { r with semanticApp = v }
                     override x.Update(r,f) = { r with semanticApp = f r.semanticApp }
+                }
+            let log =
+                { new Lens<CorrelationDrawing.Pages, CorrelationDrawing.GeologicalLog>() with
+                    override x.Get(r) = r.log
+                    override x.Set(r,v) = { r with log = v }
+                    override x.Update(r,f) = { r with log = f r.log }
                 }
