@@ -667,17 +667,21 @@ module Mutable =
         inherit obj()
         let mutable __current : Aardvark.Base.Incremental.IModRef<CorrelationDrawing.LogNode> = Aardvark.Base.Incremental.EqModRef<CorrelationDrawing.LogNode>(__initial) :> Aardvark.Base.Incremental.IModRef<CorrelationDrawing.LogNode>
         let _annotation = MAnnotation.Create(__initial.annotation)
+        let _children = MList.Create(__initial.children, (fun v -> MLogNode.Create(v)), (fun (m,v) -> MLogNode.Update(m, v)), (fun v -> v))
         let _elevation = ResetMod.Create(__initial.elevation)
-        let _colour = ResetMod.Create(__initial.colour)
-        let _nodeType = ResetMod.Create(__initial.nodeType)
+        let _range = ResetMod.Create(__initial.range)
+        let _logYPos = ResetMod.Create(__initial.logYPos)
+        let _pos = ResetMod.Create(__initial.pos)
+        let _size = ResetMod.Create(__initial.size)
         let _index = ResetMod.Create(__initial.index)
         
         member x.annotation = _annotation
+        member x.children = _children :> alist<_>
         member x.elevation = _elevation :> IMod<_>
-        member x.pos = __current.Value.pos
-        member x.size = __current.Value.size
-        member x.colour = _colour :> IMod<_>
-        member x.nodeType = _nodeType :> IMod<_>
+        member x.range = _range :> IMod<_>
+        member x.logYPos = _logYPos :> IMod<_>
+        member x.pos = _pos :> IMod<_>
+        member x.size = _size :> IMod<_>
         member x.index = _index :> IMod<_>
         
         member x.Current = __current :> IMod<_>
@@ -686,9 +690,12 @@ module Mutable =
                 __current.Value <- v
                 
                 MAnnotation.Update(_annotation, v.annotation)
+                MList.Update(_children, v.children)
                 ResetMod.Update(_elevation,v.elevation)
-                ResetMod.Update(_colour,v.colour)
-                ResetMod.Update(_nodeType,v.nodeType)
+                ResetMod.Update(_range,v.range)
+                ResetMod.Update(_logYPos,v.logYPos)
+                ResetMod.Update(_pos,v.pos)
+                ResetMod.Update(_size,v.size)
                 ResetMod.Update(_index,v.index)
                 
         
@@ -712,11 +719,29 @@ module Mutable =
                     override x.Set(r,v) = { r with annotation = v }
                     override x.Update(r,f) = { r with annotation = f r.annotation }
                 }
+            let children =
+                { new Lens<CorrelationDrawing.LogNode, Aardvark.Base.plist<CorrelationDrawing.LogNode>>() with
+                    override x.Get(r) = r.children
+                    override x.Set(r,v) = { r with children = v }
+                    override x.Update(r,f) = { r with children = f r.children }
+                }
             let elevation =
                 { new Lens<CorrelationDrawing.LogNode, Microsoft.FSharp.Core.float>() with
                     override x.Get(r) = r.elevation
                     override x.Set(r,v) = { r with elevation = v }
                     override x.Update(r,f) = { r with elevation = f r.elevation }
+                }
+            let range =
+                { new Lens<CorrelationDrawing.LogNode, CorrelationDrawing.Rangef>() with
+                    override x.Get(r) = r.range
+                    override x.Set(r,v) = { r with range = v }
+                    override x.Update(r,f) = { r with range = f r.range }
+                }
+            let logYPos =
+                { new Lens<CorrelationDrawing.LogNode, Microsoft.FSharp.Core.float>() with
+                    override x.Get(r) = r.logYPos
+                    override x.Set(r,v) = { r with logYPos = v }
+                    override x.Update(r,f) = { r with logYPos = f r.logYPos }
                 }
             let pos =
                 { new Lens<CorrelationDrawing.LogNode, Aardvark.Base.V3d>() with
@@ -729,18 +754,6 @@ module Mutable =
                     override x.Get(r) = r.size
                     override x.Set(r,v) = { r with size = v }
                     override x.Update(r,f) = { r with size = f r.size }
-                }
-            let colour =
-                { new Lens<CorrelationDrawing.LogNode, Aardvark.Base.C4b>() with
-                    override x.Get(r) = r.colour
-                    override x.Set(r,v) = { r with colour = v }
-                    override x.Update(r,f) = { r with colour = f r.colour }
-                }
-            let nodeType =
-                { new Lens<CorrelationDrawing.LogNode, CorrelationDrawing.SemanticType>() with
-                    override x.Get(r) = r.nodeType
-                    override x.Set(r,v) = { r with nodeType = v }
-                    override x.Update(r,f) = { r with nodeType = f r.nodeType }
                 }
             let index =
                 { new Lens<CorrelationDrawing.LogNode, Microsoft.FSharp.Core.int>() with
@@ -808,7 +821,7 @@ module Mutable =
                     override x.Update(r,f) = { r with borders = f r.borders }
                 }
             let range =
-                { new Lens<CorrelationDrawing.GeologicalLog, Aardvark.Base.V2d>() with
+                { new Lens<CorrelationDrawing.GeologicalLog, CorrelationDrawing.Rangef>() with
                     override x.Get(r) = r.range
                     override x.Set(r,v) = { r with range = v }
                     override x.Update(r,f) = { r with range = f r.range }

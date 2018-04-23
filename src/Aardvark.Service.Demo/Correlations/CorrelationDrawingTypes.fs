@@ -39,6 +39,20 @@ type TextInput = {
 type Projection   = Linear = 0 | Viewpoint = 1 | Sky = 2
 type GeometryType = Point = 0 | Line = 1 | Polyline = 2 | Polygon = 3 | DnS = 4 | Undefined = 5
 type SemanticType = Metric = 0 | Angular = 1 | Hierarchical = 2
+type Rangef = {
+  min     : float
+  max     : float
+}
+
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module Rangef =
+  let init : Rangef = {
+      min     = 0.0
+      max     = 0.0
+    }
+
+  let calcRange (r : Rangef) =
+    r.max - r.min
 
 [<DomainType>]
 type Style = {
@@ -130,15 +144,15 @@ type Border = {
 [<DomainType>]
 type LogNode = {
     annotation  : Annotation
+    children    : plist<LogNode>
 
     elevation   : float
-    [<NonIncremental>]
+    range       : Rangef
+    logYPos     : float
+
     pos         : V3d
-    [<NonIncremental>]
     size        : V3d
 
-    colour      : C4b //remove
-    nodeType    : SemanticType //remove
     index       : int
 }
 
@@ -148,7 +162,7 @@ type GeologicalLog = {
     id        : string
     nodes     : plist<LogNode>
     borders   : plist<Border>
-    range     : V2d //?
+    range     : Rangef //?
     camera    : CameraControllerState
 }
 

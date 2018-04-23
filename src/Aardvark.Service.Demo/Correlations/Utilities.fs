@@ -24,7 +24,17 @@ module UtilitiesRendering =
   open Aardvark.Rendering.Text
 
 
- 
+  let makeLblSg' (str : IMod<string>) (pos : IMod<V3d>) =
+    
+    let sg =
+      adaptive {
+        let! pos = pos
+        return Sg.text (Font.create "courier" FontStyle.Regular) C4b.White str
+            |> Sg.billboard
+            |> Sg.depthTest (Mod.constant DepthTestMode.None)
+            |> Sg.trafo(Mod.constant (Trafo3d.Translation pos)) 
+      }
+    sg |> Sg.dynamic
 
   let makeLblSg (str : string) (pos : V3d) =
     Sg.text (Font.create "courier" FontStyle.Regular) C4b.White (Mod.constant str)
