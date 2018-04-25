@@ -20,14 +20,21 @@ open UtilitiesGUI
 module Serialization =
     open MBrace.FsPickler
     open System.IO
+
     let binarySerializer = FsPickler.CreateBinarySerializer()
+
+
     
     let save (model : CorrelationAppModel) path = 
         let arr = binarySerializer.Pickle model
-        File.WriteAllBytes(path, arr);
+        //let info = System.IO.Directory.CreateDirectory "./saved"
+        //let success = info.Exists
+        File.WriteAllBytes("./saved/model", arr);
+        let success = File.Exists path
+        success
 
-    let load path : CorrelationAppModel = 
-        let arr = File.ReadAllBytes(path);
+    let load (path : CorrelationAppModel) = 
+        let arr = File.ReadAllBytes("./saved/model");
         let app = binarySerializer.UnPickle arr
         app
 
@@ -44,30 +51,38 @@ module CorrelationDrawingApp =
         | AnnotationMessage         of CorrelationDrawing.Action
         | KeyDown                   of key : Keys
         | KeyUp                     of key : Keys      
+        | Save
+        | Load
 
                        
-    let update (model : CorrelationAppModel) (selectedSemantic : string) (act : Action) =
+    let update (model             : CorrelationAppModel)  
+               (semanticApp       : SemanticApp)
+               (act : Action)     =
         match act, model.drawing.draw with
             | CameraMessage m, false -> 
                 { model with camera = ArcBallController.update model.camera m }      
             | DrawingMessage m, _ ->
-                { model with drawing = CorrelationDrawing.update model.drawing selectedSemantic m }      
+                { model with drawing = CorrelationDrawing.update model.drawing semanticApp m }      
             | DrawingSemanticMessage m, _ ->
-                {model with drawing = CorrelationDrawing.update model.drawing selectedSemantic m}          
+                {model with drawing = CorrelationDrawing.update model.drawing semanticApp m}          
             | AnnotationMessage m, _ ->
-                {model with drawing = CorrelationDrawing.update model.drawing selectedSemantic m}          
+                {model with drawing = CorrelationDrawing.update model.drawing semanticApp m}          
             | KeyDown k, _ -> 
                 let d = CorrelationDrawing.update 
                           model.drawing 
-                          selectedSemantic 
+                          semanticApp
                           (CorrelationDrawing.Action.KeyDown k)
                 { model with drawing = d }
             | KeyUp k, _ -> 
                 let d = CorrelationDrawing.update 
                           model.drawing 
-                          selectedSemantic 
+                          semanticApp
                           (CorrelationDrawing.Action.KeyUp k)
                 { model with drawing = d }
+            | Save , _ -> (Serialization.save model "./savedModel") |> ignore
+                          model
+            | Load , _ -> (Serialization.load model "./savedModel") |> ignore
+                          model
             | _ -> model
                        
     let myCss = [

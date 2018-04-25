@@ -48,7 +48,7 @@ let main argv =
     ctrl.Dock <- DockStyle.Fill
     form.Controls.Add ctrl
     ctrl.StartUrl <- "http://localhost:4321/"
-    ctrl.ShowDevTools()
+    //ctrl.ShowDevTools()
     form.Text <- "Examples"
     form.Icon <- Icons.aardvark 
 

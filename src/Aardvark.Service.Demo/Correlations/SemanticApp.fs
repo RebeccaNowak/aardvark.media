@@ -32,6 +32,9 @@ module SemanticApp =
 
   ///// convenience functions Semantics
 
+  let getSemantic (app : SemanticApp) (semanticId : string) =
+    HMap.tryFind semanticId app.semantics
+
   let getColor (model : MSemanticApp) (semanticId : IMod<string>) =
     let sem = Mod.bind (fun id -> AMap.tryFind id model.semantics) semanticId
     Mod.bind (fun (se : option<MSemantic>) ->
@@ -270,7 +273,7 @@ module SemanticApp =
             ([clazz "ui celled striped selectable inverted table unstackable";
                                   style "padding: 1px 5px 1px 5px"]) (
                 [thead [][tr[][th[][text "Label"];
-                               th[][text "Thickness"];
+                               th[][text "Weight"];
                                th[][text "Colour"];
                                th[][text "Level"];
 //                               th[][text "Default Geometry Type"];

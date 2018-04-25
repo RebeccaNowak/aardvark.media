@@ -22,7 +22,7 @@ module GeologicalLog =
   let intial id : GeologicalLog = {
     id          = id
     nodes       = PList.empty
-    borders     = PList.empty
+    annotations = PList.empty
     range       = Rangef.init
     camera      = 
       { ArcBallController.initial with 
@@ -31,81 +31,102 @@ module GeologicalLog =
 
   /// HELPER FUNCTIONS
 
-  let addNode (model : GeologicalLog) (anno : Annotation) =
-    let newNode = LogNode.intial anno 0 
+  let addNode (model : GeologicalLog) (anno : Annotation) (semanticApp : SemanticApp) =
+    let glvl = Annotation.getLevel semanticApp
+
+    let newAnnoLst = model.annotations.Append(anno) |> PList.toList
+
+    // filter Annotations: only hierarchical
+    let hier = Annotation.onlyHierarchicalAnnotations semanticApp newAnnoLst
+    
+//    let foo =
+//      hier
+//        |> Annotation.splitByLevel semanticApp
+        //|> List.map (fun lst -> List.sortBy (fun (a : Annotation) -> Annotation.elevation a) lst)
+    
+    let annosToNodes (lst : List<Annotation>) =
+       seq {
+          yield LogNode.initial Annotation.initialDummy lst.Head
+
+          for i in 1 .. (hier.Length - 1) do
+            yield LogNode.initial (hier.Item (i-1)) (hier.Item (i))
+        }
+
+    
     let newNodes = 
-      (model.nodes.Append newNode)
-        |> PList.toList
-        |> List.sortBy (fun (x : LogNode) -> x.elevation)
-        |> PList.ofList
-        |> PList.mapiInt
-        |> PList.map (fun (x, i) -> {x with index = i}) 
-        |> PList.map LogNode.recalcRangeAndSize
-        
-    let calcYPos (lst : List<LogNode>) =
-      let maxLogHeight = 10.0
-      let accHeight = lst |> List.sumBy (fun x -> (abs (Rangef.calcRange x.range)))
-      let factor = maxLogHeight / accHeight
-      let lst = 
-        lst
-          |> List.map (fun (x : LogNode) -> 
-                          {x with size = V3d.IOI + V3d.OIO * (Rangef.calcRange x.range) * factor}
-                      )
-      lst
-        |> List.scan (fun (x : LogNode) (y : LogNode) -> 
-                        {y with logYPos = x.logYPos + (x.size.Y * 0.5) + (y.size.Y * 0.5)}
-                     ) (LogNode.intial anno 0) 
-        |> List.tail
+      hier
+        |> Annotation.onlyLvli semanticApp 0
+        |> annosToNodes
+    
+//    let split =
+//      hier
+//        |> Annotation.splitAtLvli semanticApp 0
 
-    let nodesWithPositions = 
-      let lst = 
-        newNodes
-          |> PList.toList
-          |> List.sortBy (fun x -> x.elevation)
-      lst  
-//        |> List.scan (fun (x : LogNode) (y : LogNode) -> 
-//                        {y with logYPos = x.logYPos + (Rangef.calcRange y.range)}
-//                     ) (LogNode.intial anno 0)
-//        |> List.tail
-        |> calcYPos
-        |> PList.ofList
-        |> PList.map LogNode.recalcPos'
-//    let logHeight =
-//          newNodes 
-//            |> PList.map (fun x -> Rangef.calcRange x.range)
-//            |> PList.toList
-//            |> List.sum
+    
 
-//      let max =  
-//          newNodes 
-//            |> PList.map (fun x -> x.range.max)
-//            |> PList.toList
-//            |> List.max
+//    let foo =
+//      hier
+//        |> List.sortBy (fun x -> Annotation.elevation x)
 
-//      let newnewNodes = 
-//        newNodes
-//          |> PList.map LogNode.recalcPos
+//    let bar =
+//      seq {
+//        yield LogNode.initial Annotation.initialDummy hier.Head
+//
+//        for i in 1 .. (hier.Length - 1) do
+//          if (glvl (hier.Item (i-1))) = (glvl (hier.Item (i))) then
+//            yield (LogNode.initial (hier.Item (i-1)) (hier.Item (i)))
+//          else if (glvl (hier.Item (i-1))) < (glvl (hier.Item (i))) then
+//            // new Layer
+//            yield (LogNode.initial (hier.Item (i-1)) (hier.Item (i)))
+//
+//      }
+
+          
+      
+
+
+
+//    let newNode = LogNode.initial anno anno /////// 
+//    let onlyHNodes = 
+//      (model.nodes.Append newNode)
+//        |> PList.toList
+//        |> (LogNode.onlyHierarchicalNodes semanticApp)
+
             
-      //{Rangef.init with min = min; max = max}
+
+//    let newNodes = 
+//      onlyHNodes
+//          |> List.sortBy (fun (x : LogNode) -> x.elevation)
+//          |> PList.ofList
+//          |> PList.mapiInt
+//          |> PList.map (fun (x, i) -> {x with index = i}) 
+//          |> PList.map LogNode.recalcRangeAndSize
+        
+    let nodesWithPositions = 
+//      let lst = 
+//        onlyHNodes
+//          //|> PList.toList
+//          |> List.sortBy (fun x -> x.elevation)
+      newNodes  
+        |> Seq.toList
+        |> (LogNode.calcPos' 10.0)
+        |> PList.ofList
     
     {model with nodes = nodesWithPositions}  
 
-
-      
-                         
-
+    
 
   type Action =
       | CameraMessage             of ArcBallController.Message    
       | AddNode                   of Annotation
       
 
-  let update (model : GeologicalLog) (msg : Action) =
+  let update (model : GeologicalLog) (semanticApp : SemanticApp) (msg : Action) =
     match msg with 
       | CameraMessage m -> 
           {model with camera = ArcBallController.update model.camera m}
       | AddNode anno ->
-          addNode model anno
+          addNode model anno semanticApp
 
 
 
@@ -113,12 +134,7 @@ module GeologicalLog =
 
   let inline (==>) a b = Attributes.attribute a b
 
-//  let sortAnnosbyElevation (annos : alist<MAnnotation>) =
-//    AList.sortBy (Annotation.getAvgElevation) annos 
-
   let createAnnoBox (node : MLogNode) (colour : IMod<C4b>) =
-    
-   
     let foo = C4b(0.0, 0.0, 0.0, 0.5)
     let box =
         let c = colour |> Mod.map ( fun col -> C4b(col.R, col.G, col.B, foo.A)) 
@@ -150,7 +166,7 @@ module GeologicalLog =
 
     alist {
       for node in model.nodes do
-        yield createAnnoBox node (Annotation.getColor' node.annotation semanticApp) 
+        yield createAnnoBox node (Annotation.getColor' node.lBoundary semanticApp) 
     }
     |> AList.toASet
     |> Sg.set

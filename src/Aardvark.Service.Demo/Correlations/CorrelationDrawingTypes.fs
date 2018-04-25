@@ -86,7 +86,6 @@ type Semantic = {
    label             : TextInput
    size              : double
    style             : Style
-   geometry          : GeometryType
    semanticType      : SemanticType
    level             : int
  }
@@ -113,14 +112,17 @@ type Annotation = {
     [<NonIncremental>]
     projection            : Projection
 
+    [<NonIncremental>]
+    semanticType          : SemanticType
+
     semanticId            : string
     points                : plist<V3d>
     segments              : plist<plist<V3d>> //list<Segment>
     visible               : bool
     text                  : string
-    overrideGeometryType  : option<GeometryType>
     overrideStyle         : option<Style>
     overrideLevel         : option<int>
+    grainSize             : float
 }
 
 [<DomainType>]
@@ -143,7 +145,8 @@ type Border = {
 
 [<DomainType>]
 type LogNode = {
-    annotation  : Annotation
+    lBoundary   : Annotation
+    uBoundary   : Annotation
     children    : plist<LogNode>
 
     elevation   : float
@@ -152,18 +155,16 @@ type LogNode = {
 
     pos         : V3d
     size        : V3d
-
-    index       : int
 }
 
 [<DomainType>]
 type GeologicalLog = {
     [<NonIncremental;PrimaryKey>]
-    id        : string
-    nodes     : plist<LogNode>
-    borders   : plist<Border>
-    range     : Rangef //?
-    camera    : CameraControllerState
+    id          : string
+    annotations : plist<Annotation>
+    nodes       : plist<LogNode>
+    range       : Rangef //?
+    camera      : CameraControllerState
 }
 
 type AnnotationParameters = {Point:V3d;semanticId:string}

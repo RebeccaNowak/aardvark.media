@@ -47,15 +47,15 @@ module Pages =
             config {
                 content (
                  // element {id "render"; title "Render View"; weight 5}
-                  //vertical 1.0 [
-                    //element { id "controls"; title "Controls"; weight 1 }
+                  vertical 1.0 [
+                    element { id "controls"; title "Controls"; weight 1 }
                     horizontal 1.0 [
                       element {id "render"; title "Render View"; weight 5}
                       element {id "semantics"; title "Semantics"; weight 5}
 //                      stack 9.0 (Some "render") [dockelement {id "render"; title "Render View"; weight 5};
 //                                                 dockelement { id "semantics"; title "Semantics"; weight 5}]
                     ]
-                  //]
+                  ]
                 )
                 appName "CDPages"
                 useCachedConfig false
@@ -72,12 +72,12 @@ module Pages =
 //              | SemanticApp.Action.SetSemantic s ->
                 {model with semanticApp = SemanticApp.update model.semanticApp m}
           | CorrelationDrawingAppMessage m ->
-              {model with drawingApp = CorrelationDrawingApp.update model.drawingApp model.semanticApp.selectedSemantic m}
+              {model with drawingApp = CorrelationDrawingApp.update model.drawingApp model.semanticApp m}
           | Camera m -> 
               { model with cameraState = CameraController.update model.cameraState m }
 
           | LogMessage m ->
-            { model with log = GeologicalLog.update model.log m}
+            { model with log = GeologicalLog.update model.log model.semanticApp m}
           | CenterScene -> 
               { model with cameraState = initialCamera }
 
@@ -90,11 +90,15 @@ module Pages =
           | ToggleFill ->
               { model with fill = not model.fill; past = Some model }
 
-          | Save -> 
-//                  Serialization.save model ".\drawing"
-                  model
-          | Load -> model
-//                  Serialization.load ".\drawing"
+          | Save ->
+              let path = "./saved"
+              let cdApp = CorrelationDrawingApp.update model.drawingApp model.semanticApp CorrelationDrawingApp.Action.Save
+              model
+          | Load -> 
+              let path = "./saved"
+              let cdApp = CorrelationDrawingApp.update model.drawingApp model.semanticApp CorrelationDrawingApp.Action.Load
+              model
+//                  
           | Clear -> model
 //                  { model with drawing = { model.drawing with annotations = PList.empty }}            
 

@@ -13,22 +13,38 @@ open UtilitiesDatastructures
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Annotation =
-
+  let rand = System.Random()
   let initial (id : string) = 
       {     
-          id = id
-
-          geometry = GeometryType.Line
-          semanticId = ""
-          points = plist.Empty
-          segments = plist.Empty
-          projection = Projection.Viewpoint
-          visible = true
-          text = "text"
-          overrideStyle = None
-          overrideLevel = None
-          overrideGeometryType = None
+          id              = id
+          semanticType    = SemanticType.Hierarchical
+          geometry        = GeometryType.Line
+          semanticId      = ""
+          points          = plist.Empty
+          segments        = plist.Empty
+          projection      = Projection.Viewpoint
+          visible         = true
+          text            = "text"
+          overrideStyle   = None
+          overrideLevel   = None
+          grainSize       = rand.NextDouble() * 5.0
       }
+
+  let initialDummy = 
+    {     
+        id              = "-1"
+        semanticType    = SemanticType.Hierarchical
+        geometry        = GeometryType.Line
+        semanticId      = ""
+        points          = plist.Empty
+        segments        = plist.Empty
+        projection      = Projection.Viewpoint
+        visible         = true
+        text            = "dummy"
+        overrideStyle   = None
+        overrideLevel   = None
+        grainSize       = rand.NextDouble() * 5.0
+    }
 
   type Action =
       | SetSemantic of option<string>
@@ -100,6 +116,9 @@ module Annotation =
     anno.points
       |> AList.averageOf calcElevation
 
+  let elevation (anno : Annotation) =
+    anno.points.Mean (fun x -> x.Y)
+
   let getMinElevation (anno : MAnnotation) = 
     anno.points
       |> AList.minBy calcElevation
@@ -134,6 +153,57 @@ module Annotation =
   let getMinMaxElevation (annos : alist<MAnnotation>) =
     let avgs = (annos |> AList.map (fun x -> getAvgElevation x))
     Mod.map2 (fun  (x : float) (y : float) -> V2d(x,y)) (avgs |> AList.min) (avgs |> AList.max)
+
+  let getLevel (semanticApp : SemanticApp) (anno : Annotation) =
+    let s = (SemanticApp.getSemantic semanticApp anno.semanticId)
+    match s with
+      | Some s -> s.level
+      | None   -> -1
+
+  let onlyHierarchicalAnnotations (semanticApp : SemanticApp) (nodes : List<Annotation>) =
+    nodes
+      |> List.filter (fun (a : Annotation) -> 
+      match (SemanticApp.getSemantic semanticApp a.semanticId) with
+        | Some s  -> s.semanticType = SemanticType.Hierarchical
+        | None    -> false)
+
+  let splitByLevel (semanticApp : SemanticApp) (annos : List<Annotation>) =
+    let sem (a : Annotation) =  
+      match (SemanticApp.getSemantic semanticApp a.semanticId) with
+        | Some s -> s
+        | None -> Semantic.initial "-1"
+
+    let levels = 
+      annos 
+        |> List.map (fun x -> (sem x).level) 
+        |> List.distinct
+      
+    levels 
+      |> List.map (fun (lvl : int) ->
+                    annos 
+                      |> List.filter (fun a -> (sem a).level = lvl))
+
+  let onlyLvli (semanticApp : SemanticApp) (i : int) (annos : List<Annotation>) =
+    annos
+      |> List.filter (fun (a : Annotation) -> 
+      match (SemanticApp.getSemantic semanticApp a.semanticId) with
+        | Some s  -> s.level = i
+        | None    -> false)
+
+  
+      
+        
+        
+      
+
+
+
+
+
+
+
+
+
 
 
 

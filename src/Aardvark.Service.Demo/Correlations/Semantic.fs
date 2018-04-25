@@ -39,7 +39,6 @@ module Semantic =
                   format = "{0:0.0}"
               }
           }
-        geometry      = GeometryType.Line
         semanticType  = SemanticType.Metric
         level         = 0
     }
@@ -50,8 +49,7 @@ module Semantic =
         label         = {TextInput.init with text = "Horizon0"}
         style         = {Style.color      = {c = C4b.Red};
                          Style.thickness  = {Numeric.init with value = 5.0}}
-        geometry      = GeometryType.Line
-        semanticType  = SemanticType.Metric
+        semanticType  = SemanticType.Hierarchical
         level         = 0
       }
 
@@ -60,9 +58,8 @@ module Semantic =
         label         = {TextInput.init with text = "Horizon1"}
         style         = {Style.color      = {c = C4b.DarkRed};
                          Style.thickness  = {Numeric.init with value = 5.0}}
-        geometry      = GeometryType.Polygon
-        semanticType  = SemanticType.Metric
-        level         = 0
+        semanticType  = SemanticType.Hierarchical
+        level         = 1
       }
 
     let initialHorizon2 id = {
@@ -70,9 +67,8 @@ module Semantic =
         label         = {TextInput.init with text = "Horizon2"}
         style         = {Style.color      = {c = C4b.DarkMagenta};
                          Style.thickness  = {Numeric.init with value = 5.0}}
-        geometry      = GeometryType.Line
         semanticType  = SemanticType.Hierarchical
-        level         = 0
+        level         = 2
       }
 
     let initialHorizon3 id = {
@@ -80,8 +76,8 @@ module Semantic =
         label         = {TextInput.init with text = "Horizon3"}
         style         = {Style.color      = {c = C4b.Magenta};
                          Style.thickness  = {Numeric.init with value = 5.0}}
-        geometry      = GeometryType.Line
-        semanticType  = SemanticType.Metric
+        semanticType  = SemanticType.Hierarchical
+        level         = 3
       }
 
     let initialHorizon4 id = {
@@ -89,8 +85,8 @@ module Semantic =
         label         = {TextInput.init with text = "Horizon4"}
         style         = {Style.color      = {c = C4b.DarkBlue};
                          Style.thickness  = {Numeric.init with value = 5.0}}
-        geometry      = GeometryType.Line
-        semanticType  = SemanticType.Metric
+        semanticType  = SemanticType.Hierarchical
+        level         = 4
       }
 
 
@@ -99,7 +95,6 @@ module Semantic =
         label         = {TextInput.init with text = "Grainsize"}
         style         = {Style.color      = {c = C4b.Gray};
                          Style.thickness  = {Numeric.init with value = 1.0}}
-        geometry      = GeometryType.Line
         semanticType  = SemanticType.Metric
         level         = 2
       }
@@ -109,8 +104,7 @@ module Semantic =
         label         = {TextInput.init with text = "Crossbed"}
         style         = {Style.color      = {c = C4b.Blue};
                          Style.thickness  = {Numeric.init with value = 1.0}}
-        geometry      = GeometryType.Line
-        semanticType  = SemanticType.Metric
+        semanticType  = SemanticType.Angular
         level         = 3
       }
 
@@ -119,7 +113,6 @@ module Semantic =
         label         = {TextInput.init with text = "Impact Breccia"}
         style         = {Style.color      = {c = C4b.Black};
                          Style.thickness  = {Numeric.init with value = 1.0}}
-        geometry      = GeometryType.Point
         semanticType  = SemanticType.Angular
         level         = 3
       }
@@ -157,8 +150,6 @@ module Semantic =
                 {model with state = state}
             | SetLevel i ->
                 {model with level = i}
-//            | SetGeometry geo ->
-//                {model with geometry = geo}
             | SetSemanticType st ->
                 {model with semanticType = st}
             | _ -> model
@@ -214,10 +205,6 @@ module Semantic =
           "box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0.1) inset"
           model.label)
           
-//      let domNodeGeometryType =  
-//        intoTd <|
-//          label [clazz "ui horizontal label"]
-//                [Incremental.text (Mod.map(fun x -> x.ToString()) model.geometry)]  
 
       let domNodeSemanticType =  
         intoTd <|
@@ -266,28 +253,18 @@ module Semantic =
         intoTd <|
           div[] [
             Incremental.i (AttributeMap.ofAMap iconAttr) (AList.ofList [])
-            Incremental.text (Mod.map(fun (x : C4b) -> colorToHexStr x) s.style.color.c)
+            //Incremental.text (Mod.map(fun (x : C4b) -> colorToHexStr x) s.style.color.c)
           ]
-//          Incremental.label (AttributeMap.union 
-//            (AttributeMap.ofList [clazz "ui horizontal label"])
-//            (AttributeMap.ofAMap (incrBgColorAMap s.style.color.c)))
-//            (AList.ofList [Incremental.text (Mod.map(fun (x : C4b) -> colorToHexStr x) s.style.color.c)])
-            
+           
 
       let domNodeLevel = 
         intoTd <| 
-         // label [clazz "ui horizontal label"]
                 Incremental.text (Mod.map(fun x -> sprintf "%i" x) s.level)
             
 
-//      let domNodeGeometryType =  
-//        intoTd <|
-//          label [clazz "ui horizontal label"]
-//                [Incremental.text (Mod.map(fun x -> x.ToString()) s.geometry)]  
 
       let domNodeSemanticType =  
         intoTd <|
-          //label [clazz "ui horizontal label"]
                 Incremental.text (Mod.map(fun x -> x.ToString()) s.semanticType)
            
                  
@@ -295,7 +272,6 @@ module Semantic =
         domNodeThickness;
         domNodeColor;
         domNodeLevel;
-//        domNodeGeometryType;
         domNodeSemanticType]
       
 

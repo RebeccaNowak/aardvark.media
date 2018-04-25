@@ -57,20 +57,21 @@ module CorrelationDrawing =
         | Export
            
        
-    let finishAndAppend (model : CorrelationDrawingModel) = 
-        let (anns, log) = match model.working with
-                            | Some w ->
-                                let newLog = GeologicalLog.update model.log (GeologicalLog.AddNode w)
-                                let annos  = model.annotations |> PList.append w
-                                (annos, newLog)
-                            | None -> (model.annotations, model.log)
+    let finishAndAppend (semanticApp : SemanticApp) (model : CorrelationDrawingModel) = 
+      let (anns, log) = 
+        match model.working with
+          | Some w ->
+              let newLog = GeologicalLog.update model.log semanticApp (GeologicalLog.AddNode w)
+              let annos  = model.annotations |> PList.append w
+              (annos, newLog)
+          | None -> (model.annotations, model.log)
 
-        { model with  working       = None 
-                      annotations   = anns
-                      log           = log}
+      { model with  working       = None 
+                    annotations   = anns
+                    log           = log}
 
 
-    let update (model : CorrelationDrawingModel) (selectedSemantic : string) (act : Action) =
+    let update (model : CorrelationDrawingModel) (semanticApp : SemanticApp) (act : Action) =
         match (act, model.draw) with
             | DoNothing, _ -> model
             | KeyDown Keys.LeftCtrl, _ ->                     
@@ -88,23 +89,23 @@ module CorrelationDrawing =
                     | None    -> 
                         let id      = Guid.NewGuid().ToString()                                     
                         let newAnno = {Annotation.initial id with
-                                        points      = PList.ofList [m];  
-                                        semanticId  = selectedSemantic
-                                        geometry    = model.geometry
-                                        projection  = model.projection}//add annotation states
+                                        points        = PList.ofList [m];  
+                                        semanticId    = semanticApp.selectedSemantic
+                                        geometry      = model.geometry
+                                        projection    = model.projection}//add annotation states
                         newAnno
 
                 let model = {model with working  = Some working}
 
                 let model = match (working.geometry, (working.points |> PList.count)) with
-                              | GeometryType.Point, 1 -> model |> finishAndAppend
-                              | GeometryType.Line, 10 -> model |> finishAndAppend
+                              | GeometryType.Point, 1 -> model |> finishAndAppend semanticApp
+                              | GeometryType.Line, 10 -> model |> finishAndAppend semanticApp
                               | _                     -> model
 
                 model                 
                 
             | KeyDown Keys.Enter, _ -> 
-                    model |> finishAndAppend
+                    model |> finishAndAppend semanticApp
             | Exit, _ -> 
                     { model with hoverPosition = None }
             | SetGeometry mode, _ ->
@@ -239,6 +240,24 @@ module CorrelationDrawing =
                             (Mod.constant (Trafo3d.Translation(p)))
             } 
             |> Sg.set
+
+
+        let makePickingDotsSg (points : alist<V3d>) (color : IMod<C4b>) (view : IMod<CameraView>) =            
+          aset {
+              for p in points |> ASet.ofAList do
+                  yield makeSphereSg 
+                          color 
+                          (computeScale view (Mod.constant p) 5.0) 
+                          (Mod.constant (Trafo3d.Translation(p)))
+                        |> Sg.requirePicking
+                        |> Sg.noEvents
+//                        |> Sg.withEvents [
+//                            Sg.onClick (fun _ -> Select box.id)
+//                            Sg.onEnter (fun _ -> Enter box.id)
+//                            Sg.onLeave (fun () -> Exit)
+//                        ]
+          } 
+          |> Sg.set
            
         let makeLinesSg (points : alist<V3d>) (color : IMod<C4b>) (width : IMod<float>) = 
             edgeLines false points
@@ -308,7 +327,7 @@ module CorrelationDrawing =
               pick;
               makeBrushSg model.hoverPosition (SemanticApp.getColor semanticApp semanticApp.selectedSemantic);
               annotations;
-              (GeologicalLog.sg model.log model.annotations semanticApp cam) |> Sg.noEvents
+              //(GeologicalLog.sg model.log model.annotations semanticApp cam) |> Sg.noEvents
             ] @ createAnnotationSgs semanticApp model.working cam
             |> Sg.ofList
             

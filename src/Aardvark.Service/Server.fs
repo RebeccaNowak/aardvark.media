@@ -1089,7 +1089,8 @@ module Server =
         choose [
             yield Reflection.assemblyWebPart typeof<Client>.Assembly
             yield pathScan "/render/%s" (render >> handShake)
-            yield path "/stats.json" >=> statistics 
+            yield 
+             "/stats.json" >=> statistics 
             yield pathScan "/screenshot/%s" (screenshot) 
 
             match info.fileSystemRoot with
