@@ -19,7 +19,7 @@ module Pages =
 
   type Action = 
       | Camera                        of CameraController.Message
-      | LogMessage                    of GeologicalLog.Action
+      | CorrPlotMessage               of CorrelationPlotApp.Action
       | CenterScene
       | UpdateConfig                  of DockConfig
       | Export
@@ -30,8 +30,8 @@ module Pages =
       | Redo
       | SetCullMode                   of CullMode
       | ToggleFill
-      | CorrelationDrawingAppMessage  of CorrelationDrawingApp.Action
-      | CorrelationDrawingMessage     of CorrelationDrawing.Action
+      | CorrelationDrawingAppMessage  of act : CorrelationDrawingApp.Action
+      //| CorrelationDrawingMessage     of CorrelationDrawing.Action
       | SemanticAppMessage            of SemanticApp.Action
 //      | KeyDown                       of key : Keys
 //      | KeyUp                         of key : Keys   
@@ -47,11 +47,13 @@ module Pages =
             config {
                 content (
                  // element {id "render"; title "Render View"; weight 5}
-                  vertical 1.0 [
-                    element { id "controls"; title "Controls"; weight 1 }
-                    horizontal 1.0 [
+                  vertical 0.6 [
+                    horizontal 0.5 [ element { id "logs"; title "Logs"; weight 1};
+                                     element { id "controls"; title "Controls"; weight 1 }]
+                    //element { id "controls"; title "Controls"; weight 1 }
+                    horizontal 0.5 [
                       element {id "render"; title "Render View"; weight 5}
-                      element {id "semantics"; title "Semantics"; weight 5}
+                      element {id "semantics"; title "Semantics"; weight 3}
 //                      stack 9.0 (Some "render") [dockelement {id "render"; title "Render View"; weight 5};
 //                                                 dockelement { id "semantics"; title "Semantics"; weight 5}]
                     ]
@@ -62,7 +64,7 @@ module Pages =
             }
         semanticApp = SemanticApp.getInitialWithSamples
         drawingApp  = CorrelationDrawingApp.initial
-        log         = GeologicalLog.intial (System.Guid.NewGuid().ToString())
+        corrPlotApp = CorrelationPlotApp.initial 
     }
 
   let update (model : Pages) (msg : Action) =
@@ -71,13 +73,44 @@ module Pages =
 //            match m with
 //              | SemanticApp.Action.SetSemantic s ->
                 {model with semanticApp = SemanticApp.update model.semanticApp m}
-          | CorrelationDrawingAppMessage m ->
-              {model with drawingApp = CorrelationDrawingApp.update model.drawingApp model.semanticApp m}
+
+          | CorrelationDrawingAppMessage act ->
+            let newApp =               
+              match act  with
+                | CorrelationDrawingApp.DrawingMessage dm ->
+                  match dm, model.corrPlotApp.creatingNew with
+                    | CorrelationDrawing.ToggleSelectPoint (id, p), true ->
+                      let an = CorrelationDrawingApp.findAnnotation model.drawingApp id
+                      (CorrelationPlotApp.update 
+                        model.corrPlotApp 
+                        model.drawingApp.drawing.annotations
+                        model.semanticApp 
+                        (CorrelationPlotApp.Action.TogglePoint (p, an))
+                      )
+                    | _ -> model.corrPlotApp
+                | _ -> model.corrPlotApp
+            {model with drawingApp  = CorrelationDrawingApp.update model.drawingApp model.semanticApp act
+                        corrPlotApp = newApp}
           | Camera m -> 
               { model with cameraState = CameraController.update model.cameraState m }
 
-          | LogMessage m ->
-            { model with log = GeologicalLog.update model.log model.semanticApp m}
+          | CorrPlotMessage m ->
+            let corrPlotApp = CorrelationPlotApp.update 
+                                            model.corrPlotApp 
+                                            model.drawingApp.drawing.annotations 
+                                            model.semanticApp m
+            match m with
+              | CorrelationPlotApp.NewLog | CorrelationPlotApp.FinishLog -> 
+                {model with 
+                  drawingApp = 
+                    {model.drawingApp with
+                      drawing = 
+                        (CorrelationDrawing.update model.drawingApp.drawing model.semanticApp CorrelationDrawing.DeselectAllPoints)
+                    }
+                  corrPlotApp = corrPlotApp
+                }
+              | _ -> 
+                { model with corrPlotApp = corrPlotApp}
           | CenterScene -> 
               { model with cameraState = initialCamera }
 
@@ -188,9 +221,9 @@ module Pages =
                 (CorrelationDrawingApp.view model.drawingApp model.semanticApp) 
                   |> UI.map CorrelationDrawingAppMessage
 
-            | Some "correlation" ->
-                GeologicalLog.view runtime model.log
-                  |> UI.map LogMessage
+            | Some "logs" ->
+                CorrelationPlotApp.view model.corrPlotApp model.semanticApp
+                  |> UI.map CorrPlotMessage
 
             | Some "semantics" ->
               body [] [

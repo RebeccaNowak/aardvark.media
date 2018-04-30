@@ -47,8 +47,9 @@ module CorrelationDrawingApp =
     type Action =
         | CameraMessage             of ArcBallController.Message
         | DrawingMessage            of CorrelationDrawing.Action
-        | DrawingSemanticMessage    of CorrelationDrawing.Action
+        //| DrawingSemanticMessage    of CorrelationDrawing.Action
         | AnnotationMessage         of CorrelationDrawing.Action
+        //| ToggleSelectMessage       of CorrelationDrawing.Action
         | KeyDown                   of key : Keys
         | KeyUp                     of key : Keys      
         | Save
@@ -57,16 +58,18 @@ module CorrelationDrawingApp =
                        
     let update (model             : CorrelationAppModel)  
                (semanticApp       : SemanticApp)
-               (act : Action)     =
+               (act               : Action) =
         match act, model.drawing.draw with
             | CameraMessage m, false -> 
                 { model with camera = ArcBallController.update model.camera m }      
             | DrawingMessage m, _ ->
                 { model with drawing = CorrelationDrawing.update model.drawing semanticApp m }      
-            | DrawingSemanticMessage m, _ ->
-                {model with drawing = CorrelationDrawing.update model.drawing semanticApp m}          
+//            | DrawingSemanticMessage m, _ ->
+//                {model with drawing = CorrelationDrawing.update model.drawing semanticApp m}          
             | AnnotationMessage m, _ ->
                 {model with drawing = CorrelationDrawing.update model.drawing semanticApp m}          
+//            | ToggleSelectMessage m, _ ->
+//                {model with drawing = CorrelationDrawing.update model.drawing semanticApp m}          
             | KeyDown k, _ -> 
                 let d = CorrelationDrawing.update 
                           model.drawing 
@@ -131,6 +134,12 @@ module CorrelationDrawingApp =
             rendering = RenderingPars.initial
             drawing   = CorrelationDrawing.initial 
         }
+
+
+    let findAnnotation (app : CorrelationAppModel) (id : string) =
+      app.drawing.annotations.FirstOrDefault((fun x -> x.id = id), Annotation.initialDummy)
+
+
 
 //    let app : App<CorrelationAppModel,MCorrelationAppModel,Action> =
 //        {

@@ -20,7 +20,7 @@ module Annotation =
           semanticType    = SemanticType.Hierarchical
           geometry        = GeometryType.Line
           semanticId      = ""
-          points          = plist.Empty
+          points          = plist<AnnotationPoint>.Empty
           segments        = plist.Empty
           projection      = Projection.Viewpoint
           visible         = true
@@ -28,6 +28,7 @@ module Annotation =
           overrideStyle   = None
           overrideLevel   = None
           grainSize       = rand.NextDouble() * 5.0
+          selected        = false
       }
 
   let initialDummy = 
@@ -44,18 +45,60 @@ module Annotation =
         overrideStyle   = None
         overrideLevel   = None
         grainSize       = rand.NextDouble() * 5.0
+        selected        = false
     }
 
   type Action =
       | SetSemantic of option<string>
+      | ToggleSelected of V3d
+      | Deselect
 
-  let update (anno : Annotation) (a : Action) =
+  let update  (a : Action) (anno : Annotation) =
       match a with
           | SetSemantic str -> match str with
                                 | Some s -> {anno with semanticId = s}
                                 | None -> anno
+          | ToggleSelected (point) -> 
+            let ind =       
+              anno.points.FirstIndexOf(fun (p : AnnotationPoint) -> V3d.ApproxEqual(p.point,point, 0.1)) //TODO -1
+            let upd = anno.points.Update (ind, (fun (p : AnnotationPoint) -> {p with selected = not p.selected}))
+            {anno with points = upd}
+          | Deselect -> {anno with points = anno.points |> PList.map (fun p -> {p with selected = false})}
 
-  let view (model : MAnnotation)  (semanticApp : MSemanticApp) = 
+  let viewSelected (model : MAnnotation)  (semanticApp : MSemanticApp) = 
+    let semanticsNode = 
+      let iconAttr =
+        amap {
+          yield clazz "circle outline icon"
+          let! c = SemanticApp.getColor semanticApp model.semanticId
+          yield style (sprintf "color:%s" (colorToHexStr c))
+//          yield attribute "color" "blue"
+        }      
+      td [clazz "center aligned"; style lrPadding] 
+         [
+          Incremental.i (AttributeMap.ofAMap iconAttr) (AList.ofList []);
+          //label  [clazz "ui label"] 
+                 Incremental.text (SemanticApp.getLabel semanticApp model.semanticId)]
+
+        
+    let geometryTypeNode =
+      td [clazz "center aligned"; style lrPadding] 
+         //[label  [clazz "ui label"] 
+                 [text (model.geometry.ToString())]
+
+    let projectionNode =
+      td [clazz "center aligned"; style lrPadding] 
+         //[label  [clazz "ui label"] 
+                 [text (model.projection.ToString())]
+
+    let annotationTextNode = 
+        td [clazz "center aligned"; style lrPadding] 
+           //[label  [clazz "ui label"] 
+                   [Incremental.text model.text]
+    
+    [semanticsNode;geometryTypeNode;projectionNode;annotationTextNode]
+
+  let viewDeselected (model : MAnnotation)  (semanticApp : MSemanticApp) = 
     let semanticsNode = 
       let iconAttr =
         amap {
@@ -87,6 +130,15 @@ module Annotation =
                    [Incremental.text model.text]
     
     [semanticsNode;geometryTypeNode;projectionNode;annotationTextNode]
+
+
+  let view  (model : MAnnotation)  (semanticApp : MSemanticApp) = 
+    model.selected
+      |> Mod.map (fun d -> 
+          match d with
+            | true  -> viewSelected model semanticApp
+            | false -> viewDeselected model semanticApp)
+ 
     
         
   ///////// HELPER FUNCTIONS
@@ -109,50 +161,56 @@ module Annotation =
                       | Some a -> SemanticApp.getThickness semanticApp a.semanticId
                       | None -> Mod.constant Semantic.ThicknessDefault) anno   
 
-  let calcElevation (v : V3d) =
-    v.Y
+  let getThickness' (anno : MAnnotation) (semanticApp : MSemanticApp) = 
+    SemanticApp.getThickness semanticApp anno.semanticId
 
-  let getAvgElevation (anno : MAnnotation) =
-    anno.points
-      |> AList.averageOf calcElevation
+//  let calcElevation (v : V3d) =
+//    v.Y
 
+//  let getAvgElevation (anno : MAnnotation) =
+//    anno.points
+//      |> AList.averageOf (calcElevation 
+//
   let elevation (anno : Annotation) =
-    anno.points.Mean (fun x -> x.Y)
+    anno.points 
+      |> PList.toList
+      |> List.map (fun x -> x.point.Y)
+      |> List.average
+//
+//  let getMinElevation (anno : MAnnotation) = 
+//    anno.points
+//      |> AList.minBy calcElevation
+//
+//  let getMaxElevation (anno : MAnnotation) = 
+//    anno.points
+//      |> AList.maxBy calcElevation
+//
+//  let getRangeMinMax (anno : MAnnotation) =
+//    let min = anno.points
+//                |> AList.minBy calcElevation
+//    let max = anno.points
+//                |> AList.maxBy calcElevation
+//    Mod.map2 (fun (x : V3d) (y : V3d) -> V2d(x.Y,y.Y)) min max
+//
+//  let getRange (anno : MAnnotation) =
+//    let min = anno.points
+//                |> AList.minBy calcElevation
+//    let max = anno.points
+//                |> AList.maxBy calcElevation
+//    Mod.map2 (fun (mi : V3d) (ma : V3d) -> (ma.Y - mi.Y)) min max
 
-  let getMinElevation (anno : MAnnotation) = 
-    anno.points
-      |> AList.minBy calcElevation
-
-  let getMaxElevation (anno : MAnnotation) = 
-    anno.points
-      |> AList.maxBy calcElevation
-
-  let getRangeMinMax (anno : MAnnotation) =
-    let min = anno.points
-                |> AList.minBy calcElevation
-    let max = anno.points
-                |> AList.maxBy calcElevation
-    Mod.map2 (fun (x : V3d) (y : V3d) -> V2d(x.Y,y.Y)) min max
-
-  let getRange (anno : MAnnotation) =
-    let min = anno.points
-                |> AList.minBy calcElevation
-    let max = anno.points
-                |> AList.maxBy calcElevation
-    Mod.map2 (fun (mi : V3d) (ma : V3d) -> (ma.Y - mi.Y)) min max
-
-
-  let getMinElevation' (annos : alist<MAnnotation>) =
-    AList.toArray (annos |> AList.map (fun x -> getAvgElevation x))
-      |> Array.min
-
-  let getMaxElevation' (annos : alist<MAnnotation>) =
-    AList.toArray (annos |> AList.map (fun x -> getAvgElevation x))
-      |> Array.max
-
-  let getMinMaxElevation (annos : alist<MAnnotation>) =
-    let avgs = (annos |> AList.map (fun x -> getAvgElevation x))
-    Mod.map2 (fun  (x : float) (y : float) -> V2d(x,y)) (avgs |> AList.min) (avgs |> AList.max)
+//
+//  let getMinElevation' (annos : alist<MAnnotation>) =
+//    AList.toArray (annos |> AList.map (fun x -> getAvgElevation x))
+//      |> Array.min
+//
+//  let getMaxElevation' (annos : alist<MAnnotation>) =
+//    AList.toArray (annos |> AList.map (fun x -> getAvgElevation x))
+//      |> Array.max
+//
+//  let getMinMaxElevation (annos : alist<MAnnotation>) =
+//    let avgs = (annos |> AList.map (fun x -> getAvgElevation x))
+//    Mod.map2 (fun  (x : float) (y : float) -> V2d(x,y)) (avgs |> AList.min) (avgs |> AList.max)
 
   let getLevel (semanticApp : SemanticApp) (anno : Annotation) =
     let s = (SemanticApp.getSemantic semanticApp anno.semanticId)

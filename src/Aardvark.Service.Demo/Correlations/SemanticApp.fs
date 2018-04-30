@@ -225,20 +225,6 @@ module SemanticApp =
                      button[clazz "compact ui button"; onMouseClick (fun _ -> CancelNew)][text "Cancel"]
                   ]
               )
-//            yield (tr [] [ 
-//                     td [clazz "middle aligned"; style lrPadding;attribute "colspan" (sprintf "%i" domNode.Length)][
-//                      table [][
-//                       tr 
-//                          [style UtilitiesGUI.tinyPadding; onClick (fun str -> SetSemantic (Some mSem.id))]
-//                          (List.map (fun x -> x |> UI.map SemanticMessage) domNode)
-//                       tr
-//                          [style UtilitiesGUI.tinyPadding]
-//                          [td [clazz "middle aligned"; style lrPadding;attribute "colspan" (sprintf "%i" domNode.Length)][menu]]
-//                      ]
-//                     ]
-//                   ]
-//                  )
-
             yield (tr 
                     ([clazz "active";style UtilitiesGUI.tinyPadding; onClick (fun str -> SetSemantic (Some mSem.id))])
                     ((List.map (fun x -> x |> UI.map SemanticMessage) domNode))

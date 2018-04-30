@@ -11,7 +11,8 @@ module Border =
   open Aardvark.Rendering.Text
 
   let initial id : Border = {
-    annotations = plist.Empty
+    anno  = Annotation.initialDummy
+    point = V3d.OOO
   }
 
   let getAvgY (points : alist<V3d>) =
@@ -30,18 +31,18 @@ module Border =
 
     
 
-    let view' (annos : alist<MAnnotation>)  =
-        let sortedAnnos = annos |> AList.sortBy (fun x -> getAvgY x.points)
-        sortedAnnos |> AList.map (fun x -> createLabel x.id (getMinY x.points))
-          |> AList.toList
-          |> Sg.ofList
-          
-
-    let view (model : MBorder)  =
-        let sortedAnnos = model.annotations |> AList.sortBy (fun x -> getAvgY x.points)
-        sortedAnnos |> AList.map (fun x -> createLabel x.id (getMinY x.points))
-          |> AList.toList
-          |> Sg.ofList
+//    let view' (annos : alist<MAnnotation>)  =
+//        let sortedAnnos = annos |> AList.sortBy (fun x -> getAvgY x.points)
+//        sortedAnnos |> AList.map (fun x -> createLabel x.id (getMinY x.points))
+//          |> AList.toList
+//          |> Sg.ofList
+//          
+//
+//    let view (model : MBorder)  =
+//        let sortedAnnos = model.annotations |> AList.sortBy (fun x -> getAvgY x.points)
+//        sortedAnnos |> AList.map (fun x -> createLabel x.id (getMinY x.points))
+//          |> AList.toList
+//          |> Sg.ofList
 //        for anno in sortedAnnos |> AList.toList do
 //          createLabel anno.id
 

@@ -93,10 +93,12 @@
     <Compile Include="Correlations\SemanticApp.fs" />
     <Compile Include="Correlations\Annotation.fs" />
     <Compile Include="Correlations\AnnotationApp.fs" />
+    <Compile Include="Correlations\AnnotationPoint.fs" />	
     <Compile Include="Correlations\Border.fs" />
     <Compile Include="Correlations\LogNode.fs" />
     <Compile Include="Correlations\GeologicalLog.fs" />
     <Compile Include="Correlations\CorrelationPlot.fs" />
+    <Compile Include="Correlations\CorrelationPlotApp.fs" />
     <Compile Include="Correlations\CorrelationDrawing.fs" />
     <Compile Include="Correlations\CorrelationDrawingApp.fs" />
     <Compile Include="Correlations\PagesApp.fs" />

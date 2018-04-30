@@ -102,6 +102,15 @@ type Semantic = {
  }
 
 [<DomainType>]
+type AnnotationPoint = {
+  point     : V3d
+  selected  : bool
+}
+
+
+
+
+[<DomainType>]
 type Annotation = {     
     [<NonIncremental;PrimaryKey>]
     id                    : string
@@ -115,8 +124,10 @@ type Annotation = {
     [<NonIncremental>]
     semanticType          : SemanticType
 
+    selected              : bool
+
     semanticId            : string
-    points                : plist<V3d>
+    points                : plist<AnnotationPoint>
     segments              : plist<plist<V3d>> //list<Segment>
     visible               : bool
     text                  : string
@@ -139,14 +150,16 @@ type Horizon = {
 
 [<DomainType>]
 type Border = {
-    annotations : plist<Annotation>
+    anno  : Annotation
+    point : V3d
 }
 
 
 [<DomainType>]
 type LogNode = {
-    lBoundary   : Annotation
-    uBoundary   : Annotation
+    label       : string
+    lBoundary   : Border
+    uBoundary   : Border
     children    : plist<LogNode>
 
     elevation   : float
@@ -161,10 +174,18 @@ type LogNode = {
 type GeologicalLog = {
     [<NonIncremental;PrimaryKey>]
     id          : string
-    annotations : plist<Annotation>
+    annoPoints  : list<(V3d * Annotation)>
     nodes       : plist<LogNode>
     range       : Rangef //?
     camera      : CameraControllerState
+}
+
+[<DomainType>]
+type CorrelationPlotApp = {
+   logs                : plist<GeologicalLog>
+   working             : list<(V3d * Annotation)>
+   selectedLog         : option<string>
+   creatingNew         : bool
 }
 
 type AnnotationParameters = {Point:V3d;semanticId:string}
@@ -176,14 +197,12 @@ type CorrelationDrawingModel = {
     working             : option<Annotation>
     projection          : Projection //TODO move to semantic
     geometry            : GeometryType //TODO move to semantic
-//    semantics           : hmap<string, Semantic>
-//    semanticsList       : DropdownList<Semantic>
-    //selectedSemantic    : Semantic
     selectedAnnotation  : option<string>
     annotations         : plist<Annotation>
     exportPath          : string
-    log                 : GeologicalLog
 }
+
+
 
 [<DomainType>]
 type CorrelationAppModel = {
@@ -210,5 +229,5 @@ type Pages =
 
         drawingApp  : CorrelationAppModel
         semanticApp : SemanticApp
-        log         : GeologicalLog
+        corrPlotApp : CorrelationPlotApp
     }

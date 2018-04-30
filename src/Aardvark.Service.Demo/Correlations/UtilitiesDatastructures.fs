@@ -19,6 +19,21 @@ module UtilitiesDatastructures =
           |> PList.ofSeq 
 
 
+module List =
+  let contains' (f : 'a -> bool) (lst : List<'a>)  =
+    lst |> List.map (fun x -> f x)
+        |> List.reduce (fun x y -> x || y)
+
+  let contains'' (f : 'a -> 'b) (a : 'a)  (lst : List<'a>) =
+    lst
+       |> List.map f
+       |> List.contains (f a)
+
+  let reduce' (f1 : 'a -> 'b) (f2 : 'b -> 'b -> 'b) (lst : List<'a>) =
+    lst
+      |> List.map f1
+      |> List.reduce f2
+
 module PList =
   let mapiInt (lst : plist<'a>) =
     let i = ref 0
@@ -81,3 +96,4 @@ module AList =
 
     sum / (float lst.Length)
 
+ 
