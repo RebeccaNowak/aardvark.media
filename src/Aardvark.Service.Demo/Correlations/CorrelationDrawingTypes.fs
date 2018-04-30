@@ -125,6 +125,7 @@ type Annotation = {
     semanticType          : SemanticType
 
     selected              : bool
+    hovered               : bool
 
     semanticId            : string
     points                : plist<AnnotationPoint>

@@ -493,6 +493,7 @@ module Mutable =
         inherit obj()
         let mutable __current : Aardvark.Base.Incremental.IModRef<CorrelationDrawing.Annotation> = Aardvark.Base.Incremental.EqModRef<CorrelationDrawing.Annotation>(__initial) :> Aardvark.Base.Incremental.IModRef<CorrelationDrawing.Annotation>
         let _selected = ResetMod.Create(__initial.selected)
+        let _hovered = ResetMod.Create(__initial.hovered)
         let _semanticId = ResetMod.Create(__initial.semanticId)
         let _points = MList.Create(__initial.points, (fun v -> MAnnotationPoint.Create(v)), (fun (m,v) -> MAnnotationPoint.Update(m, v)), (fun v -> v))
         let _segments = MList.Create(__initial.segments, (fun v -> MList.Create(v)), (fun (m,v) -> MList.Update(m, v)), (fun v -> v :> alist<_>))
@@ -507,6 +508,7 @@ module Mutable =
         member x.projection = __current.Value.projection
         member x.semanticType = __current.Value.semanticType
         member x.selected = _selected :> IMod<_>
+        member x.hovered = _hovered :> IMod<_>
         member x.semanticId = _semanticId :> IMod<_>
         member x.points = _points :> alist<_>
         member x.segments = _segments :> alist<_>
@@ -522,6 +524,7 @@ module Mutable =
                 __current.Value <- v
                 
                 ResetMod.Update(_selected,v.selected)
+                ResetMod.Update(_hovered,v.hovered)
                 ResetMod.Update(_semanticId,v.semanticId)
                 MList.Update(_points, v.points)
                 MList.Update(_segments, v.segments)
@@ -575,6 +578,12 @@ module Mutable =
                     override x.Get(r) = r.selected
                     override x.Set(r,v) = { r with selected = v }
                     override x.Update(r,f) = { r with selected = f r.selected }
+                }
+            let hovered =
+                { new Lens<CorrelationDrawing.Annotation, Microsoft.FSharp.Core.bool>() with
+                    override x.Get(r) = r.hovered
+                    override x.Set(r,v) = { r with hovered = v }
+                    override x.Update(r,f) = { r with hovered = f r.hovered }
                 }
             let semanticId =
                 { new Lens<CorrelationDrawing.Annotation, Microsoft.FSharp.Core.string>() with

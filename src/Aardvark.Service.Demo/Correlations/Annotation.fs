@@ -29,6 +29,7 @@ module Annotation =
           overrideLevel   = None
           grainSize       = rand.NextDouble() * 5.0
           selected        = false
+          hovered         = false
       }
 
   let initialDummy = 
@@ -46,11 +47,14 @@ module Annotation =
         overrideLevel   = None
         grainSize       = rand.NextDouble() * 5.0
         selected        = false
+        hovered         = false
     }
 
   type Action =
       | SetSemantic of option<string>
       | ToggleSelected of V3d
+      | HoverIn
+      | HoverOut
       | Deselect
 
   let update  (a : Action) (anno : Annotation) =
@@ -63,6 +67,14 @@ module Annotation =
               anno.points.FirstIndexOf(fun (p : AnnotationPoint) -> V3d.ApproxEqual(p.point,point, 0.1)) //TODO -1
             let upd = anno.points.Update (ind, (fun (p : AnnotationPoint) -> {p with selected = not p.selected}))
             {anno with points = upd}
+          | HoverIn  -> 
+            {anno with hovered        = true
+                       overrideStyle  = Some {Style.color      = {c = C4b.Yellow};
+                                              Style.thickness  = {Numeric.init with value = 3.0}
+                                             }
+            }
+          | HoverOut -> {anno with hovered = false
+                                   overrideStyle = None}
           | Deselect -> {anno with points = anno.points |> PList.map (fun p -> {p with selected = false})}
 
   let viewSelected (model : MAnnotation)  (semanticApp : MSemanticApp) = 
@@ -142,18 +154,58 @@ module Annotation =
     
         
   ///////// HELPER FUNCTIONS
-  let getColor (anno : IMod<Option<MAnnotation>>) (semanticApp : MSemanticApp) = 
-    anno |> 
-      Mod.bind (fun (a : Option<MAnnotation>) -> 
-        match a with
-          | Some a -> SemanticApp.getColor semanticApp a.semanticId
-          | None -> Mod.constant C4b.Red)
+  let getColor (imAnno : IMod<Option<MAnnotation>>) (semanticApp : MSemanticApp) =
+    adaptive {
+      let! optAnno = imAnno
+      let (a : IMod<C4b>, b : IMod<bool>) = 
+          match optAnno with
+            | Some an -> 
+              let col =
+                an.overrideStyle 
+                  |> Mod.bind (fun (st : Option<MStyle>) ->
+                                match st with
+                                  | Some st -> st.color.c
+                                  | None -> ((SemanticApp.getColor semanticApp an.semanticId))
+                              )
+              (col, an.hovered)
+//                let! style = a.overrideStyle
+//                match style with
+//                  | Some st -> st.color
+//                  | None -> ((SemanticApp.getColor semanticApp a.semanticId), a.hovered)
+//              foo
+            //let foo = ((SemanticApp.getColor semanticApp a.semanticId), a.hovered)
+            //foo
+            | None -> ((Mod.constant C4b.Red), (Mod.constant false))
 
+      let! hover = b
+      let! col = a
+//      return match hover with
+//              | true -> C4b.Yellow
+//              | false -> col
+      return col
+    }
+//      Mod.map2 (fun c h -> 
+//                  match h with 
+//                    | true -> Mod.constant C4b.Yellow
+//                    | false -> c
+//               ) c h 
   let getColor' (anno : MAnnotation) (semanticApp : MSemanticApp) = 
-    SemanticApp.getColor semanticApp anno.semanticId
+    adaptive {
+      return! anno.overrideStyle 
+                |> Mod.bind (fun (st : Option<MStyle>) ->
+                    match st with
+                      | Some st -> st.color.c
+                      | None -> ((SemanticApp.getColor semanticApp anno.semanticId)))
+    }
+      //let! h = anno.hovered
+//      return! match h with
+//                | true -> Mod.constant C4b.Yellow
+//                | false -> SemanticApp.getColor semanticApp anno.semanticId
+
+
+
     
  
-    
 
   let getThickness (anno : IMod<Option<MAnnotation>>) (semanticApp : MSemanticApp) = 
     Mod.bind (fun (a : Option<MAnnotation>)

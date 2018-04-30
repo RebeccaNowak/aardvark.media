@@ -46,6 +46,8 @@ module CorrelationDrawing =
         | AddSemantic
         | DoNothing
         | AnnotationMessage       of Annotation.Action
+        | HoverIn                 of string
+        | HoverOut                of string
         | SetGeometry             of GeometryType
         | SetProjection           of Projection
         | SetExportPath           of string
@@ -131,7 +133,25 @@ module CorrelationDrawing =
                             model.annotations 
                               |> PList.map
                                   (fun a -> Annotation.update (Annotation.Action.Deselect) a)
-              }     
+              }    
+            | HoverIn id, false -> 
+              let anIndex = model.annotations.FirstIndexOf (fun a -> a.id = id)
+              let an = model.annotations.Item anIndex
+              {model with annotations = model.annotations.Update 
+                                          (anIndex, 
+                                            Annotation.update Annotation.Action.HoverIn
+                                          ) 
+              }
+
+            | HoverOut id, false -> 
+              let anIndex = model.annotations.FirstIndexOf (fun a -> a.id = id)
+              let an = model.annotations.Item anIndex
+              {model with annotations = model.annotations.Update 
+                                          (anIndex, 
+                                            Annotation.update Annotation.Action.HoverOut
+                                          ) 
+              }
+
             | KeyDown Keys.Enter, _ -> 
                     model |> finishAndAppend semanticApp
             | Exit, _ -> 
@@ -263,8 +283,8 @@ module CorrelationDrawing =
                 |> Sg.noEvents    
                 |> Sg.withEvents [
                     Sg.onClick(fun p -> ToggleSelectPoint (anno.id, Mod.force point.point))
-                    //Sg.onEnter (fun _ -> Enter box.id)
-                    //Sg.onLeave (fun () -> Exit)
+                    Sg.onEnter (fun _ -> HoverIn (anno.id))
+                    Sg.onLeave (fun _ -> HoverOut (anno.id))
                 ]
                 |> (Sg.trafo trafo)
                 |> Sg.depthTest (Mod.constant DepthTestMode.Never)
@@ -371,7 +391,7 @@ module CorrelationDrawing =
         let createAnnotationSgs' (semanticApp  : MSemanticApp)
                         (anno         : MAnnotation)
                         (view         : IMod<CameraView>) =      
-          let color = SemanticApp.getColor semanticApp anno.semanticId
+          let color = Annotation.getColor' anno semanticApp
           let thickness = SemanticApp.getThickness semanticApp anno.semanticId
           [makeLinesSg anno.points color thickness;
            makeDotsSg' anno color view thickness;
