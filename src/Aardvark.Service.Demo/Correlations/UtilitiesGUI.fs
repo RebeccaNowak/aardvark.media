@@ -29,7 +29,9 @@ module UtilitiesGUI =
     let bgColorAttr (color : C4b) =
       style (sprintf "background: %s" (colorToHexStr color))
 
-    
+    let bgColorStr (color : C4b) =
+      (sprintf "background: %s" (colorToHexStr color))
+
     let incrBgColorAMap (colorMod : IMod<C4b>) =      
       amap { 
         let! col =  colorMod

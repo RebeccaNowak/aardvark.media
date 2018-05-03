@@ -51,8 +51,9 @@ module Annotation =
     }
 
   type Action =
-      | SetSemantic of option<string>
-      | ToggleSelected of V3d
+      | SetSemantic     of option<string>
+      | ToggleSelected  of V3d
+      | Select          of V3d 
       | HoverIn
       | HoverOut
       | Deselect
@@ -64,8 +65,13 @@ module Annotation =
                                 | None -> anno
           | ToggleSelected (point) -> 
             let ind =       
-              anno.points.FirstIndexOf(fun (p : AnnotationPoint) -> V3d.ApproxEqual(p.point,point, 0.1)) //TODO -1
+              anno.points.FirstIndexOf(fun (p : AnnotationPoint) -> V3d.AllEqual(p.point,point)) 
             let upd = anno.points.Update (ind, (fun (p : AnnotationPoint) -> {p with selected = not p.selected}))
+            {anno with points = upd}
+          | Select (point) ->
+            let ind =       
+              anno.points.FirstIndexOf(fun (p : AnnotationPoint) -> V3d.AllEqual(p.point,point)) 
+            let upd = anno.points.Update (ind, (fun (p : AnnotationPoint) -> {p with selected = true}))
             {anno with points = upd}
           | HoverIn  -> 
             {anno with hovered        = true
@@ -226,7 +232,7 @@ module Annotation =
   let elevation (anno : Annotation) =
     anno.points 
       |> PList.toList
-      |> List.map (fun x -> x.point.Y)
+      |> List.map (fun x -> x.point.Length)
       |> List.average
 //
 //  let getMinElevation (anno : MAnnotation) = 
@@ -263,6 +269,12 @@ module Annotation =
 //  let getMinMaxElevation (annos : alist<MAnnotation>) =
 //    let avgs = (annos |> AList.map (fun x -> getAvgElevation x))
 //    Mod.map2 (fun  (x : float) (y : float) -> V2d(x,y)) (avgs |> AList.min) (avgs |> AList.max)
+
+  let getType (semanticApp : SemanticApp) (anno : Annotation) =
+    let s = (SemanticApp.getSemantic semanticApp anno.semanticId)
+    match s with
+      | Some s -> s.semanticType
+      | None   -> SemanticType.Undefined
 
   let getLevel (semanticApp : SemanticApp) (anno : Annotation) =
     let s = (SemanticApp.getSemantic semanticApp anno.semanticId)

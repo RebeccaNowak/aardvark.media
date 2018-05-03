@@ -96,7 +96,7 @@ module Semantic =
         style         = {Style.color      = {c = C4b.Gray};
                          Style.thickness  = {Numeric.init with value = 1.0}}
         semanticType  = SemanticType.Metric
-        level         = 2
+        level         = -1
       }
 
     let initialCrossbed id = {
@@ -105,7 +105,7 @@ module Semantic =
         style         = {Style.color      = {c = C4b.Blue};
                          Style.thickness  = {Numeric.init with value = 1.0}}
         semanticType  = SemanticType.Angular
-        level         = 3
+        level         = -1
       }
 
     let impactBreccia id = {
@@ -114,7 +114,7 @@ module Semantic =
         style         = {Style.color      = {c = C4b.Black};
                          Style.thickness  = {Numeric.init with value = 1.0}}
         semanticType  = SemanticType.Angular
-        level         = 3
+        level         = -1
       }
     
     ////// ACTIONS

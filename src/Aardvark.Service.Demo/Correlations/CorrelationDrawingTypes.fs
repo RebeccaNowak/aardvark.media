@@ -38,7 +38,7 @@ type TextInput = {
 
 type Projection   = Linear = 0 | Viewpoint = 1 | Sky = 2
 type GeometryType = Point = 0 | Line = 1 | Polyline = 2 | Polygon = 3 | DnS = 4 | Undefined = 5
-type SemanticType = Metric = 0 | Angular = 1 | Hierarchical = 2
+type SemanticType = Metric = 0 | Angular = 1 | Hierarchical = 2 | Undefined = 3
 type Rangef = {
   min     : float
   max     : float
@@ -151,14 +151,19 @@ type Horizon = {
 
 [<DomainType>]
 type Border = {
-    anno  : Annotation
-    point : V3d
+    anno      : Annotation
+    point     : V3d
 }
 
+type LogNodeType  = TopLevel | Hierarchical | Metric | Angular | Infinity | Empty
 
 [<DomainType>]
 type LogNode = {
+  // TODO add id
+    
     label       : string
+    nodeType    : LogNodeType
+
     lBoundary   : Border
     uBoundary   : Border
     children    : plist<LogNode>
@@ -221,7 +226,7 @@ type Pages =
         [<NonIncremental>]
         future      : Option<Pages>
 
-        cameraState : CameraControllerState
+//        cameraState : CameraControllerState
 
         cullMode    : CullMode
         fill        : bool

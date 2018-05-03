@@ -56,6 +56,7 @@ module CorrelationDrawing =
         | AddPoint                of V3d
         | ToggleSelectPoint       of (string * V3d)
         | DeselectAllPoints       
+        | SelectPoints            of List<(V3d * string)>
         | KeyDown                 of key : Keys
         | KeyUp                   of key : Keys      
         | Export
@@ -117,23 +118,51 @@ module CorrelationDrawing =
               //let updatedAnno = Annotation.update anno (Annotation.Action.SetSelected true)
               let anIndex = model.annotations.FirstIndexOf (fun a -> a.id = id)
               let an = model.annotations.Item anIndex
+              let modelWithToggledPoint = 
+                {model with annotations = 
+                              model.annotations.Update (
+                                anIndex, 
+                                  Annotation.update (Annotation.Action.ToggleSelected (point))
+                              )
+                }
               let isAnnoSel = (an.points 
                                 |> PList.toList
                                 |> List.reduce' (fun x -> x.selected) (fun x y -> x || y))
               match isAnnoSel with
-                | true -> model
-                | false ->
-                  {model with annotations = model.annotations.Update 
-                                              (anIndex, 
-                                                Annotation.update (Annotation.Action.ToggleSelected (point))
-                                              ) 
-                  }
+                | true -> let toggleOff = 
+                            an.points
+                              |> PList.filter (fun (x : AnnotationPoint) -> x.point = point && x.selected = true)
+                              |> PList.count > 0
+                          match toggleOff with
+                            | true  -> modelWithToggledPoint
+                            | false -> model
+                | false -> modelWithToggledPoint
             | DeselectAllPoints, _  -> 
               {model with annotations = 
                             model.annotations 
                               |> PList.map
                                   (fun a -> Annotation.update (Annotation.Action.Deselect) a)
               }    
+            | SelectPoints lst, false ->
+              let deselected = model.annotations 
+                                |> PList.map
+                                    (fun a -> Annotation.update (Annotation.Action.Deselect) a)
+              let annoInList (a : Annotation) = 
+                lst 
+                  |> List.map snd
+                  |> List.contains a.id
+              
+              let updateFunction (anno : Annotation) =
+                  match annoInList anno with
+                      | true  -> 
+                        let ind = lst.FirstIndexOf (fun (p, a) -> a = anno.id)
+                        let (pt, a) = lst.Item ind
+                        Annotation.update (Annotation.Action.Select pt) anno
+                      | false -> anno
+              let updated = deselected |> PList.map updateFunction
+                  
+              {model with annotations = updated}
+              
             | HoverIn id, false -> 
               let anIndex = model.annotations.FirstIndexOf (fun a -> a.id = id)
               let an = model.annotations.Item anIndex
@@ -262,6 +291,7 @@ module CorrelationDrawing =
                     | None -> [||]                         
             )
 
+
         let makeSphereSg color size trafo =      
           Sg.sphere 5 color size 
                   |> Sg.shader {
@@ -272,7 +302,19 @@ module CorrelationDrawing =
                   |> Sg.noEvents
                   |> Sg.trafo(trafo)
 
+        let makeCylinderSg (c : C4b) =      
+          Sg.cylinder' 3 c 0.1 20.0 
+                  |> Sg.shader {
+                      do! DefaultSurfaces.trafo
+                      do! DefaultSurfaces.vertexColor
+                      do! DefaultSurfaces.simpleLighting
+                  }
+                  |> Sg.noEvents
+
         let makeSphereSg' color size trafo (anno : MAnnotation) (point : MAnnotationPoint) =      
+          let elevationLabel =
+            makeLblSg (sprintf "%.2f" (Mod.force point.point).Length) (Mod.force point.point)
+
           let pickSg = 
             Sg.sphere 10 (Mod.constant C4b.White) size 
                 |> Sg.shader {
@@ -288,6 +330,9 @@ module CorrelationDrawing =
                 ]
                 |> (Sg.trafo trafo)
                 |> Sg.depthTest (Mod.constant DepthTestMode.Never)
+
+
+                   
 
           adaptive {
             let! sel = point.selected
@@ -324,6 +369,7 @@ module CorrelationDrawing =
             }
             |> Sg.dynamic
             |> Sg.andAlso pickSg
+            |> Sg.andAlso elevationLabel
 
             
         let makeBrushSg (hovered : IMod<Trafo3d option>) (color : IMod<C4b>) = //(size : IMod<float>)= 
@@ -428,5 +474,6 @@ module CorrelationDrawing =
               //(GeologicalLog.sg model.log model.annotations semanticApp cam) |> Sg.noEvents
             ] @ createAnnotationSgs semanticApp model.working cam
             |> Sg.ofList
+            
             
             

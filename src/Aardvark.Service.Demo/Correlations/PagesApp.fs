@@ -11,14 +11,14 @@ module Pages =
   open Aardvark.Base.Rendering
   open UtilitiesGUI
 
-  let initialCamera = { 
-          CameraController.initial with 
-              view = CameraView.lookAt (V3d.III * 3.0) V3d.OOO Mars.Terrain.up //V3d.OOI
-      }
+//  let initialCamera = { 
+//          CameraController.initial with 
+//              view = CameraView.lookAt (V3d.III * 3.0) V3d.OOO Mars.Terrain.up //V3d.OOI
+//      }
 
 
   type Action = 
-      | Camera                        of CameraController.Message
+      //| Camera                        of CameraController.Message
       | CorrPlotMessage               of CorrelationPlotApp.Action
       | CenterScene
       | UpdateConfig                  of DockConfig
@@ -40,7 +40,7 @@ module Pages =
     { 
         past = None
         future = None
-        cameraState = initialCamera
+//        cameraState = initialCamera
         cullMode = CullMode.None
         fill = true
         dockConfig =
@@ -75,26 +75,28 @@ module Pages =
                 {model with semanticApp = SemanticApp.update model.semanticApp m}
 
           | CorrelationDrawingAppMessage act ->
-            let newApp =               
+            let (corrApp, drawingApp) =               
               match act  with
                 | CorrelationDrawingApp.DrawingMessage dm ->
                   match dm, model.corrPlotApp.creatingNew with
                     | CorrelationDrawing.ToggleSelectPoint (id, p), true ->
                       let an = CorrelationDrawingApp.findAnnotation model.drawingApp id
-                      (CorrelationPlotApp.update 
-                        model.corrPlotApp 
-                        model.drawingApp.drawing.annotations
-                        model.semanticApp 
-                        (CorrelationPlotApp.Action.TogglePoint (p, an))
-                      )
-                    | _ -> model.corrPlotApp
-                | _ -> model.corrPlotApp
-            {model with drawingApp  = CorrelationDrawingApp.update model.drawingApp model.semanticApp act
-                        corrPlotApp = newApp}
-          | Camera m -> 
-              { model with cameraState = CameraController.update model.cameraState m }
+                      let cApp = (CorrelationPlotApp.update 
+                                      model.corrPlotApp 
+                                      model.drawingApp.drawing.annotations
+                                      model.semanticApp 
+                                      (CorrelationPlotApp.Action.TogglePoint (p, an))
+                                  )
+                      (cApp, CorrelationDrawingApp.update model.drawingApp model.semanticApp act)
+                    | CorrelationDrawing.ToggleSelectPoint (id, p), false -> (model.corrPlotApp, model.drawingApp)
+                    | _,_ -> (model.corrPlotApp, CorrelationDrawingApp.update model.drawingApp model.semanticApp act)
+                | _ -> (model.corrPlotApp, CorrelationDrawingApp.update model.drawingApp model.semanticApp act)
+            {model with drawingApp  = drawingApp
+                        corrPlotApp = corrApp}
+//          | Camera m -> 
+//              { model with cameraState = CameraController.update model.cameraState m }
 
-          | CorrPlotMessage m ->
+          | CorrPlotMessage m -> // TODO refactor
             let corrPlotApp = CorrelationPlotApp.update 
                                             model.corrPlotApp 
                                             model.drawingApp.drawing.annotations 
@@ -109,10 +111,48 @@ module Pages =
                     }
                   corrPlotApp = corrPlotApp
                 }
+              | CorrelationPlotApp.ToggleSelectLog logId -> 
+                match logId with
+                  | Some lid -> 
+                    let (drawingApp, cApp) =
+                      let updateBoth = 
+                        let ind = model.corrPlotApp.logs.FirstIndexOf (fun l -> l.id = lid)
+                        let selLog = model.corrPlotApp.logs.Item ind
+                        ({model.drawingApp with
+                            drawing = 
+                              (CorrelationDrawing.update 
+                                  model.drawingApp.drawing 
+                                  model.semanticApp 
+                                  (CorrelationDrawing.SelectPoints (
+                                      selLog.annoPoints
+                                        |> List.map (fun (p,a) -> (p, a.id))
+                                    )
+                                  )
+                              )
+                        }, {corrPlotApp with selectedLog = logId})
+
+                      match model.corrPlotApp.selectedLog with
+                        | Some se -> 
+                          match (se = lid) with 
+                            | true  ->                           
+                              ({model.drawingApp with
+                                  drawing = 
+                                    (CorrelationDrawing.update 
+                                        model.drawingApp.drawing 
+                                        model.semanticApp 
+                                        (CorrelationDrawing.DeselectAllPoints))
+                              }, {corrPlotApp with selectedLog = None})
+                            | false -> updateBoth
+
+                        | None -> updateBoth
+                          
+                    {model with corrPlotApp = cApp
+                                drawingApp  = drawingApp}
+                  | None -> model
               | _ -> 
                 { model with corrPlotApp = corrPlotApp}
-          | CenterScene -> 
-              { model with cameraState = initialCamera }
+//          | CenterScene -> 
+//              { model with cameraState = initialCamera }
 
           | UpdateConfig cfg ->
               { model with dockConfig = cfg; past = Some model }
@@ -122,7 +162,17 @@ module Pages =
 
           | ToggleFill ->
               { model with fill = not model.fill; past = Some model }
-
+//          | KeyDown k -> 
+//                { model with drawingApp = CorrelationDrawingApp.update 
+//                                            model.drawingApp
+//                                            model.semanticApp
+//                                            (CorrelationDrawingApp.Action.KeyDown k)}
+//                             
+//          | KeyUp k -> 
+//                { model with drawingApp = CorrelationDrawingApp.update 
+//                                            model.drawingApp
+//                                            model.semanticApp
+//                                            (CorrelationDrawingApp.Action.KeyUp k)}
           | Save ->
               let path = "./saved"
               let cdApp = CorrelationDrawingApp.update model.drawingApp model.semanticApp CorrelationDrawingApp.Action.Save
@@ -135,15 +185,15 @@ module Pages =
           | Clear -> model
 //                  { model with drawing = { model.drawing with annotations = PList.empty }}            
 
-          | Undo ->
-              match model.past with
-                  | Some p -> { p with future = Some model; cameraState = model.cameraState }
-                  | None -> model
-
-          | Redo ->
-              match model.future with
-                  | Some f -> { f with past = Some model; cameraState = model.cameraState }
-                  | None -> model
+//          | Undo ->
+//              match model.past with
+//                  | Some p -> { p with future = Some model; cameraState = model.cameraState }
+//                  | None -> model
+//
+//          | Redo ->
+//              match model.future with
+//                  | Some f -> { f with past = Some model; cameraState = model.cameraState }
+//                  | None -> model
 
           | _   -> model
 
@@ -205,10 +255,10 @@ module Pages =
       ]
     
 
-    let renderControl =
-        CameraController.controlledControl model.cameraState Camera (Frustum.perspective 60.0 0.1 100.0 1.0 |> Mod.constant) 
-                    (AttributeMap.ofList [ style "width: 100%; height:100%"; attribute "data-samples" "8" ]) 
-                    (viewScene model)
+//    let renderControl =
+//        CameraController.controlledControl model.cameraState Camera (Frustum.perspective 60.0 0.1 100.0 1.0 |> Mod.constant) 
+//                    (AttributeMap.ofList [ style "width: 100%; height:100%"; attribute "data-samples" "8" ]) 
+//                    (viewScene model)
 
     page (fun request -> 
         match Map.tryFind "page" request.queryParams with
@@ -244,14 +294,14 @@ module Pages =
                 ]
     )
 
-  let threads (model : Pages) = 
-      CameraController.threads model.cameraState |> ThreadPool.map Camera
+//  let threads (model : Pages) = 
+//      CameraController.threads model.cameraState |> ThreadPool.map Camera
 
 
   let start (w : Form) (runtime: IRuntime) =
       App.start {
           unpersist = Unpersist.instance
-          threads = threads
+          threads = fun _ -> ThreadPool.empty//threads
           view = view w runtime
           update = update
           initial = initial

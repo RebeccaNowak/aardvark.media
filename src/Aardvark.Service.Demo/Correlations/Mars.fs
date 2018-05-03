@@ -27,11 +27,14 @@ module Terrain =
     
     let scene = mars()
 
+    let up = scene.boundingBox.Center.Normalized
+
     let preTransform =
         let bb = scene.boundingBox
-        Trafo3d.Translation(-bb.Center) * scene.preTransform
+        //Trafo3d.Translation(-bb.Center) * scene.preTransform
+        Trafo3d.Translation(-bb.Center + (24.0 * up)) * scene.preTransform
     
-    let up = scene.boundingBox.Center.Normalized
+
 
     let mkISg() =
         Aardvark.Opc.Sg2.createFlatISg scene

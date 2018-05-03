@@ -53,10 +53,11 @@ module LogNode =
 //    size        = V3d.OOO
 //  }
 
-  let dummyInitial : LogNode = {
-    label      = "log node"
-    lBoundary  = {point = V3d.OOO; anno = (Annotation.initial "-1")}
-    uBoundary  = {point = V3d.OOO; anno = (Annotation.initial "-1")}
+  let initialEmpty : LogNode = {
+    nodeType    = LogNodeType.Empty
+    label       = "log node"
+    lBoundary   = {point = V3d.OOO; anno = (Annotation.initial "-1")}
+    uBoundary   = {point = V3d.OOO; anno = (Annotation.initial "-1")}
     children    = plist.Empty
     elevation   = 0.0
     range       = Rangef.init
@@ -66,11 +67,17 @@ module LogNode =
 
   }
 
-  let initial ((up, ua) : (V3d * Annotation)) ((lp, la) : (V3d * Annotation)) (cAnnos : plist<Annotation>): LogNode = {
-    label      = "log node"
-    lBoundary  = {point = lp; anno = la}
-    uBoundary  = {point = up; anno = ua}
-    children    = cAnnos |> PList.map (fun a -> dummyInitial)
+
+  let initialTopLevel 
+    ((up, ua) : (V3d * Annotation)) 
+    ((lp, la) : (V3d * Annotation)) 
+    (children : plist<LogNode>): LogNode = {
+
+    nodeType    = LogNodeType.TopLevel
+    label       = "log node"
+    lBoundary   = {point = lp; anno = la}
+    uBoundary   = {point = up; anno = ua}
+    children    = children
     elevation   = 0.0
     range       = Rangef.init
     logYPos     = 0.0
@@ -79,23 +86,49 @@ module LogNode =
 
   }
 
+  let initialHierarchical (anno : Annotation) (annos : plist<Annotation>) =
+    {initialEmpty with
+      nodeType    = LogNodeType.Hierarchical}
 
+  let intialMetric (anno : Annotation) =
+    {initialEmpty with
+      nodeType    = LogNodeType.Metric}
+
+
+  let intialAngular (anno : Annotation) =
+    {initialEmpty with
+      nodeType    = LogNodeType.Angular}
   /////////////////////
 
 
   let view (model : MLogNode) =
+
+  //
     let intoTd (x) = // TODO move to utils
-      td [clazz "center aligned"; style lrPadding] [x]
+      adaptive {
+        let! hov = model.uBoundary.anno.hovered
+        match hov with
+          | true -> return td [clazz "center aligned";  style lrPadding] [x]//return td [clazz "center aligned"; style (sprintf "%s;%s" (bgColorStr C4b.Yellow) lrPadding)] [x]
+          | false -> return td [clazz "center aligned";  style lrPadding] [x]
+      }
+      
 
     let labelText (p : IMod<V3d> ) = 
       p |> Mod.map (fun v -> sprintf "(%.1f, %.1f, %.1f)" v.X v.Y v.Z)
-         
+    let pToTxt = Mod.map (fun (x : V3d) -> sprintf "%.2f" (x.Length))     
+
+    let append (x : IMod<string>) (str : string) (y : IMod<string>)  = 
+      Mod.map2 (fun a b -> sprintf "%s%s%s" a str b) x y
     div [] [
-      Incremental.text (Mod.map2  (sprintf "%s%s") (labelText model.uBoundary.point)  (labelText model.lBoundary.point) )
+      Incremental.text (append (pToTxt model.uBoundary.point) ", " (pToTxt model.lBoundary.point));
       Incremental.text (model.children.Content |> Mod.map (fun lst -> sprintf "children: %i" lst.Count))
+
       //Incremental.text (Mod.map  (sprintf "%s%s") (model.uBoundary.anno.) )
       ]
       |> intoTd
+
+
+
 
 
     

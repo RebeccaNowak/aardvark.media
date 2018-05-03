@@ -20,6 +20,9 @@ module Border =
 
   let getMinY (points : alist<V3d>) =
     (AList.toList points) |> List.minBy  (fun x -> x.Y)
+
+  let calcElevation (border : Border) = 
+    border.point.Length
     
   module Sg =
 

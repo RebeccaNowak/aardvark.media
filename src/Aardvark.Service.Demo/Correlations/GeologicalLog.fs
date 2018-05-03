@@ -21,34 +21,117 @@ module GeologicalLog =
 
   let getSecond (_, s) = s
 
-  let generateNodes (lst : List<V3d * Annotation>) (annos : plist<Annotation>)=
-    
-    let pwList = 
-      lst 
-        |> List.pairwise
-    seq {
-      for ((up, ua), (lp, la)) in pwList do
-        let children = 
-          //let dir = (lp - up).Normalized
-          //let between (a : Annotation) = ((Annotation.elevation a dir) < up.Y) && ((Annotation.elevation a dir) > lp.Y)
-          let upper = if up.Y > lp.Y then up.Y else lp.Y
-          let lower = if up.Y < lp.Y then up.Y else lp.Y
-          let between (a : Annotation) = (upper > (Annotation.elevation a) && (lower < (Annotation.elevation a)))
-          annos
-            |> PList.filter between
+  // let annotationToNode (anno : Annotation) (semApp : SemanticApp) =
 
-        yield LogNode.initial (up, ua) (lp, la) children
-    }
-    |> PList.ofSeq
-//      |> PList.map
-//        (fun (upper, lower) -> LogNode.initial upper lower)
-//      |> PList.ofList
+  let generateNonLevelNodes (annos : plist<Annotation>) (semApp : SemanticApp) =
+    
+    annos 
+      |> PList.map 
+        (fun a -> 
+          match (Annotation.getType semApp a) with
+           | SemanticType.Hierarchical -> (LogNode.initialEmpty) //TODO
+           | SemanticType.Angular -> (LogNode.intialAngular a)
+           | SemanticType.Metric -> (LogNode.intialMetric a)
+           | _ -> (LogNode.initialEmpty) //TODO
+        )
 
   
 
-  let intial (id : string) (lst : List<V3d * Annotation>) (annos : plist<Annotation>) : GeologicalLog = {
+                      
+    
+    
+  let rec generateLevel (lst : List<V3d * Annotation>) (annos : plist<Annotation>) (semApp : SemanticApp) =
+    let currentLevel =
+      lst
+        |> List.map (fun (p,a) -> Annotation.getLevel semApp a)
+        |> List.min
+
+    let copyAnnoWith (v : V3d) (aToAdd : (V3d * Annotation)) = 
+      let a = 
+        (fun (p,a) -> 
+          (v, {a with points = PList.ofList [{AnnotationPoint.initial with point    = v
+                                                                           selected = false
+                                            }]
+              }
+          )
+        ) aToAdd
+      a
+
+    let filteredList = 
+      lst 
+        |> List.filter (fun (p, a) -> (Annotation.getLevel semApp a) = currentLevel)
+        |> List.sortBy (fun (p, a) -> (p.Length))
+
+        
+    let listWithBorders = 
+      List.concat 
+            [[copyAnnoWith (V3d.OOO) (List.head filteredList)]; //TODO might lead to problems
+              filteredList;
+              [(copyAnnoWith (V3d(Double.PositiveInfinity)) (List.last lst))]]
+
+        
+    let pwList =
+      listWithBorders
+        |> List.pairwise
+
+    // TODO performance
+//    let minElevation =
+//      pwList
+//        |> List.map (fun ((up, _), (lp, _)) -> (up.Length,lp.Length)) // TODO make more generic (elevation)
+//        |> List.map (fun (x , y) ->  Operators.min x y)
+//        |> List.min
+//
+//    let maxElevation =
+//      pwList
+//        |> List.map (fun ((up, _), (lp, _)) -> (up.Length,lp.Length)) // TODO make more generic (elevation)
+//        |> List.map (fun (x , y) ->  Operators.max x y)
+//        |> List.max
+
+    let restAnnos =
+      annos
+        |> PList.filter (fun a -> (Annotation.getLevel semApp a) <> currentLevel)
+        //|> PList.filter (fun a -> (Annotation.elevation a) <= minElevation)
+        //|> PList.filter (fun a -> (Annotation.elevation a) >= maxElevation)
+
+    let restSelPoints =
+      lst 
+        |> List.filter (fun (p, a) -> (Annotation.getLevel semApp a) <> currentLevel)
+        //|> List.filter (fun (p, a) -> (Annotation.elevation a) >= minElevation)
+        //|> List.filter (fun (p, a) -> (Annotation.elevation a) <= maxElevation)
+
+
+
+    seq { // TODO
+      for ((p1, a1), (p2, a2)) in pwList do
+        // sort pairs
+        let (lp, la) = if p1.Length < p2.Length then (p1, a1) else (p2, a2) //TODO refactor
+        let (up, ua) = if p1.Length < p2.Length then (p2, a2) else (p1, a1)
+        let layerChildren = 
+         // let upper = if up.Length > lp.Length then up.Length else lp.Length // could be left out if order can be relied on
+         // let lower = if up.Length < lp.Length then up.Length else lp.Length
+          let between (a : Annotation) = (lp.Length < (Annotation.elevation a) && (up.Length > (Annotation.elevation a)))
+          let layerRestAnnos = 
+            restAnnos
+              |> PList.filter between
+          let layerRestSelPoints = 
+            restSelPoints
+              |> List.filter (fun (p, a) -> (between a))
+
+
+          match layerRestSelPoints with
+            | []    -> generateNonLevelNodes layerRestAnnos semApp
+            | cLst  -> generateLevel layerRestSelPoints layerRestAnnos semApp
+
+        yield LogNode.initialTopLevel (up, ua) (lp, la) layerChildren
+    }
+    |> PList.ofSeq
+
+
+  
+
+  let intial (id : string) (lst : List<V3d * Annotation>) (annos : plist<Annotation>) (semApp : SemanticApp): GeologicalLog = {
     id          = id
-    nodes       = generateNodes lst annos
+    nodes       = generateLevel lst annos semApp
     annoPoints  = lst
     range       = Rangef.init
     camera      = 
@@ -68,8 +151,12 @@ module GeologicalLog =
 
 
   let view (model : MGeologicalLog) (semanticApp : MSemanticApp) =
-    model.nodes
-      |> AList.map (fun n -> LogNode.view n)
+    alist {
+      for n in model.nodes do
+        let! dn = (LogNode.view n)
+        yield dn
+    }
+
       
 
 

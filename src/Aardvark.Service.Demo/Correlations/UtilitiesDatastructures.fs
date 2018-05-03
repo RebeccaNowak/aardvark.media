@@ -21,13 +21,22 @@ module UtilitiesDatastructures =
 
 module List =
   let contains' (f : 'a -> bool) (lst : List<'a>)  =
-    lst |> List.map (fun x -> f x)
-        |> List.reduce (fun x y -> x || y)
+    match lst with
+      | []  -> false
+      | l   ->
+        lst |> List.map (fun x -> f x)
+            |> List.reduce (fun x y -> x || y)
 
   let contains'' (f : 'a -> 'b) (a : 'a)  (lst : List<'a>) =
-    lst
-       |> List.map f
-       |> List.contains (f a)
+    match lst with
+      | []  -> false
+      | l   ->
+        lst
+           |> List.map f
+           |> List.contains (f a)
+
+//  let l = [1..5]
+//  l |> (contains'' (fun (x : int) -> (sprintf "%i" x)) 7)
 
   let reduce' (f1 : 'a -> 'b) (f2 : 'b -> 'b -> 'b) (lst : List<'a>) =
     lst

@@ -45,7 +45,7 @@ module CorrelationDrawingApp =
     open Newtonsoft.Json
             
     type Action =
-        | CameraMessage             of ArcBallController.Message
+        | CameraMessage             of CameraController.Message
         | DrawingMessage            of CorrelationDrawing.Action
         //| DrawingSemanticMessage    of CorrelationDrawing.Action
         | AnnotationMessage         of CorrelationDrawing.Action
@@ -61,7 +61,7 @@ module CorrelationDrawingApp =
                (act               : Action) =
         match act, model.drawing.draw with
             | CameraMessage m, false -> 
-                { model with camera = ArcBallController.update model.camera m }      
+                { model with camera = CameraController.update model.camera m }      
             | DrawingMessage m, _ ->
                 { model with drawing = CorrelationDrawing.update model.drawing semanticApp m }      
 //            | DrawingSemanticMessage m, _ ->
@@ -69,19 +69,21 @@ module CorrelationDrawingApp =
             | AnnotationMessage m, _ ->
                 {model with drawing = CorrelationDrawing.update model.drawing semanticApp m}          
 //            | ToggleSelectMessage m, _ ->
-//                {model with drawing = CorrelationDrawing.update model.drawing semanticApp m}          
+//                {model with drawing = CorrelationDrawing.update model.drawing semanticApp m}     
             | KeyDown k, _ -> 
                 let d = CorrelationDrawing.update 
                           model.drawing 
                           semanticApp
                           (CorrelationDrawing.Action.KeyDown k)
-                { model with drawing = d }
+                { model with drawing  = d 
+                             camera   = CameraController.update model.camera (CameraController.Message.KeyDown k)}
             | KeyUp k, _ -> 
                 let d = CorrelationDrawing.update 
                           model.drawing 
                           semanticApp
                           (CorrelationDrawing.Action.KeyUp k)
-                { model with drawing = d }
+                { model with drawing  = d 
+                             camera   = CameraController.update model.camera (CameraController.Message.KeyUp k)}
             | Save , _ -> (Serialization.save model "./savedModel") |> ignore
                           model
             | Load , _ -> (Serialization.load model "./savedModel") |> ignore
@@ -102,7 +104,7 @@ module CorrelationDrawingApp =
         require (myCss) (
             body [clazz "ui"; style "background: #1B1C1E; width: 100%; height:100%; overflow: auto;"] [
               div [] [
-                ArcBallController.controlledControl model.camera CameraMessage frustum
+                CameraController.controlledControl model.camera CameraMessage frustum
                     (AttributeMap.ofList [
                                 onKeyDown (KeyDown)
                                 onKeyUp (KeyUp)
@@ -130,7 +132,8 @@ module CorrelationDrawingApp =
 
     let initial : CorrelationAppModel =
         {
-            camera    = { ArcBallController.initial with view = CameraView.lookAt (23.0 * V3d.OIO) V3d.Zero Mars.Terrain.up}
+           // camera    = { ArcBallController.initial with view = CameraView.lookAt (23.0 * V3d.OIO) V3d.Zero Mars.Terrain.up}
+            camera    = { CameraController.initial with view = CameraView.lookAt (23.0 * Mars.Terrain.up + V3d.OOI * -20.0) (23.0 * Mars.Terrain.up) Mars.Terrain.up}
             rendering = RenderingPars.initial
             drawing   = CorrelationDrawing.initial 
         }
