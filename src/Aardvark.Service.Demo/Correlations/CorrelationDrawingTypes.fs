@@ -20,8 +20,8 @@ type TextInput = {
     size      : option<int>
  } 
 
- [<DomainType>]
- type DropdownList<'a> = {
+[<DomainType>]
+type DropdownList<'a> = {
    valueList          : plist<'a>
    selected           : option<'a>
    color              : C4b
@@ -60,17 +60,14 @@ type Style = {
     thickness : NumericInput
  } 
 
+
 [<DomainType>]
 type RenderingParameters = {
     fillMode : FillMode
     cullMode : CullMode
 }   
     
-module RenderingPars =
-    let initial : RenderingParameters = {
-        fillMode = FillMode.Fill
-        cullMode = CullMode.None
-    }
+
 
 type SemanticState = New | Edit | Display
 
@@ -163,7 +160,7 @@ type LogNode = {
     
     label       : string
     nodeType    : LogNodeType
-
+    level       : int //TODO think about this; performance vs interaction
     lBoundary   : Border
     uBoundary   : Border
     children    : plist<LogNode>
@@ -180,6 +177,7 @@ type LogNode = {
 type GeologicalLog = {
     [<NonIncremental;PrimaryKey>]
     id          : string
+    label       : string
     annoPoints  : list<(V3d * Annotation)>
     nodes       : plist<LogNode>
     range       : Rangef //?

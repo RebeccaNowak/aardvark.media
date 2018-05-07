@@ -739,6 +739,7 @@ module Mutable =
         let mutable __current : Aardvark.Base.Incremental.IModRef<CorrelationDrawing.LogNode> = Aardvark.Base.Incremental.EqModRef<CorrelationDrawing.LogNode>(__initial) :> Aardvark.Base.Incremental.IModRef<CorrelationDrawing.LogNode>
         let _label = ResetMod.Create(__initial.label)
         let _nodeType = ResetMod.Create(__initial.nodeType)
+        let _level = ResetMod.Create(__initial.level)
         let _lBoundary = MBorder.Create(__initial.lBoundary)
         let _uBoundary = MBorder.Create(__initial.uBoundary)
         let _children = MList.Create(__initial.children, (fun v -> MLogNode.Create(v)), (fun (m,v) -> MLogNode.Update(m, v)), (fun v -> v))
@@ -750,6 +751,7 @@ module Mutable =
         
         member x.label = _label :> IMod<_>
         member x.nodeType = _nodeType :> IMod<_>
+        member x.level = _level :> IMod<_>
         member x.lBoundary = _lBoundary
         member x.uBoundary = _uBoundary
         member x.children = _children :> alist<_>
@@ -766,6 +768,7 @@ module Mutable =
                 
                 ResetMod.Update(_label,v.label)
                 ResetMod.Update(_nodeType,v.nodeType)
+                ResetMod.Update(_level,v.level)
                 MBorder.Update(_lBoundary, v.lBoundary)
                 MBorder.Update(_uBoundary, v.uBoundary)
                 MList.Update(_children, v.children)
@@ -801,6 +804,12 @@ module Mutable =
                     override x.Get(r) = r.nodeType
                     override x.Set(r,v) = { r with nodeType = v }
                     override x.Update(r,f) = { r with nodeType = f r.nodeType }
+                }
+            let level =
+                { new Lens<CorrelationDrawing.LogNode, Microsoft.FSharp.Core.int>() with
+                    override x.Get(r) = r.level
+                    override x.Set(r,v) = { r with level = v }
+                    override x.Update(r,f) = { r with level = f r.level }
                 }
             let lBoundary =
                 { new Lens<CorrelationDrawing.LogNode, CorrelationDrawing.Border>() with
@@ -855,12 +864,14 @@ module Mutable =
     type MGeologicalLog(__initial : CorrelationDrawing.GeologicalLog) =
         inherit obj()
         let mutable __current : Aardvark.Base.Incremental.IModRef<CorrelationDrawing.GeologicalLog> = Aardvark.Base.Incremental.EqModRef<CorrelationDrawing.GeologicalLog>(__initial) :> Aardvark.Base.Incremental.IModRef<CorrelationDrawing.GeologicalLog>
+        let _label = ResetMod.Create(__initial.label)
         let _annoPoints = ResetMod.Create(__initial.annoPoints)
         let _nodes = MList.Create(__initial.nodes, (fun v -> MLogNode.Create(v)), (fun (m,v) -> MLogNode.Update(m, v)), (fun v -> v))
         let _range = ResetMod.Create(__initial.range)
         let _camera = Aardvark.UI.Primitives.Mutable.MCameraControllerState.Create(__initial.camera)
         
         member x.id = __current.Value.id
+        member x.label = _label :> IMod<_>
         member x.annoPoints = _annoPoints :> IMod<_>
         member x.nodes = _nodes :> alist<_>
         member x.range = _range :> IMod<_>
@@ -871,6 +882,7 @@ module Mutable =
             if not (System.Object.ReferenceEquals(__current.Value, v)) then
                 __current.Value <- v
                 
+                ResetMod.Update(_label,v.label)
                 ResetMod.Update(_annoPoints,v.annoPoints)
                 MList.Update(_nodes, v.nodes)
                 ResetMod.Update(_range,v.range)
@@ -896,6 +908,12 @@ module Mutable =
                     override x.Get(r) = r.id
                     override x.Set(r,v) = { r with id = v }
                     override x.Update(r,f) = { r with id = f r.id }
+                }
+            let label =
+                { new Lens<CorrelationDrawing.GeologicalLog, Microsoft.FSharp.Core.string>() with
+                    override x.Get(r) = r.label
+                    override x.Set(r,v) = { r with label = v }
+                    override x.Update(r,f) = { r with label = f r.label }
                 }
             let annoPoints =
                 { new Lens<CorrelationDrawing.GeologicalLog, Microsoft.FSharp.Collections.list<(Aardvark.Base.V3d * CorrelationDrawing.Annotation)>>() with

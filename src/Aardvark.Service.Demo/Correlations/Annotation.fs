@@ -50,6 +50,28 @@ module Annotation =
         hovered         = false
     }
 
+  let initialDummyWithPoints (v : V3d)= 
+    {     
+        id              = "-2"
+        semanticType    = SemanticType.Hierarchical
+        geometry        = GeometryType.Point
+        semanticId      = ""
+        points          = PList.ofList [{point    = v
+                                         selected = false
+                                       }]
+        segments        = plist.Empty
+        projection      = Projection.Viewpoint
+        visible         = false
+        text            = "dummy"
+        overrideStyle   = 
+          Some {Style.color     = { c = C4b.Black }
+                Style.thickness = Numeric.init}
+        overrideLevel   = Some 0
+        grainSize       = rand.NextDouble() * 5.0
+        selected        = false
+        hovered         = false
+    }
+
   type Action =
       | SetSemantic     of option<string>
       | ToggleSelected  of V3d
@@ -57,6 +79,27 @@ module Annotation =
       | HoverIn
       | HoverOut
       | Deselect
+
+  let getConstColor  (anno : MAnnotation) (semanticApp : MSemanticApp) (ignoreOverride : bool) = 
+    let foo = Mod.force anno.overrideStyle
+    let bar = match foo, ignoreOverride with //TODO refactor
+                //| null      -> ((SemanticApp.getColor semanticApp anno.semanticId))
+                | Some f, false    -> f.color.c
+                | Some f, true     -> ((SemanticApp.getColor semanticApp anno.semanticId))
+                | None, true       -> ((SemanticApp.getColor semanticApp anno.semanticId))
+                | None, false      -> ((SemanticApp.getColor semanticApp anno.semanticId))
+    bar
+
+  let getColor' (anno : MAnnotation) (semanticApp : MSemanticApp) =          
+    let rval = 
+      adaptive {
+        return! anno.overrideStyle 
+                  |> Mod.bind (fun (st : Option<MStyle>) ->
+                      match st with
+                        | Some st -> st.color.c
+                        | None -> ((SemanticApp.getColor semanticApp anno.semanticId)))
+      }
+    rval
 
   let update  (a : Action) (anno : Annotation) =
       match a with
@@ -66,22 +109,46 @@ module Annotation =
           | ToggleSelected (point) -> 
             let ind =       
               anno.points.FirstIndexOf(fun (p : AnnotationPoint) -> V3d.AllEqual(p.point,point)) 
-            let upd = anno.points.Update (ind, (fun (p : AnnotationPoint) -> {p with selected = not p.selected}))
+            let upd = 
+              anno.points.Update 
+                (ind, (fun (p : AnnotationPoint) 
+                        -> match p.selected with
+                            | true -> {p with selected = not p.selected}
+                            | false -> {p with selected = not p.selected}
+                      )
+                )
             {anno with points = upd}
           | Select (point) ->
             let ind =       
               anno.points.FirstIndexOf(fun (p : AnnotationPoint) -> V3d.AllEqual(p.point,point)) 
             let upd = anno.points.Update (ind, (fun (p : AnnotationPoint) -> {p with selected = true}))
-            {anno with points = upd}
+            {anno with points         = upd}
           | HoverIn  -> 
             {anno with hovered        = true
-                       overrideStyle  = Some {Style.color      = {c = C4b.Yellow};
+                       overrideStyle  = Some {Style.color      = {c = C4b.DarkYellow};
                                               Style.thickness  = {Numeric.init with value = 3.0}
                                              }
             }
           | HoverOut -> {anno with hovered = false
                                    overrideStyle = None}
-          | Deselect -> {anno with points = anno.points |> PList.map (fun p -> {p with selected = false})}
+          | Deselect -> {anno with points = anno.points |> PList.map (fun p -> {p with selected = false})
+                                            overrideStyle  = None}
+
+  let getColourIcon (model : MAnnotation) (semanticApp : MSemanticApp) =
+      let ignoreOverride = // TODO dirty hack
+        match Mod.force model.semanticId with
+          | "-1" -> false
+          | "-2" -> false
+          | _    -> true
+
+      let iconAttr =
+        amap {
+          yield clazz "circle icon"
+          let! c = getConstColor model semanticApp ignoreOverride
+          yield style (sprintf "color:%s" (colorToHexStr c))
+        }      
+      Incremental.i (AttributeMap.ofAMap iconAttr) (AList.ofList [])
+
 
   let viewSelected (model : MAnnotation)  (semanticApp : MSemanticApp) = 
     let semanticsNode = 
@@ -195,14 +262,7 @@ module Annotation =
 //                    | true -> Mod.constant C4b.Yellow
 //                    | false -> c
 //               ) c h 
-  let getColor' (anno : MAnnotation) (semanticApp : MSemanticApp) = 
-    adaptive {
-      return! anno.overrideStyle 
-                |> Mod.bind (fun (st : Option<MStyle>) ->
-                    match st with
-                      | Some st -> st.color.c
-                      | None -> ((SemanticApp.getColor semanticApp anno.semanticId)))
-    }
+
       //let! h = anno.hovered
 //      return! match h with
 //                | true -> Mod.constant C4b.Yellow

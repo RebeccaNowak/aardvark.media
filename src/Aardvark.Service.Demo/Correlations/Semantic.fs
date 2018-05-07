@@ -47,8 +47,8 @@ module Semantic =
     let initialHorizon0 id = {
       initial id with 
         label         = {TextInput.init with text = "Horizon0"}
-        style         = {Style.color      = {c = C4b.Red};
-                         Style.thickness  = {Numeric.init with value = 5.0}}
+        style         = {Style.color      = {c = new C4b(37,52,148)}
+                         Style.thickness  = {Numeric.init with value = 6.0}}
         semanticType  = SemanticType.Hierarchical
         level         = 0
       }
@@ -56,7 +56,7 @@ module Semantic =
     let initialHorizon1 id = {
       initial id with 
         label         = {TextInput.init with text = "Horizon1"}
-        style         = {Style.color      = {c = C4b.DarkRed};
+        style         = {Style.color      = {c = new C4b(44,127,184)}
                          Style.thickness  = {Numeric.init with value = 5.0}}
         semanticType  = SemanticType.Hierarchical
         level         = 1
@@ -65,8 +65,8 @@ module Semantic =
     let initialHorizon2 id = {
       initial id with 
         label         = {TextInput.init with text = "Horizon2"}
-        style         = {Style.color      = {c = C4b.DarkMagenta};
-                         Style.thickness  = {Numeric.init with value = 5.0}}
+        style         = {Style.color      = {c = new C4b(65,182,196)}
+                         Style.thickness  = {Numeric.init with value = 4.0}}
         semanticType  = SemanticType.Hierarchical
         level         = 2
       }
@@ -74,8 +74,8 @@ module Semantic =
     let initialHorizon3 id = {
       initial id with 
         label         = {TextInput.init with text = "Horizon3"}
-        style         = {Style.color      = {c = C4b.Magenta};
-                         Style.thickness  = {Numeric.init with value = 5.0}}
+        style         = {Style.color      = {c = new C4b(127,205,187)}
+                         Style.thickness  = {Numeric.init with value = 3.0}}
         semanticType  = SemanticType.Hierarchical
         level         = 3
       }
@@ -83,8 +83,8 @@ module Semantic =
     let initialHorizon4 id = {
       initial id with 
         label         = {TextInput.init with text = "Horizon4"}
-        style         = {Style.color      = {c = C4b.DarkBlue};
-                         Style.thickness  = {Numeric.init with value = 5.0}}
+        style         = {Style.color      = {c = new C4b(199,233,180)}
+                         Style.thickness  = {Numeric.init with value = 2.0}}
         semanticType  = SemanticType.Hierarchical
         level         = 4
       }
@@ -93,7 +93,7 @@ module Semantic =
     let initialGrainSize id = {
       initial id with 
         label         = {TextInput.init with text = "Grainsize"}
-        style         = {Style.color      = {c = C4b.Gray};
+        style         = {Style.color      = {c = new C4b(252,141,98)}
                          Style.thickness  = {Numeric.init with value = 1.0}}
         semanticType  = SemanticType.Metric
         level         = -1
@@ -102,7 +102,7 @@ module Semantic =
     let initialCrossbed id = {
       initial id with 
         label         = {TextInput.init with text = "Crossbed"}
-        style         = {Style.color      = {c = C4b.Blue};
+        style         = {Style.color      = {c = new C4b(231,138,195)}
                          Style.thickness  = {Numeric.init with value = 1.0}}
         semanticType  = SemanticType.Angular
         level         = -1
@@ -111,7 +111,7 @@ module Semantic =
     let impactBreccia id = {
       initial id with 
         label         = {TextInput.init with text = "Impact Breccia"}
-        style         = {Style.color      = {c = C4b.Black};
+        style         = {Style.color      = {c = new C4b(166,216,84)}
                          Style.thickness  = {Numeric.init with value = 1.0}}
         semanticType  = SemanticType.Angular
         level         = -1

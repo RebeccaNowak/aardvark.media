@@ -56,6 +56,7 @@ module LogNode =
   let initialEmpty : LogNode = {
     nodeType    = LogNodeType.Empty
     label       = "log node"
+    level       = -1
     lBoundary   = {point = V3d.OOO; anno = (Annotation.initial "-1")}
     uBoundary   = {point = V3d.OOO; anno = (Annotation.initial "-1")}
     children    = plist.Empty
@@ -71,14 +72,16 @@ module LogNode =
   let initialTopLevel 
     ((up, ua) : (V3d * Annotation)) 
     ((lp, la) : (V3d * Annotation)) 
-    (children : plist<LogNode>): LogNode = {
+    (children : plist<LogNode>)
+    (level    : int) : LogNode = {
 
     nodeType    = LogNodeType.TopLevel
     label       = "log node"
+    level       = level
     lBoundary   = {point = lp; anno = la}
     uBoundary   = {point = up; anno = ua}
     children    = children
-    elevation   = 0.0
+    elevation   = (up.Length + lp.Length) * 0.5
     range       = Rangef.init
     logYPos     = 0.0
     pos         = V3d.OOO
@@ -86,46 +89,103 @@ module LogNode =
 
   }
 
+  // TODO add level
   let initialHierarchical (anno : Annotation) (annos : plist<Annotation>) =
     {initialEmpty with
-      nodeType    = LogNodeType.Hierarchical}
+      nodeType    = LogNodeType.Hierarchical
+      elevation   = Annotation.elevation anno}
 
-  let intialMetric (anno : Annotation) =
+  let intialMetric (anno : Annotation) (lower : Border) (upper : Border) =
     {initialEmpty with
-      nodeType    = LogNodeType.Metric}
+      nodeType    = LogNodeType.Metric
+      elevation   = Annotation.elevation anno
+      lBoundary   = lower
+      uBoundary   = upper}
 
 
-  let intialAngular (anno : Annotation) =
+  let intialAngular (anno : Annotation) (lower : Border) (upper : Border)  =
     {initialEmpty with
-      nodeType    = LogNodeType.Angular}
+      nodeType    = LogNodeType.Angular
+      elevation   = Annotation.elevation anno
+      lBoundary   = lower
+      uBoundary   = upper}
   /////////////////////
 
-
-  let view (model : MLogNode) =
-
-  //
-    let intoTd (x) = // TODO move to utils
-      adaptive {
-        let! hov = model.uBoundary.anno.hovered
-        match hov with
-          | true -> return td [clazz "center aligned";  style lrPadding] [x]//return td [clazz "center aligned"; style (sprintf "%s;%s" (bgColorStr C4b.Yellow) lrPadding)] [x]
-          | false -> return td [clazz "center aligned";  style lrPadding] [x]
-      }
-      
-
-    let labelText (p : IMod<V3d> ) = 
-      p |> Mod.map (fun v -> sprintf "(%.1f, %.1f, %.1f)" v.X v.Y v.Z)
-    let pToTxt = Mod.map (fun (x : V3d) -> sprintf "%.2f" (x.Length))     
-
-    let append (x : IMod<string>) (str : string) (y : IMod<string>)  = 
-      Mod.map2 (fun a b -> sprintf "%s%s%s" a str b) x y
-    div [] [
-      Incremental.text (append (pToTxt model.uBoundary.point) ", " (pToTxt model.lBoundary.point));
-      Incremental.text (model.children.Content |> Mod.map (fun lst -> sprintf "children: %i" lst.Count))
-
-      //Incremental.text (Mod.map  (sprintf "%s%s") (model.uBoundary.anno.) )
+  let description (model : MLogNode) (semApp : MSemanticApp) = 
+    let createDomNode (descString : IMod<string>) =
+      div [] [
+        Annotation.getColourIcon model.lBoundary.anno semApp
+        Annotation.getColourIcon model.uBoundary.anno semApp
+        Incremental.text descString
       ]
-      |> intoTd
+
+    let modStr = 
+      model.nodeType 
+        |> Mod.bind 
+          (fun t -> 
+            match t with
+              | LogNodeType.Hierarchical | LogNodeType.Infinity | LogNodeType.TopLevel ->
+                (Mod.map2 (fun (u : V3d) (l : V3d)  -> 
+                                sprintf "%.2f-%.2f" l.Length u.Length)
+                          model.uBoundary.point model.lBoundary.point)
+              | LogNodeType.Angular | LogNodeType.Metric ->
+                  model.elevation |> Mod.map (sprintf "%.2f" )
+              | LogNodeType.Empty -> Mod.constant "EmptyNode"
+          )
+      
+    createDomNode modStr
+
+  let rec view' (model : MLogNode) (semApp : MSemanticApp) =
+//    let description = Incremental.text 
+//                        (Mod.map2 (fun (u : V3d) (l : V3d)  -> 
+//                                        sprintf "%.2f-%.2f" l.Length u.Length)
+//                                  model.uBoundary.point model.lBoundary.point)
+    let childrenView = 
+      alist {
+        for c in model.children do
+          let! (v : alist<DomNode<'a>>) = (view' c semApp)
+          for it in v do
+            yield it
+      }
+    
+    let rval =
+      adaptive {
+        let isEmpty = AList.isEmpty model.children
+        let! (b : bool) = isEmpty
+        match b with
+          | true  -> 
+              return AList.ofList [li [attribute "value" ">"] [(description model semApp)]]
+          | false ->                
+              return AList.ofList [li [attribute "value" "-"] [(description model semApp)];
+                     ul [] [Incremental.li (AttributeMap.ofList [attribute "value" "-"]) childrenView]]
+      }
+    rval
+
+//  let view (model : MLogNode) =
+//
+//  //
+////    let intoTd (x) = // TODO move to utils
+////      adaptive {
+////        let! hov = model.uBoundary.anno.hovered
+////        match hov with
+////          | true -> return td [clazz "center aligned";  style lrPadding] [x]//return td [clazz "center aligned"; style (sprintf "%s;%s" (bgColorStr C4b.Yellow) lrPadding)] [x]
+////          | false -> return td [clazz "center aligned";  style lrPadding] [x]
+////      }
+//      
+//
+//    let labelText (p : IMod<V3d> ) = 
+//      p |> Mod.map (fun v -> sprintf "(%.1f, %.1f, %.1f)" v.X v.Y v.Z)
+//    let pToTxt = Mod.map (fun (x : V3d) -> sprintf "%.2f" (x.Length))     
+//
+//    let append (x : IMod<string>) (str : string) (y : IMod<string>)  = 
+//      Mod.map2 (fun a b -> sprintf "%s%s%s" a str b) x y
+//    div [] [
+//      Incremental.text (append (pToTxt model.uBoundary.point) ", " (pToTxt model.lBoundary.point));
+//      Incremental.text (model.children.Content |> Mod.map (fun lst -> sprintf "children: %i" lst.Count))
+//
+//      //Incremental.text (Mod.map  (sprintf "%s%s") (model.uBoundary.anno.) )
+//      ]
+     
 
 
 

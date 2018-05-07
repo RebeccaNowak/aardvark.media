@@ -109,8 +109,8 @@ module CorrelationDrawing =
                 let model = {model with working  = Some working}
 
                 let model = match (working.geometry, (working.points |> PList.count)) with
-                              | GeometryType.Point, 1 -> model |> (finishAndAppend semanticApp)
-                              | GeometryType.Line, 10 -> model |> finishAndAppend semanticApp
+                              | GeometryType.Point, 1 ->  model |> finishAndAppend semanticApp
+                              | GeometryType.Line,  2  -> model |> finishAndAppend semanticApp
                               | _                     -> model
 
                 model                 
@@ -446,9 +446,10 @@ module CorrelationDrawing =
 
 
 
-        let view (model       : MCorrelationDrawingModel)
-                 (semanticApp : MSemanticApp) 
-                 (cam         : IMod<CameraView>) =        
+        let view (model         : MCorrelationDrawingModel)
+                 (semanticApp   : MSemanticApp) 
+                 (cam           : IMod<CameraView>) 
+                 (additionalSg  : ISg<Action>) =        
             // order is irrelevant for rendering. change list to set,
             // since set provides more degrees of freedom for the compiler
             let annoSet = ASet.ofAList model.annotations 
@@ -471,6 +472,7 @@ module CorrelationDrawing =
               pick;
               makeBrushSg model.hoverPosition (SemanticApp.getColor semanticApp semanticApp.selectedSemantic);
               annotations;
+              additionalSg;
               //(GeologicalLog.sg model.log model.annotations semanticApp cam) |> Sg.noEvents
             ] @ createAnnotationSgs semanticApp model.working cam
             |> Sg.ofList

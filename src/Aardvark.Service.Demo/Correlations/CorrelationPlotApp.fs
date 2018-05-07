@@ -9,6 +9,7 @@
     open Aardvark.Application
     open Aardvark.UI
     open UtilitiesGUI
+    open Aardvark.UI.Primitives
 
     type Action =
       | ToggleSelectLog of option<string>
@@ -56,6 +57,8 @@
             
           
         | FinishLog, true        ->
+          // hovering bug
+         // let unhoveredAnnos = annos |> PList.map (Annotation.update Annotation.Action.HoverOut)
           {model with creatingNew = false
                       logs        = (model.logs.Append 
                                       (GeologicalLog.intial (System.Guid.NewGuid().ToString()) model.working annos semApp))
@@ -103,14 +106,24 @@
                 match sel with
                   | Some s  -> s = log.id
                   | None    -> false
-              let st = 
-                match isSelected with
-                  | true  -> style (sprintf "%s;%s;%s" UtilitiesGUI.tinyPadding (bgColorStr C4b.Yellow) "color:black")
-                  | false -> style UtilitiesGUI.tinyPadding
-              yield (Incremental.tr 
-                      (AttributeMap.ofList [st; onClick (fun str -> ToggleSelectLog (Some log.id))])
-                      (GeologicalLog.view log semApp)
-                    )
+              
+              yield
+                        div [clazz "item"][
+                          div [clazz "content"] [
+                            div [clazz "header"; onMouseClick (fun _ -> ToggleSelectLog (Some log.id))] [
+                              Incremental.text log.label
+                            ]
+                            Incremental.div 
+                              (AttributeMap.ofList []) 
+                              (GeologicalLog.view log semApp isSelected)
+                          ]
+                        ]
+                    
+
+//              yield (Incremental.tr 
+//                      (AttributeMap.ofList [st; onClick (fun str -> ToggleSelectLog (Some log.id))])
+//                      (GeologicalLog.view log semApp isSelected)
+//                    )
           }     
 
       let myCss = [
@@ -123,20 +136,58 @@
         body [] [
           div [] [
             menu
-            table
-              ([clazz "ui celled striped inverted table unstackable";
-                                    style "padding: 1px 5px 1px 5px"]) (
-                  [thead [][
-                    tr[][th[][text "Name"];
-                                  //th[][text "Weight"];
-                                  //th[][text "Colour"];
-                                  //th[][text "Level"];
-  //                               th[][text "Default Geometry Type"];
-                                  //th[][text "Semantic Type"]
-                    ]
-                  ];
-                  Incremental.tbody  (AttributeMap.ofList []) domList]           
-              )
+            div [clazz "ui inverted segment"]
+                [Incremental.div (AttributeMap.ofList [clazz "ui inverted divided list"])
+                                 domList
+                ]           
           ]
         ]
       )
+
+//      require (myCss) (
+//        body [] [
+//          div [] [
+//            menu
+//            table
+//              ([clazz "ui celled striped inverted table unstackable";
+//                                    style "padding: 1px 5px 1px 5px"]) (
+//                  [thead [][
+//                    tr[][th[][text "Name"];
+//                                  //th[][text "Weight"];
+//                                  //th[][text "Colour"];
+//                                  //th[][text "Level"];
+//  //                               th[][text "Default Geometry Type"];
+//                                  //th[][text "Semantic Type"]
+//                    ]
+//                  ];
+//                  Incremental.tbody  (AttributeMap.ofList []) domList]           
+//              )
+//          ]
+//        ]
+//      )
+
+    let getLogConnectionSgs 
+          (model : MCorrelationPlotApp)
+          (semanticApp : MSemanticApp) 
+          (camera : MCameraControllerState) =
+
+
+      adaptive {
+        let! logIdOpt = model.selectedLog
+        return match logIdOpt with
+                | None      -> Sg.empty
+                | Some logId  ->
+                  let sgs = 
+                    model.logs
+                      |> AList.map (fun (x : MGeologicalLog) -> 
+                                      (GeologicalLog.getLogConnectionSg x semanticApp (x.id = logId) camera |> Sg.noEvents))
+                      |> ASet.ofAList
+                      |> Sg.set
+                  sgs
+      }
+      |> Sg.dynamic
+
+
+
+        
+        

@@ -96,7 +96,9 @@ module CorrelationDrawingApp =
                   { kind = Script; name = "semui"; url = "https://cdn.jsdelivr.net/semantic-ui/2.2.6/semantic.min.js" }
                 ]
     
-    let view (model : MCorrelationAppModel) (semanticApp : MSemanticApp)=
+    let view (model : MCorrelationAppModel) 
+             (semanticApp : MSemanticApp) 
+             (additionalSg : ISg) =
         let frustum =
             Mod.constant (Frustum.perspective 60.0 0.1 100.0 1.0)
 
@@ -111,7 +113,7 @@ module CorrelationDrawingApp =
                                 attribute "style" "width:70%; height: 100%; float: left;"]
                     )
                     (
-                        CorrelationDrawing.Sg.view model.drawing semanticApp model.camera.view
+                        CorrelationDrawing.Sg.view model.drawing semanticApp model.camera.view (additionalSg |> Sg.noEvents)
                             |> Sg.map DrawingMessage
                             |> Sg.fillMode (model.rendering.fillMode)
                                     

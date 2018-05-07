@@ -18,120 +18,183 @@ module GeologicalLog =
   open UtilitiesRendering
   open Aardvark.Application
   open OrientationCube
+  open UtilitiesGUI
 
   let getSecond (_, s) = s
 
   // let annotationToNode (anno : Annotation) (semApp : SemanticApp) =
 
-  let generateNonLevelNodes (annos : plist<Annotation>) (semApp : SemanticApp) =
-    
+  let copyAnnoWith (v : V3d) (aToAdd : (V3d * Annotation)) = 
+    let a = 
+      (fun (p,a) -> 
+        (v, {a with points = PList.ofList [{AnnotationPoint.initial with point    = v
+                                                                         selected = false
+                                          }]
+            }
+        )
+      ) aToAdd
+    a
+
+  let getMinLevel ( model : MGeologicalLog) =
+    model.nodes
+      |> AList.toList
+      |> List.map (fun (n : MLogNode) -> Mod.force n.level)
+      |> List.min 
+
+  let generateNonLevelNodes (annos : plist<Annotation>) (lp, la) (up, ua) (semApp : SemanticApp) =
+  // TODO do I need this information?
+//    let lBorder = {Border.initial with anno  = la
+//                                       point = lp}
+//    let uBorder = {Border.initial with anno  = ua
+//                                       point = up}
+                    
     annos 
       |> PList.map 
         (fun a -> 
+          let lBorder = {Border.initial with anno  = a
+                                             point = lp} // TODO think of a better way
+          let uBorder = {Border.initial with anno  = a
+                                             point = up}         
+          
           match (Annotation.getType semApp a) with
-           | SemanticType.Hierarchical -> (LogNode.initialEmpty) //TODO
-           | SemanticType.Angular -> (LogNode.intialAngular a)
-           | SemanticType.Metric -> (LogNode.intialMetric a)
-           | _ -> (LogNode.initialEmpty) //TODO
+           | SemanticType.Hierarchical -> (LogNode.initialEmpty) //TODO shoudln't happen
+           | SemanticType.Angular -> (LogNode.intialAngular a lBorder uBorder)
+           | SemanticType.Metric -> (LogNode.intialMetric a  lBorder uBorder)
+           | SemanticType.Undefined -> (LogNode.initialEmpty) //TODO something useful
+           | _ -> (LogNode.initialEmpty) //TODO something useful
         )
+      |> PList.filter (fun n -> n.nodeType <> LogNodeType.Empty)
+
+      
 
   
 
-                      
-    
-    
-  let rec generateLevel (lst : List<V3d * Annotation>) (annos : plist<Annotation>) (semApp : SemanticApp) =
-    let currentLevel =
-      lst
-        |> List.map (fun (p,a) -> Annotation.getLevel semApp a)
-        |> List.min
 
-    let copyAnnoWith (v : V3d) (aToAdd : (V3d * Annotation)) = 
-      let a = 
-        (fun (p,a) -> 
-          (v, {a with points = PList.ofList [{AnnotationPoint.initial with point    = v
-                                                                           selected = false
-                                            }]
-              }
-          )
-        ) aToAdd
-      a
+  let rec generateLevel (lst : List<V3d * Annotation>) 
+                        (annos : plist<Annotation>) 
+                        (semApp : SemanticApp) 
+                        (lowerBorder : Border) 
+                        (upperBorder : Border) =
+    match lst with
+      | [] -> plist.Empty
+      | lst ->
+        let currentLevel =
+          lst
+            |> List.map (fun (p,a) -> Annotation.getLevel semApp a)
+            |> List.min
 
-    let filteredList = 
-      lst 
-        |> List.filter (fun (p, a) -> (Annotation.getLevel semApp a) = currentLevel)
-        |> List.sortBy (fun (p, a) -> (p.Length))
+        let filteredList = 
+          lst 
+            |> List.filter (fun (p, a) -> (Annotation.getLevel semApp a) = currentLevel)
+            |> List.sortBy (fun (p, a) -> (p.Length))
+
+        let lBorder = {lowerBorder with anno = {lowerBorder.anno with overrideLevel = Some currentLevel}}
+        let uBorder = {upperBorder with anno = {upperBorder.anno with overrideLevel = Some currentLevel}}
+        
+        let listWithBorders = 
+          List.concat 
+                [//[copyAnnoWith (V3d.OOO) (List.head filteredList)]; //TODO might lead to problems
+                  [(lBorder.point, lBorder.anno)]
+                  filteredList;
+                  [(uBorder.point, uBorder.anno)]
+                  //[(copyAnnoWith (V3d(Double.PositiveInfinity)) (List.last lst))]]
+                ]
+          |> List.sortBy (fun (p, a) -> (p.Length))
 
         
-    let listWithBorders = 
-      List.concat 
-            [[copyAnnoWith (V3d.OOO) (List.head filteredList)]; //TODO might lead to problems
-              filteredList;
-              [(copyAnnoWith (V3d(Double.PositiveInfinity)) (List.last lst))]]
+        let pwList =
+          listWithBorders
+            |> List.pairwise
 
+        // TODO performance
+    //    let minElevation =
+    //      pwList
+    //        |> List.map (fun ((up, _), (lp, _)) -> (up.Length,lp.Length)) // TODO make more generic (elevation)
+    //        |> List.map (fun (x , y) ->  Operators.min x y)
+    //        |> List.min
+    //
+    //    let maxElevation =
+    //      pwList
+    //        |> List.map (fun ((up, _), (lp, _)) -> (up.Length,lp.Length)) // TODO make more generic (elevation)
+    //        |> List.map (fun (x , y) ->  Operators.max x y)
+    //        |> List.max
+
+        let restAnnos =
+          annos
+            |> PList.filter (fun a -> (Annotation.getLevel semApp a) <> currentLevel)
+            //|> PList.filter (fun a -> (Annotation.elevation a) <= minElevation)
+            //|> PList.filter (fun a -> (Annotation.elevation a) >= maxElevation)
+
+        let restSelPoints =
+          lst 
+            |> List.filter (fun (p, a) -> (Annotation.getLevel semApp a) <> currentLevel)
+            //|> List.filter (fun (p, a) -> (Annotation.elevation a) >= minElevation)
+            //|> List.filter (fun (p, a) -> (Annotation.elevation a) <= maxElevation)
+
+
+
+        seq { // TODO
+          for ((p1, a1), (p2, a2)) in pwList do
+            // sort pairs
+            let (lp, la) = if p1.Length < p2.Length then (p1, a1) else (p2, a2) //TODO refactor
+            let (up, ua) = if p1.Length < p2.Length then (p2, a2) else (p1, a1)
+            let layerChildren = 
+             // let upper = if up.Length > lp.Length then up.Length else lp.Length // could be left out if order can be relied on
+             // let lower = if up.Length < lp.Length then up.Length else lp.Length
+              let between (a : Annotation) = (lp.Length < (Annotation.elevation a) && (up.Length > (Annotation.elevation a)))
+              let layerRestAnnos = 
+                restAnnos
+                  |> PList.filter between
+              let layerRestSelPoints = 
+                restSelPoints
+                  //|> List.filter (fun (p, a) -> (between a))
+                  |> List.filter (
+                    fun (p, a) -> 
+                      (lp.Length < p.Length && (up.Length > p.Length)))
+
+              match layerRestSelPoints with
+                | []    -> generateNonLevelNodes layerRestAnnos (lp, la) (up, ua) semApp
+                | cLst  -> 
+    //              let (minP, minAnno) = 
+    //                layerRestSelPoints
+    //                  |> List.minBy (fun (p, a) -> p.Length)
+    //              let thisLeaves = 
+    //                layerRestAnnos
+    //                  |> PList.filter (fun a -> Annotation.elevation a <= minP.Length)
+    //              let rest = 
+    //                layerRestAnnos
+    //                  |> PList.filter (fun a -> Annotation.elevation a > minP.Length)
+
+                  let lBorder = {Border.initial with anno  = la
+                                                     point = lp}
+                  let uBorder = {Border.initial with anno  = ua
+                                                     point = up} 
+                  generateLevel layerRestSelPoints layerRestAnnos semApp lBorder uBorder
+
+            yield LogNode.initialTopLevel (up, ua) (lp, la) layerChildren currentLevel
+        }
+        |> Seq.sortByDescending (fun x -> x.elevation)
+        |> PList.ofSeq
         
-    let pwList =
-      listWithBorders
-        |> List.pairwise
-
-    // TODO performance
-//    let minElevation =
-//      pwList
-//        |> List.map (fun ((up, _), (lp, _)) -> (up.Length,lp.Length)) // TODO make more generic (elevation)
-//        |> List.map (fun (x , y) ->  Operators.min x y)
-//        |> List.min
-//
-//    let maxElevation =
-//      pwList
-//        |> List.map (fun ((up, _), (lp, _)) -> (up.Length,lp.Length)) // TODO make more generic (elevation)
-//        |> List.map (fun (x , y) ->  Operators.max x y)
-//        |> List.max
-
-    let restAnnos =
-      annos
-        |> PList.filter (fun a -> (Annotation.getLevel semApp a) <> currentLevel)
-        //|> PList.filter (fun a -> (Annotation.elevation a) <= minElevation)
-        //|> PList.filter (fun a -> (Annotation.elevation a) >= maxElevation)
-
-    let restSelPoints =
-      lst 
-        |> List.filter (fun (p, a) -> (Annotation.getLevel semApp a) <> currentLevel)
-        //|> List.filter (fun (p, a) -> (Annotation.elevation a) >= minElevation)
-        //|> List.filter (fun (p, a) -> (Annotation.elevation a) <= maxElevation)
-
-
-
-    seq { // TODO
-      for ((p1, a1), (p2, a2)) in pwList do
-        // sort pairs
-        let (lp, la) = if p1.Length < p2.Length then (p1, a1) else (p2, a2) //TODO refactor
-        let (up, ua) = if p1.Length < p2.Length then (p2, a2) else (p1, a1)
-        let layerChildren = 
-         // let upper = if up.Length > lp.Length then up.Length else lp.Length // could be left out if order can be relied on
-         // let lower = if up.Length < lp.Length then up.Length else lp.Length
-          let between (a : Annotation) = (lp.Length < (Annotation.elevation a) && (up.Length > (Annotation.elevation a)))
-          let layerRestAnnos = 
-            restAnnos
-              |> PList.filter between
-          let layerRestSelPoints = 
-            restSelPoints
-              |> List.filter (fun (p, a) -> (between a))
-
-
-          match layerRestSelPoints with
-            | []    -> generateNonLevelNodes layerRestAnnos semApp
-            | cLst  -> generateLevel layerRestSelPoints layerRestAnnos semApp
-
-        yield LogNode.initialTopLevel (up, ua) (lp, la) layerChildren
-    }
-    |> PList.ofSeq
 
 
   
 
-  let intial (id : string) (lst : List<V3d * Annotation>) (annos : plist<Annotation>) (semApp : SemanticApp): GeologicalLog = {
+  let intial (id : string)
+             (lst : List<V3d * Annotation>) 
+             (annos : plist<Annotation>) 
+             (semApp : SemanticApp) :
+              GeologicalLog = {
     id          = id
-    nodes       = generateLevel lst annos semApp
+    label       = "log"
+    nodes       = generateLevel 
+                    lst 
+                    annos //(annos |> PList.map (Annotation.update Annotation.Action.HoverOut))
+                    semApp 
+                    {point = (V3d.OOO)
+                     anno = (Annotation.initialDummyWithPoints (V3d.OOO))}
+                    {point = (V3d.PositiveInfinity)
+                     anno = (Annotation.initialDummyWithPoints (V3d.PositiveInfinity))}
     annoPoints  = lst
     range       = Rangef.init
     camera      = 
@@ -150,13 +213,104 @@ module GeologicalLog =
           {model with camera = ArcBallController.update model.camera m}
 
 
-  let view (model : MGeologicalLog) (semanticApp : MSemanticApp) =
-    alist {
-      for n in model.nodes do
-        let! dn = (LogNode.view n)
-        yield dn
-    }
 
+  let view (model : MGeologicalLog) (semanticApp : MSemanticApp) (isSelected : bool)  =
+    let minLvl = getMinLevel model
+    let minLvlNodes =
+      model.nodes
+        |> AList.filter (fun n -> Mod.force n.level = minLvl)
+        |> AList.toSeq
+        |> Seq.sortByDescending (fun n -> Mod.force n.elevation)
+      
+
+    let nodeViews =
+      alist {
+        for n in minLvlNodes do
+          yield Incremental.ul (AttributeMap.ofList [clazz "ui inverted list"]) 
+                    (alist {
+                      let! v = (LogNode.view' n semanticApp)
+                      for it in v do
+                        yield it
+                    })                      
+      }
+
+
+    nodeViews  
+
+    
+
+
+  let getLogConnectionSg 
+        (model : MGeologicalLog) 
+        (semanticApp : MSemanticApp) 
+        (isSelected : bool) //TODO performance: IMod<bool>
+        (camera : MCameraControllerState) =
+
+    match isSelected with
+      | false -> Sg.empty
+      | true  ->
+        let color = Mod.constant C4b.Yellow
+        let width = Mod.constant 1.0 
+        let lines =
+          adaptive {
+            let! aps = model.annoPoints
+            let points =  
+              aps
+                |> List.map (fun (p, a) -> p)
+            let head = points |> List.tryHead
+            return match head with
+                    | Some h ->  points
+                                    |> List.pairwise
+                                    |> List.map (fun (a,b) -> new Line3d(a, b))
+                                    |> List.toArray
+                    | None -> [||]
+          }
+        
+        lines
+            |> Sg.lines color
+            |> Sg.effect [
+                toEffect DefaultSurfaces.trafo
+                toEffect DefaultSurfaces.vertexColor
+                toEffect DefaultSurfaces.thickLine                                
+                ] 
+            |> Sg.noEvents
+            |> Sg.uniform "LineWidth" width
+            |> Sg.pass (RenderPass.after "lines" RenderPassOrder.Arbitrary RenderPass.main)
+            |> Sg.depthTest (Mod.constant DepthTestMode.None)
+
+      
+      
+
+
+
+
+    //          yield (Incremental.tr 
+//            (AttributeMap.ofList []) //[st; onClick (fun str -> ToggleSelectLog (Some log.id))])
+//              children
+//            )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//      match isSelected with // TODO performance carry in Mod
+//        | _  -> clazz "ui celled striped inverted table"
+//        | false -> clazz "ui celled striped yellow table"
+        //| true  -> style (sprintf "%s;%s;%s" UtilitiesGUI.tinyPadding (bgColorStr C4b.Yellow) "color:black")
+        //| false -> style UtilitiesGUI.tinyPadding
+               
       
 
 

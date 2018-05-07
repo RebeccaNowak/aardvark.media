@@ -268,7 +268,10 @@ module Pages =
                 )
 
             | Some "render" -> // renderControl
-                (CorrelationDrawingApp.view model.drawingApp model.semanticApp) 
+                (CorrelationDrawingApp.view 
+                  model.drawingApp 
+                  model.semanticApp 
+                  (CorrelationPlotApp.getLogConnectionSgs model.corrPlotApp model.semanticApp model.drawingApp.camera) )
                   |> UI.map CorrelationDrawingAppMessage
 
             | Some "logs" ->

@@ -23,6 +23,8 @@ module UtilitiesGUI =
                 |> (Array.map (fun (x : byte) -> System.String.Format("{0:X2}", x)))
                 |> (String.concat System.String.Empty)
         String.concat String.Empty ["#";str] 
+
+
     
 
     // ATTRIBUTES

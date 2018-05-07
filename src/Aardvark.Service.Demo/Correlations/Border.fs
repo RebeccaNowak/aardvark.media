@@ -10,7 +10,12 @@ module Border =
   open Aardvark.UI
   open Aardvark.Rendering.Text
 
-  let initial id : Border = {
+//  let initial id : Border = {
+//    anno  = Annotation.initialDummy
+//    point = V3d.OOO
+//  }
+
+  let initial : Border = {
     anno  = Annotation.initialDummy
     point = V3d.OOO
   }

@@ -26,7 +26,7 @@ module SemanticApp =
     semantics         = hmap.Empty
     selectedSemantic  = ""
     semanticsList     = plist.Empty
-    sortBy            = SemanticsSortingOption.Timestamp
+    sortBy            = SemanticsSortingOption.Level
     creatingNew       = false
   }
 
@@ -128,14 +128,14 @@ module SemanticApp =
     insertSemantic newSemantic SemanticState.New model
 
   let getInitialWithSamples =
-    initial
-      |> insertSemantic (Semantic.initialHorizon0 (System.Guid.NewGuid().ToString())) SemanticState.Display
-      |> insertSemantic (Semantic.initialHorizon1 (System.Guid.NewGuid().ToString())) SemanticState.Display
-      |> insertSemantic (Semantic.initialHorizon2 (System.Guid.NewGuid().ToString())) SemanticState.Display
-      |> insertSemantic (Semantic.initialHorizon3 (System.Guid.NewGuid().ToString())) SemanticState.Display
-      |> insertSemantic (Semantic.initialHorizon4 (System.Guid.NewGuid().ToString())) SemanticState.Display
-      |> insertSemantic (Semantic.initialCrossbed (System.Guid.NewGuid().ToString())) SemanticState.Display
-      |> insertSemantic (Semantic.initialGrainSize (System.Guid.NewGuid().ToString())) SemanticState.Edit
+      initial
+        |> insertSemantic (Semantic.initialHorizon0 (System.Guid.NewGuid().ToString())) SemanticState.Display
+        |> insertSemantic (Semantic.initialHorizon1 (System.Guid.NewGuid().ToString())) SemanticState.Display
+        |> insertSemantic (Semantic.initialHorizon2 (System.Guid.NewGuid().ToString())) SemanticState.Display
+        |> insertSemantic (Semantic.initialHorizon3 (System.Guid.NewGuid().ToString())) SemanticState.Display
+        |> insertSemantic (Semantic.initialHorizon4 (System.Guid.NewGuid().ToString())) SemanticState.Display
+        |> insertSemantic (Semantic.initialCrossbed (System.Guid.NewGuid().ToString())) SemanticState.Display
+        |> insertSemantic (Semantic.initialGrainSize (System.Guid.NewGuid().ToString())) SemanticState.Edit
 
   ////// UPDATE 
   let update (model : SemanticApp) (action : Action) =
