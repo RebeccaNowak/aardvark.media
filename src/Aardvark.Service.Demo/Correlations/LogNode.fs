@@ -135,7 +135,31 @@ module LogNode =
       
     createDomNode modStr
 
-  let rec view' (model : MLogNode) (semApp : MSemanticApp) =
+  let rec svgView (model : MLogNode) (semApp : MSemanticApp) =
+    let childrenView = 
+      alist {
+        for c in model.children do
+          let! (v : alist<DomNode<'a>>) = (svgView c semApp)
+          for it in v do
+            yield it
+      }
+    
+    let rval =
+      adaptive {
+        let isEmpty = AList.isEmpty model.children
+        let! (b : bool) = isEmpty
+        match b with
+          | true  -> 
+              return AList.ofList [li [attribute "value" ">"] [(description model semApp)]]
+          | false ->                
+              return AList.ofList [li [attribute "value" "-"] [(description model semApp)];
+                     ul [] [Incremental.li (AttributeMap.ofList [attribute "value" "-"]) childrenView]]
+      }
+    rval
+
+
+
+  let rec debugView' (model : MLogNode) (semApp : MSemanticApp) =
 //    let description = Incremental.text 
 //                        (Mod.map2 (fun (u : V3d) (l : V3d)  -> 
 //                                        sprintf "%.2f-%.2f" l.Length u.Length)
@@ -143,7 +167,7 @@ module LogNode =
     let childrenView = 
       alist {
         for c in model.children do
-          let! (v : alist<DomNode<'a>>) = (view' c semApp)
+          let! (v : alist<DomNode<'a>>) = (debugView' c semApp)
           for it in v do
             yield it
       }

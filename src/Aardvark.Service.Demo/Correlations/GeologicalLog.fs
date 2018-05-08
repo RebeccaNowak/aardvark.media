@@ -22,7 +22,7 @@ module GeologicalLog =
 
   let getSecond (_, s) = s
 
-  // let annotationToNode (anno : Annotation) (semApp : SemanticApp) =
+  
 
   let copyAnnoWith (v : V3d) (aToAdd : (V3d * Annotation)) = 
     let a = 
@@ -228,7 +228,7 @@ module GeologicalLog =
         for n in minLvlNodes do
           yield Incremental.ul (AttributeMap.ofList [clazz "ui inverted list"]) 
                     (alist {
-                      let! v = (LogNode.view' n semanticApp)
+                      let! v = (LogNode.debugView' n semanticApp)
                       for it in v do
                         yield it
                     })                      
